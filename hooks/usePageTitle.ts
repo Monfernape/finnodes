@@ -15,6 +15,8 @@ export const usePageTitle = () => {
                 return 'Seats'
             case '/managers':
                 return 'Managers'
+            case '/expenses/add-expense':
+                return 'Add Expense'
             case '/reports':
                 return 'Reports'
             default:
