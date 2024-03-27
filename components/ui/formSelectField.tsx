@@ -13,39 +13,38 @@ import { Label } from "./label";
 type FormSelectFieldProps = {
   label: string;
   placeholder: string;
-  options: options[];
+  name: string;
+  options: option[];
   value: string;
+  register: (value: string) => void;
 };
 
-type options = {
-  name: string;
+type option = {
   value: string;
+  label: string;
 };
 
 export const FormSelectField: React.FC<FormSelectFieldProps> = ({
   label,
   placeholder,
+  name,
   options,
   value,
+  register,
 }) => {
-  const [selectedValue, setSelectedValue] = useState("");
-
   return (
     <div>
-      <Label htmlFor={label}>{label}</Label>
+      <Label className="mb-2">{label}</Label>
 
-      <Select value={selectedValue} onValueChange={setSelectedValue} defaultValue={options[0].}>
+      <Select value={value} onValueChange={register}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {/* {options.map(() => (
-              <SelectItem value={value}>{name}</SelectItem>
-            ))} */}
-            <SelectItem value="shared">Shared</SelectItem>
-            <SelectItem value="per_unit">Per Unit</SelectItem>
-            <SelectItem value="per_seat">Per Seat</SelectItem>
+            {options.map(({ value, label }) => (
+              <SelectItem value={value}>{label}</SelectItem>
+            ))}
           </SelectGroup>
         </SelectContent>
       </Select>

@@ -6,16 +6,28 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AddExpenseFormData } from "../../types";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { FormInputField } from "../ui/formInputField";
+import { FormSelectField } from "../ui/formSelectField";
 
+type option = {
+  value: string;
+  label: string;
+};
+
+const typeOptions: option[] = [
+  {
+    value: "shared",
+    label: "Shared",
+  },
+  {
+    value: "per_unit",
+    label: "Per Unit",
+  },
+  {
+    value: "per_seat",
+    label: "Per Seat",
+  },
+];
 
 export const AddExpense = () => {
   const {
@@ -23,9 +35,15 @@ export const AddExpense = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<AddExpenseFormData>();
+  const [selectedValue, setSelectedValue] = useState("");
 
   const onSubmit = async (data: AddExpenseFormData) => {
     console.log("SUCCESS", data);
+  };
+
+  const onTypeChange = (value: string) => {
+    console.log("value: ", value);
+    setSelectedValue(value);
   };
 
   return (
@@ -36,36 +54,37 @@ export const AddExpense = () => {
       >
         <FormInputField
           type="text"
-          placeholder="Enter expense title"
-          label="Expense Title"
+          placeholder="Enter title"
+          label="Title"
           name="title"
           register={register}
           error={errors.title}
         />
-        
-        <div>
-          
-        </div>
-        <div>
-          <label
-            className="block text-sm font-medium text-gray-700"
-            htmlFor="amount"
-          >
-            Expense Amount
-          </label>
-          <Input
-            id="amount"
-            placeholder="Enter expense amount"
-            type="number"
-            className="mt-1"
-          />
-        </div>
+
+        <FormSelectField
+          label="Select Type"
+          placeholder="Select type"
+          options={typeOptions}
+          name="type"
+          register={register}
+          value={selectedValue}
+        />
+
+        <FormInputField
+          type="text"
+          placeholder="Enter amount"
+          label="Amount"
+          name="amount"
+          register={register}
+          error={errors.amount}
+        />
+
         <Button
           className="w-full rounded-lg py-2 bg-gray-900 text-white shadow-lg"
           type="submit"
           variant="solid"
         >
-          Submit
+          Add
         </Button>
       </form>
     </div>
