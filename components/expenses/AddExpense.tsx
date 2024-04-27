@@ -6,32 +6,28 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { AddExpenseFormData } from "../../types";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Label } from "../ui/label";
+} from "@/components/ui/select";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Input } from "../ui/input";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { InfoIcon } from "@/components/icons";
 
 export enum ExpenseType {
   Shared = "shared",
@@ -93,12 +89,31 @@ export const AddExpense = () => {
             </FormItem>
           )}
         />
-                <FormField
+        <FormField
           control={form.control}
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Expense type</FormLabel>
+              <FormLabel>
+                Expense type{" "}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <InfoIcon style={{ width: 20, paddingTop: 14 }} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Shared - Expense is shared among all managers. i.e.
+                      Ahmed's lunch
+                      <br />
+                      Per Unit - Expense is calculated per unit - i.e. Employee
+                      salary
+                      <br />
+                      Per Seat - Expense is calculated per seat - i.e. Rent,
+                      kitchen items
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -113,13 +128,6 @@ export const AddExpense = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>
-                Shared - Expense is shared among all managers. i.e. Ahmed's lunch
-                <br />
-                Per Unit - Expense is calculated per unit - i.e. Employee salary
-                <br />
-                Per Seat - Expense is calculated per seat - i.e. Rent, kitchen items
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -131,11 +139,7 @@ export const AddExpense = () => {
             <FormItem>
               <FormLabel>Amount</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Amount"
-                  {...field}
-                />
+                <Input type="number" placeholder="Amount" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
