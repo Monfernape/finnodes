@@ -1,4 +1,4 @@
-import { assertNever, ensureUnreachable } from "@/utils/supabase/common";
+import { assertNever, ensureUnreachable } from "@/lib/common";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 

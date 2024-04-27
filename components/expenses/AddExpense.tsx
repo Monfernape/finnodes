@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -28,12 +27,11 @@ import { Input } from "@/components/ui/input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "@/components/icons";
-
-export enum ExpenseType {
-  Shared = "shared",
-  PerUnit = "per_unit",
-  PerSeat = "per_seat",
-}
+import { createClient } from "@/utils/supabase/client";
+import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation";
+import { Routes } from "@/hooks/useToolbar";
+import { ExpenseType } from "@/entities";
 
 const EXPENSE_TYPES = [
   {
@@ -56,8 +54,13 @@ const formSchema = z.object({
   amount: z.string(),
 });
 
+type ExpenseSchema = z.infer<typeof formSchema>;
+
 export const AddExpense = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const supabaseClient = createClient();
+  const { toast } = useToast()
+  const router = useRouter();
+  const form = useForm<ExpenseSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
@@ -66,8 +69,27 @@ export const AddExpense = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  async function onSubmit(values: ExpenseSchema) {
+    try {
+      const { data, error } = await supabaseClient
+        .from("expenses")
+        .insert([{...values, amount: parseFloat(values.amount)}])
+        .select();
+      if (error) {
+        throw error;
+      }
+      toast({
+        title: "Expense saved",
+        description: `Expense "${data?.[0].title}" has been saved.`,
+      })
+      router.push(Routes.EXPENSES);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:  'Expense could not be saved. Please try again later.',
+        variant: "destructive",
+      })
+    }
   }
 
   return (
