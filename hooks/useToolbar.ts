@@ -1,4 +1,3 @@
-import { assertNever, ensureUnreachable } from "@/lib/common";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
@@ -11,6 +10,7 @@ export enum Routes {
   MANAGERS = "/managers",
   ADD_MANAGER = "/managers/add-manager",
   REPORTS = "/reports",
+  NOT_FOUND = "/_not-found"
 }
 
 export const useToolbar = () => {
@@ -54,8 +54,8 @@ export const useToolbar = () => {
         };
       default:
         if (!(pathname in Routes)) {
-          assertNever(pathname);
-          return ensureUnreachable(pathname);
+          // assertNever(pathname);
+          // return ensureUnreachable(pathname);
         }
     }
   }, [pathname]);

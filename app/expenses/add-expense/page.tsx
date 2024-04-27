@@ -1,6 +1,6 @@
 import { AddExpense } from "@/components/expenses/AddExpense";
 
-export const AddExpensePage = () => {
+const AddExpensePage = () => {
   return <AddExpense />
 };
 
