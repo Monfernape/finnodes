@@ -1,92 +1,150 @@
 "use client";
 
-import React, { useState } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-
-import { Input } from "@/components/ui/input";
+import React from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { AddExpenseFormData } from "../../types";
-import { FormInputField } from "../ui/formInputField";
-import { FormSelectField } from "../ui/formSelectField";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Label } from "../ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { Input } from "../ui/input";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-type option = {
-  value: string;
-  label: string;
-};
+export enum ExpenseType {
+  Shared = "shared",
+  PerUnit = "per_unit",
+  PerSeat = "per_seat",
+}
 
-const typeOptions: option[] = [
+const EXPENSE_TYPES = [
   {
-    value: "shared",
+    value: ExpenseType.Shared,
     label: "Shared",
   },
   {
-    value: "per_unit",
+    value: ExpenseType.PerUnit,
     label: "Per Unit",
   },
   {
-    value: "per_seat",
+    value: ExpenseType.PerSeat,
     label: "Per Seat",
   },
 ];
 
+const formSchema = z.object({
+  title: z.string(),
+  type: z.enum([ExpenseType.Shared, ExpenseType.PerUnit, ExpenseType.PerSeat]),
+  amount: z.string(),
+});
+
 export const AddExpense = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<AddExpenseFormData>();
-  const [selectedValue, setSelectedValue] = useState("");
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: "",
+      type: ExpenseType.Shared,
+      amount: "",
+    },
+  });
 
-  const onSubmit = async (data: AddExpenseFormData) => {
-    console.log("SUCCESS", data);
-  };
-
-  const onTypeChange = (value: string) => {
-    console.log("value: ", value);
-    setSelectedValue(value);
-  };
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(values);
+  }
 
   return (
-    <div className="flex flex-col justify-center min-h-screen bg-gray-50 dark:bg-gray-900 px-4 py-2">
+    <Form {...form}>
       <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-md mx-auto bg-white shadow-lg rounded-lg p-4 space-y-4 overflow-auto"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="w-full flex flex-col gap-3 px-10"
       >
-        <FormInputField
-          type="text"
-          placeholder="Enter title"
-          label="Title"
+        <FormField
+          control={form.control}
           name="title"
-          register={register}
-          error={errors.title}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Rent, utility..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-
-        <FormSelectField
-          label="Select Type"
-          placeholder="Select type"
-          options={typeOptions}
+                <FormField
+          control={form.control}
           name="type"
-          register={register}
-          value={selectedValue}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Expense type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a expense type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {EXPENSE_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Shared - Expense is shared among all managers. i.e. Ahmed's lunch
+                <br />
+                Per Unit - Expense is calculated per unit - i.e. Employee salary
+                <br />
+                Per Seat - Expense is calculated per seat - i.e. Rent, kitchen items
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-
-        <FormInputField
-          type="text"
-          placeholder="Enter amount"
-          label="Amount"
+        <FormField
+          control={form.control}
           name="amount"
-          register={register}
-          error={errors.amount}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Amount</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Amount"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-
-        <Button
-          className="w-full rounded-lg py-2 bg-gray-900 text-white shadow-lg"
-          type="submit"
-          variant="solid"
-        >
-          Add
+        <Button className="w-full" type="submit">
+          Save Expense
         </Button>
       </form>
-    </div>
+    </Form>
   );
 };
