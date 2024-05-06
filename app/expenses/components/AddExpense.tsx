@@ -27,11 +27,15 @@ import { Input } from "@/components/ui/input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "@/components/icons";
-import { createClient } from "@/utils/supabase/client";
-import { useToast } from "@/components/ui/use-toast"
+import { DatabaseTable, createClient } from "@/utils/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { Routes } from "@/hooks/useToolbar";
-import { ExpenseType } from "@/entities";
+import { ExpenseType, Manager } from "@/entities";
+
+type Props = {
+  managers: Manager[]
+}
 
 const EXPENSE_TYPES = [
   {
@@ -48,32 +52,47 @@ const EXPENSE_TYPES = [
   },
 ];
 
-const formSchema = z.object({
-  title: z.string(),
-  type: z.enum([ExpenseType.Shared, ExpenseType.PerUnit, ExpenseType.PerSeat]),
-  amount: z.string(),
+const perUnitExpensSchema = z.object({
+  type: z.literal(ExpenseType.PerUnit),
+  unit_manager: z.string({ required_error: "Per unit expense requires a unit manager"}),
+  title: z.string({ required_error: "Title is required"}),
+  amount: z.string( { required_error: "Amount cannot be empty"}),
 });
+
+const baseExpenseSchema = z.object({
+  type: z.enum([ExpenseType.Shared, ExpenseType.PerSeat]),
+  title: z.string({ required_error: "Title is required"}),
+  amount: z.string( { required_error: "Amount cannot be empty"}),
+});
+
+const formSchema = z.discriminatedUnion('type',[perUnitExpensSchema, baseExpenseSchema]);
 
 type ExpenseSchema = z.infer<typeof formSchema>;
 
-export const AddExpense = () => {
+export const AddExpense = ({ managers }: Props) => {
   const supabaseClient = createClient();
-  const { toast } = useToast()
+  const { toast } = useToast();
   const router = useRouter();
   const form = useForm<ExpenseSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
+      title: undefined,
       type: ExpenseType.Shared,
-      amount: "",
+      amount: undefined,
     },
   });
 
   async function onSubmit(values: ExpenseSchema) {
+    console.log({ values})
+    const payload = {
+      ...values,
+      amount: parseFloat(values.amount),
+      unit_manager: values.type === ExpenseType.PerUnit ? Number(values.unit_manager) : null
+    };
     try {
       const { data, error } = await supabaseClient
-        .from("expenses")
-        .insert([{...values, amount: parseFloat(values.amount)}])
+        .from(DatabaseTable.Expenses)
+        .insert([payload])
         .select();
       if (error) {
         throw error;
@@ -81,14 +100,14 @@ export const AddExpense = () => {
       toast({
         title: "Expense saved",
         description: `Expense "${data?.[0].title}" has been saved.`,
-      })
+      });
       router.push(Routes.EXPENSES);
     } catch (error) {
       toast({
         title: "Error",
-        description:  'Expense could not be saved. Please try again later.',
+        description: "Expense could not be saved. Please try again later.",
         variant: "destructive",
-      })
+      });
     }
   }
 
@@ -154,6 +173,35 @@ export const AddExpense = () => {
             </FormItem>
           )}
         />
+        {form.watch("type") === ExpenseType.PerUnit && (
+          <FormField
+            control={form.control}
+            name="unit_manager"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Unit manager</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select unit manager" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {managers.map((manager) => (
+                      <SelectItem key={manager.id} value={manager.id.toString()}>
+                        {manager.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <FormField
           control={form.control}
           name="amount"

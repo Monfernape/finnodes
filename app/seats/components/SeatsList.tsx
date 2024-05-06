@@ -7,58 +7,52 @@ import {
   Table,
   TableCell,
 } from "@/components/ui/table";
-import { ExpenseType } from "@/entities";
-import { Expense } from "@/entities";
+import { Manager, Seat } from "@/entities";
 import { formatDate } from "@/lib/date";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Button } from "../ui/button";
-import { EllipsesIcon } from "../icons";
+} from "../../../components/ui/dropdown-menu";
+import { Button } from "../../../components/ui/button";
+import { EllipsesIcon } from "../../../components/icons";
 import { useRouter } from "next/navigation";
 import { DatabaseTable, createClient } from "@/utils/supabase/client";
-import { data } from "autoprefixer";
-import { useToast } from "../ui/use-toast";
-
-const ExpenseTypeMapper = {
-  [ExpenseType.Shared]: "Shared",
-  [ExpenseType.PerUnit]: "Per Unit",
-  [ExpenseType.PerSeat]: "Per Seat",
-};
+import { useToast } from "../../../components/ui/use-toast";
 
 type Props = {
-  expenses: Expense[];
+  seats: Seat[];
+  managers: Manager[];
 };
 
-export const ExpensesList = ({ expenses }: Props) => {
+export const SeatsList = ({ seats, managers }: Props) => {
   const router = useRouter();
   const { toast } = useToast();
   const supabaseClient = createClient();
-  const handleEditExpense = (expenseId: number) => {
+
+  const handleEditSeat = (expenseId: number) => {
     router.push(`/expenses/${expenseId}/edit`);
   };
 
-  const handleDeleteExpense = async (expenseId: number) => {
+  const handleDeleteSeat = async (seatId: number) => {
     try {
       const { error } = await supabaseClient
-        .from(DatabaseTable.Expenses)
+        .from(DatabaseTable.Seats)
         .delete()
-        .match({ id: expenseId });
+        .match({ id: seatId });
       if (error) {
         throw error;
       }
       toast({
-        title: "Expense deleted",
-        description: `Expense has been deleted.`,
+        title: "Seat deleted",
+        description: `Seat has been deleted.`,
       });
-      router.refresh()
+      router.refresh();
     } catch (error) {
       toast({
         title: "Error",
-        description: "An error occurred while deleting the expense.",
+        description: "An error occurred while deleting the seat.",
       });
     }
   };
@@ -69,20 +63,18 @@ export const ExpensesList = ({ expenses }: Props) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Created At</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Manager</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {expenses.map((expense) => (
-              <TableRow key={expense.id}>
-                <TableCell>{expense.title}</TableCell>
-                <TableCell>{ExpenseTypeMapper[expense.type]}</TableCell>
-                <TableCell>{expense.amount} Rs.</TableCell>
-                <TableCell>{formatDate(expense.created_at)}</TableCell>
+            {seats.map((seat) => (
+              <TableRow key={seat.id}>
+                <TableCell>{seat.name}</TableCell>
+                <TableCell>
+                  {managers.find((m) => m.seats.includes(m.id))?.name || "-"}
+                </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -91,13 +83,11 @@ export const ExpensesList = ({ expenses }: Props) => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => handleEditExpense(expense.id)}
-                      >
+                      <DropdownMenuItem onClick={() => handleEditSeat(seat.id)}>
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDeleteExpense(expense.id)}
+                        onClick={() => handleDeleteSeat(seat.id)}
                       >
                         Delete
                       </DropdownMenuItem>

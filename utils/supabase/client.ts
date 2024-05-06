@@ -2,6 +2,8 @@ import { createBrowserClient } from "@supabase/ssr";
 
 export enum DatabaseTable {
   Expenses = "expenses",
+  Seats = "seats",
+  Managers = "managers",
 }
 
 export const createClient = () =>

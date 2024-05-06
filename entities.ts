@@ -11,3 +11,16 @@ export type Expense = {
   type: ExpenseType;
   created_at: string;
 };
+
+export type Seat = {
+  id: number;
+  name: string;
+  created_at: string;
+}
+
+export type Manager = {
+  id: number;
+  name: string;
+  created_at: string;
+  seats: number[]
+}

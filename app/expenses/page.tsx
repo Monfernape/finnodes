@@ -1,5 +1,5 @@
 import React from "react";
-import { ExpensesList } from "@/components/expenses/ExpensesList";
+import { ExpensesList } from "@/app/expenses/components/ExpensesList";
 import { createClient } from "@/utils/supabase/server";
 import { Expense } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/client";
