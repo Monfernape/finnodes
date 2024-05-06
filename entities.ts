@@ -9,6 +9,7 @@ export type Expense = {
   title: string;
   amount: number;
   type: ExpenseType;
+  unit_manager: number;
   created_at: string;
 };
 
@@ -23,4 +24,12 @@ export type Manager = {
   name: string;
   created_at: string;
   seats: number[]
+}
+
+export type ExpenseReport = {
+  sharedExpense: number;
+  perUnitExpense: number;
+  perSeatExpense: number;
+  totalExpense: number;
+  managerName: string;
 }
