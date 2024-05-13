@@ -38,7 +38,7 @@ export const ExpensesList = ({ expenses }: Props) => {
   const supabaseClient = createClient();
 
   const handleEditExpense = (expenseId: number) => {
-    router.push(`/expenses/${expenseId}/edit`);
+    router.push(`/expenses/edit-expense/${expenseId}`);
   };
 
   const handleDeleteExpense = async (expenseId: number) => {
@@ -97,6 +97,7 @@ export const ExpensesList = ({ expenses }: Props) => {
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
+                      className="text-red-500"
                         onClick={() => handleDeleteExpense(expense.id)}
                       >
                         Delete

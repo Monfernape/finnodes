@@ -29,13 +29,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "@/components/icons";
 import { DatabaseTable, createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Routes } from "@/hooks/useToolbar";
-import { ExpenseType, Manager } from "@/entities";
+import { Expense, ExpenseType, Manager } from "@/entities";
 
 type Props = {
-  managers: Manager[]
-}
+  managers: Manager[];
+  expense?: Expense; // represent the case of edit expense
+};
 
 const EXPENSE_TYPES = [
   {
@@ -54,40 +55,57 @@ const EXPENSE_TYPES = [
 
 const perUnitExpensSchema = z.object({
   type: z.literal(ExpenseType.PerUnit),
-  unit_manager: z.string({ required_error: "Per unit expense requires a unit manager"}),
-  title: z.string({ required_error: "Title is required"}),
-  amount: z.string( { required_error: "Amount cannot be empty"}),
+  unit_manager: z.string({
+    required_error: "Per unit expense requires a unit manager",
+  }),
+  title: z.string({ required_error: "Title is required" }),
+  amount: z.string({ required_error: "Amount cannot be empty" }),
 });
 
 const baseExpenseSchema = z.object({
   type: z.enum([ExpenseType.Shared, ExpenseType.PerSeat]),
-  title: z.string({ required_error: "Title is required"}),
-  amount: z.string( { required_error: "Amount cannot be empty"}),
+  title: z.string({ required_error: "Title is required" }),
+  amount: z.string({ required_error: "Amount cannot be empty" }),
 });
 
-const formSchema = z.discriminatedUnion('type',[perUnitExpensSchema, baseExpenseSchema]);
+const formSchema = z.discriminatedUnion("type", [
+  perUnitExpensSchema,
+  baseExpenseSchema,
+]);
 
 type ExpenseSchema = z.infer<typeof formSchema>;
 
-export const AddExpense = ({ managers }: Props) => {
+export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
   const supabaseClient = createClient();
   const { toast } = useToast();
   const router = useRouter();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const form = useForm<ExpenseSchema>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: undefined,
-      type: ExpenseType.Shared,
-      amount: undefined,
-    },
+    defaultValues:
+      isEditMode && expense
+        ? {
+            title: expense.title,
+            type: expense.type,
+            amount: expense.amount.toString(),
+            unit_manager: expense.unit_manager ? expense.unit_manager.toString() : undefined,
+          }
+        : {
+            title: undefined,
+            type: ExpenseType.Shared,
+            amount: undefined,
+          },
   });
 
-  async function onSubmit(values: ExpenseSchema) {
-    console.log({ values})
+  const saveExpense = async (values: ExpenseSchema) => {
     const payload = {
       ...values,
       amount: parseFloat(values.amount),
-      unit_manager: values.type === ExpenseType.PerUnit ? Number(values.unit_manager) : null
+      unit_manager:
+        values.type === ExpenseType.PerUnit
+          ? Number(values.unit_manager)
+          : null,
     };
     try {
       const { data, error } = await supabaseClient
@@ -108,6 +126,46 @@ export const AddExpense = ({ managers }: Props) => {
         description: "Expense could not be saved. Please try again later.",
         variant: "destructive",
       });
+    }
+  };
+
+  const updateExpense = async (values: ExpenseSchema) => {
+    const payload = {
+      ...values,
+      amount: parseFloat(values.amount),
+      unit_manager:
+        values.type === ExpenseType.PerUnit
+          ? Number(values.unit_manager)
+          : null,
+    };
+    try {
+      const { data, error } = await supabaseClient
+        .from(DatabaseTable.Expenses)
+        .update(payload)
+        .eq("id", Number(id))
+        .select();
+      if (error) {
+        throw error;
+      }
+      toast({
+        title: "Expense updated",
+        description: `Expense "${data?.[0].title}" has been updated.`,
+      });
+      router.push(Routes.EXPENSES);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Expense could not be updated. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  async function onSubmit(values: ExpenseSchema) {
+    if (isEditMode) {
+      updateExpense(values);
+    } else {
+      saveExpense(values);
     }
   }
 
@@ -191,7 +249,10 @@ export const AddExpense = ({ managers }: Props) => {
                   </FormControl>
                   <SelectContent>
                     {managers.map((manager) => (
-                      <SelectItem key={manager.id} value={manager.id.toString()}>
+                      <SelectItem
+                        key={manager.id}
+                        value={manager.id.toString()}
+                      >
                         {manager.name}
                       </SelectItem>
                     ))}
@@ -215,8 +276,12 @@ export const AddExpense = ({ managers }: Props) => {
             </FormItem>
           )}
         />
-        <Button className="w-full" type="submit">
-          Save Expense
+        <Button
+          className="w-full"
+          type="submit"
+          disabled={form.formState.isSubmitting || !form.formState.isDirty}
+        >
+          {isEditMode ? "Update Expense" : "Save Expense"}
         </Button>
       </form>
     </Form>

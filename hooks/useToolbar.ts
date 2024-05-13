@@ -5,6 +5,7 @@ export enum Routes {
   HOME = "/",
   EXPENSES = "/expenses",
   ADD_EXPENSE = "/expenses/add-expense",
+  EDIT_EXPENSE = "/expenses/edit-expense",
   SEATS = "/seats",
   ADD_SEATS = "/seats/add-seat",
   MANAGERS = "/managers",
@@ -18,44 +19,50 @@ export const useToolbar = () => {
   const pathname = usePathname();
 
   const toolbarMetaData = useMemo(() => {
-    switch (pathname) {
-      case Routes.HOME:
+    switch (true) {
+      case pathname === Routes.HOME:
         return {
           title: "Home",
         };
-      case Routes.EXPENSES:
+      case pathname === Routes.EXPENSES:
         return {
           title: "Expenses",
           addRoute: Routes.ADD_EXPENSE,
         };
-      case Routes.ADD_EXPENSE:
+      case pathname === Routes.ADD_EXPENSE:
         return {
           title: "Add Expense",
           backRoute: Routes.EXPENSES,
         };
-      case Routes.SEATS:
+      case pathname.startsWith(Routes.EDIT_EXPENSE):
+        // Extract the 'id' parameter from the pathname
+        const id = pathname.substring(Routes.EDIT_EXPENSE.length + 1);
+        return {
+          title: `Edit Expense ${id}`,
+          backRoute: Routes.EXPENSES,
+        };
+      case pathname === Routes.SEATS:
         return {
           title: "Seats",
           addRoute: Routes.ADD_SEATS,
         };
-      case Routes.MANAGERS:
+      case pathname === Routes.MANAGERS:
         return {
           title: "Managers",
           addRoute: Routes.ADD_MANAGER,
         };
-      case Routes.ADD_MANAGER:
+      case pathname === Routes.ADD_MANAGER:
         return {
           title: "Add Manager",
           backRoute: Routes.MANAGERS,
         };
-      case Routes.REPORTS:
+      case pathname === Routes.REPORTS:
         return {
           title: "Reports",
         };
       default:
         if (!(pathname in Routes)) {
-          // assertNever(pathname);
-          // return ensureUnreachable(pathname);
+          // Handle unknown routes
         }
     }
   }, [pathname]);
