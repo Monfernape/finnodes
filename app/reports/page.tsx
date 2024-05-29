@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/client";
 import { Seat, Manager, Expense, ExpenseType, ExpenseReport } from "@/entities";
 import { ExpenseReportTable } from "./components/ExpenseReportTable";
+import { ReportRangeFilter } from "./components/ReportRangeFilter";
 
 const Page = async ({
   searchParams,
@@ -52,9 +53,9 @@ const Page = async ({
     .select()
     .returns<Manager[]>();
 
-    const expenses = _expenses || [];
-    const seats = _seats || [];
-    const managers = _managers || [];
+  const expenses = _expenses || [];
+  const seats = _seats || [];
+  const managers = _managers || [];
 
   const expenseGroups = expenses.reduce((acc, expense) => {
     if (!acc[expense.type]) {
@@ -70,21 +71,33 @@ const Page = async ({
 
   const managersWithExpenseShare: ExpenseReport[] = managers.map((manager) => {
     const managerSeatShare = manager.seats.length / seats.length;
-    const sharedExpense = sharedExpenses.reduce((acc, expense) => acc + expense.amount, 0)/managers.length;
-    const perUnitExpense = perUnitExpenses.filter((expense) => expense.unit_manager === manager.id).reduce((acc, expense) => acc + expense.amount, 0);
-    const perSeatExpense = perSeatExpenses.reduce((acc, expense) => acc + expense.amount, 0) * managerSeatShare;
+    const sharedExpense =
+      sharedExpenses.reduce((acc, expense) => acc + expense.amount, 0) /
+      managers.length;
+    const perUnitExpense = perUnitExpenses
+      .filter((expense) => expense.unit_manager === manager.id)
+      .reduce((acc, expense) => acc + expense.amount, 0);
+    const perSeatExpense =
+      perSeatExpenses.reduce((acc, expense) => acc + expense.amount, 0) *
+      managerSeatShare;
     const totalExpense = sharedExpense + perUnitExpense + perSeatExpense;
     return {
-    managerName: manager.name,
-    sharedExpense: Math.round(sharedExpense),
-    perUnitExpense: Math.round(perUnitExpense),
-    perSeatExpense: Math.round(perSeatExpense),
-    totalExpense: Math.round(totalExpense),
-  }});
+      managerName: manager.name,
+      sharedExpense: Math.round(sharedExpense),
+      perUnitExpense: Math.round(perUnitExpense),
+      perSeatExpense: Math.round(perSeatExpense),
+      totalExpense: Math.round(totalExpense),
+    };
+  });
 
-  return <div>
-    <ExpenseReportTable expenseReport={managersWithExpenseShare} />
-  </div>;
+  return (
+    <div className="flex flex-col">
+      <div className="flex justify-end">
+      <ReportRangeFilter />
+      </div>
+      <ExpenseReportTable expenseReport={managersWithExpenseShare} />
+    </div>
+  );
 };
 
 export default Page;
