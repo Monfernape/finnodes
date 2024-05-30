@@ -4,6 +4,7 @@ import { DatabaseTable } from "@/utils/supabase/client";
 import { Seat, Manager, Expense, ExpenseType, ExpenseReport } from "@/entities";
 import { ExpenseReportTable } from "./components/ExpenseReportTable";
 import { ReportRangeFilter } from "./components/ReportRangeFilter";
+import { ExpenseStats } from "./components/ExpenseStats";
 
 const Page = async ({
   searchParams,
@@ -96,6 +97,7 @@ const Page = async ({
       <ReportRangeFilter />
       </div>
       <ExpenseReportTable expenseReport={managersWithExpenseShare} />
+      <ExpenseStats expenses={expenses} expenseReport={managersWithExpenseShare} />
     </div>
   );
 };
