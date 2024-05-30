@@ -32,6 +32,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { Routes } from "@/hooks/useToolbar";
 import { Expense, ExpenseType, Manager } from "@/entities";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 
 type Props = {
   managers: Manager[];
@@ -60,12 +69,14 @@ const perUnitExpensSchema = z.object({
   }),
   title: z.string({ required_error: "Title is required" }),
   amount: z.string({ required_error: "Amount cannot be empty" }),
+  created_at: z.date(),
 });
 
 const baseExpenseSchema = z.object({
   type: z.enum([ExpenseType.Shared, ExpenseType.PerSeat]),
   title: z.string({ required_error: "Title is required" }),
   amount: z.string({ required_error: "Amount cannot be empty" }),
+  created_at: z.date(),
 });
 
 const formSchema = z.discriminatedUnion("type", [
@@ -89,12 +100,16 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
             title: expense.title,
             type: expense.type,
             amount: expense.amount.toString(),
-            unit_manager: expense.unit_manager ? expense.unit_manager.toString() : undefined,
+            unit_manager: expense.unit_manager
+              ? expense.unit_manager.toString()
+              : undefined,
+            created_at: new Date(expense.created_at),
           }
         : {
             title: undefined,
             type: ExpenseType.Shared,
             amount: undefined,
+            created_at: new Date(),
           },
   });
 
@@ -106,6 +121,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
         values.type === ExpenseType.PerUnit
           ? Number(values.unit_manager)
           : null,
+      created_at: values.created_at.toISOString(),
     };
     try {
       const { data, error } = await supabaseClient
@@ -137,6 +153,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
         values.type === ExpenseType.PerUnit
           ? Number(values.unit_manager)
           : null,
+      created_at: values.created_at.toISOString(),
     };
     try {
       const { data, error } = await supabaseClient
@@ -272,6 +289,47 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
               <FormControl>
                 <Input type="number" placeholder="Amount" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="created_at"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Date</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
