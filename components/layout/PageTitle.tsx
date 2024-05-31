@@ -2,55 +2,29 @@
 import { useToolbar } from "@/hooks/useToolbar";
 import Link from "next/link";
 import React from "react";
+import { ArrowLeftIcon } from "../icons";
 
 export const PageTitle = () => {
   const toolbarMetaData = useToolbar();
   const { title, backRoute, addRoute } = toolbarMetaData || {};
   return (
-    <header className="flex h-28 justify-between border-b">
-      {backRoute && (
-        <Link
+    <header className="flex items-center justify-between border-b border-gray-200 py-4 px-6 dark:border-gray-800">
+      <div className="flex items-center space-x-4">
+        {backRoute && <Link
           href={backRoute}
-          className="flex items-center pl-4 text-foreground"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:hover:bg-gray-800 dark:focus:ring-gray-300"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back
-        </Link>
-      )}
-      <h1 className="font-semibold text-center w-full text-base md:text-xl lg:text-2xl">
-        {title}
-      </h1>
-      {addRoute && (
-        <Link href={addRoute}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            />
-          </svg>
-        </Link>
-      )}
+          <ArrowLeftIcon className="h-5 w-5" />
+          <span className="sr-only">Back</span>
+        </Link>}
+        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+      </div>
+      {addRoute && <Link
+        href={addRoute}
+        className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus:ring-gray-300"
+      >
+        Add New
+      </Link>}
     </header>
   );
 };

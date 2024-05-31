@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/client";
 import { Seat, Manager, Expense, ExpenseType, ExpenseReport } from "@/entities";
 import { ExpenseReportTable } from "./components/ExpenseReportTable";
-import { ReportRangeFilter } from "./components/ReportRangeFilter";
+import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { ExpenseStats } from "./components/ExpenseStats";
 
 const Page = async ({
@@ -94,7 +94,7 @@ const Page = async ({
   return (
     <div className="flex flex-col">
       <div className="flex justify-end">
-      <ReportRangeFilter />
+      <DateRangeFilter />
       </div>
       <ExpenseReportTable expenseReport={managersWithExpenseShare} />
       <ExpenseStats expenses={expenses} expenseReport={managersWithExpenseShare} />

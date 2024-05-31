@@ -21,6 +21,7 @@ import { EllipsesIcon } from "../../../components/icons";
 import { useRouter } from "next/navigation";
 import { DatabaseTable, createClient } from "@/utils/supabase/client";
 import { useToast } from "../../../components/ui/use-toast";
+import { capitalize } from "@/lib/string";
 
 const ExpenseTypeMapper = {
   [ExpenseType.Shared]: "Shared",
@@ -79,7 +80,7 @@ export const ExpensesList = ({ expenses }: Props) => {
           <TableBody>
             {expenses.map((expense) => (
               <TableRow key={expense.id}>
-                <TableCell>{expense.title}</TableCell>
+                <TableCell>{capitalize(expense.title)}</TableCell>
                 <TableCell>{ExpenseTypeMapper[expense.type]}</TableCell>
                 <TableCell>{expense.amount} Rs.</TableCell>
                 <TableCell>{formatDate(expense.created_at)}</TableCell>

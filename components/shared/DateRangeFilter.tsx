@@ -33,7 +33,7 @@ const getMonthStartAndEnd = (): DateRange => {
   return { from: startDate, to: endDate };
 };
 
-export function ReportRangeFilter({
+export function DateRangeFilter({
   className = "",
 }: React.HTMLAttributes<HTMLDivElement>) {
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() =>
