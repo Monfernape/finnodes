@@ -49,6 +49,7 @@ const Page = async ({
     .from(DatabaseTable.Seats)
     .select()
     .returns<Seat[]>();
+    
   const { data: _managers } = await supabaseClient
     .from(DatabaseTable.Managers)
     .select()

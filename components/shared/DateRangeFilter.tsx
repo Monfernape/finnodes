@@ -13,22 +13,31 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {  usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-const getMonthStartAndEnd = (): DateRange => {
+const getMonthStartAndEnd = ({
+  from,
+  to,
+}: {
+  from: string | null;
+  to: string | null;
+}): DateRange => {
   const currentDate = new Date();
 
-  const startDate = new Date(
+  let startDate = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth(),
     1
   );
 
-  const endDate = new Date(
+  let endDate = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth() + 1,
     0
   );
+
+  if (from) startDate = new Date(from);
+  if (to) endDate = new Date(to);
 
   return { from: startDate, to: endDate };
 };
@@ -36,22 +45,28 @@ const getMonthStartAndEnd = (): DateRange => {
 export function DateRangeFilter({
   className = "",
 }: React.HTMLAttributes<HTMLDivElement>) {
+  const searchParams = useSearchParams();
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() =>
-    getMonthStartAndEnd()
+    getMonthStartAndEnd({
+      from: searchParams.get("from"),
+      to: searchParams.get("to"),
+    })
   );
   const router = useRouter();
   const pathname = usePathname();
 
   const handleDateRangeChange = (dateRange: DateRange | undefined) => {
     setDateRange(dateRange);
+    const params = new URLSearchParams(searchParams.toString());
     if (dateRange?.from && dateRange?.to) {
-      const params = new URLSearchParams();
       params.set("from", format(dateRange.from, "yyyy-MM-dd"));
       params.set("to", format(dateRange.to, "yyyy-MM-dd"));
-
-      const updatedSearchParams = params.toString();
-      router.push(pathname + "?" + updatedSearchParams);
+    } else {
+      params.delete("from");
+      params.delete("to");
     }
+    const updatedSearchParams = params.toString();
+    router.push(pathname + "?" + updatedSearchParams);
   };
 
   return (

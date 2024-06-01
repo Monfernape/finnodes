@@ -1,16 +1,19 @@
 import React from "react";
 import { ExpensesList } from "@/app/expenses/components/ExpensesList";
 import { createClient } from "@/utils/supabase/server";
-import { Expense } from "@/entities";
+import { Expense, ExpenseType, Manager, Seat } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/client";
 import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
+import { ExpenseManagerFilter } from "./components/ExpenseManagerFilter";
+import { ExpenseListSummary } from "./components/ExpenseListSummary";
 
 const Expenses = async ({
   searchParams,
 }: {
   searchParams?: {
-    from: string;
-    to: string;
+    from?: string;
+    to?: string;
+    manager?: string;
   };
 }) => {
   const supabaseClient = createClient();
@@ -30,11 +33,11 @@ const Expenses = async ({
     0
   ).toISOString();
 
-    // If 'from' and 'to' parameters are provided, update start and end date accordingly
-    if (searchParams && searchParams.from && searchParams.to) {
-      startDate = new Date(searchParams.from).toISOString();
-      endDate = new Date(searchParams.to).toISOString();
-    }
+  // If 'from' and 'to' parameters are provided, update start and end date accordingly
+  if (searchParams && searchParams.from && searchParams.to) {
+    startDate = new Date(searchParams.from).toISOString();
+    endDate = new Date(searchParams.to).toISOString();
+  }
 
   const { data } = await supabaseClient
     .from(DatabaseTable.Expenses)
@@ -44,12 +47,66 @@ const Expenses = async ({
     .lt("created_at", endDate)
     .returns<Expense[]>();
 
+  const { data: _managers } = await supabaseClient
+    .from(DatabaseTable.Managers)
+    .select()
+    .returns<Manager[]>();
+
+    const { data: _seats } = await supabaseClient
+    .from(DatabaseTable.Seats)
+    .select()
+    .returns<Seat[]>();
+
+  let expenses = data || [];
+  const managers = _managers || [];
+  const seats = _seats || [];
+  let selectedManager: Manager | undefined;
+
+  if (searchParams && searchParams.manager) {
+    selectedManager = managers.find(
+      (manager) => manager.id.toString() === searchParams.manager
+    );
+
+    if (selectedManager) {
+      const managerSeatShare = selectedManager.seats.length / seats.length;
+
+      const perUnitExpenses = expenses.filter(
+        (expense) =>
+          expense.type === ExpenseType.PerUnit &&
+          expense.unit_manager === selectedManager!.id
+      );
+      const perSeatExpenses = expenses
+        .filter((expense) => expense.type === ExpenseType.PerSeat)
+        .map((expense) => ({
+          ...expense,
+          amount: expense.amount * managerSeatShare,
+        }));
+
+      const sharedExpenses = expenses
+        .filter((expense) => expense.type === ExpenseType.Shared)
+        .map((expense) => ({
+          ...expense,
+          amount: expense.amount / managers.length,
+        }));
+
+        expenses = [...perUnitExpenses, ...perSeatExpenses, ...sharedExpenses];
+        console.log('Filtered Expenses', perSeatExpenses)
+    }
+  }
+
+  const totalSumOfExpenses = expenses.reduce(
+    (acc, expense) => acc + expense.amount,
+    0
+  );
+
   return (
-    <div className="flex flex-col">
-      <div className="flex justify-end">
+    <div className="flex flex-col gap-3">
+      <div className="flex justify-end gap-2">
+        <ExpenseManagerFilter managers={managers} />
         <DateRangeFilter />
       </div>
-      <ExpensesList expenses={data ?? []} />
+      <ExpenseListSummary manager={selectedManager} totalSum={totalSumOfExpenses} />
+      <ExpensesList expenses={expenses} managers={managers} />
     </div>
   );
 };
