@@ -90,7 +90,6 @@ const Expenses = async ({
         }));
 
         expenses = [...perUnitExpenses, ...perSeatExpenses, ...sharedExpenses];
-        console.log('Filtered Expenses', perSeatExpenses)
     }
   }
 

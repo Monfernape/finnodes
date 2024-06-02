@@ -52,7 +52,6 @@ export const ManagerFormBuilder = ({ seats }: Props) => {
   }, [seats]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log( { values});
     try {
       const { data, error } = await supabaseClient
         .from(DatabaseTable.Managers)
