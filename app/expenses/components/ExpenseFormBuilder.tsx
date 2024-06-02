@@ -113,6 +113,8 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
           },
   });
 
+  const isSubmitting = form.formState.isSubmitting;
+
   const saveExpense = async (values: ExpenseSchema) => {
     const payload = {
       ...values,
@@ -131,11 +133,11 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
       if (error) {
         throw error;
       }
+      router.push(Routes.EXPENSES);
       toast({
         title: "Expense saved",
         description: `Expense "${data?.[0].title}" has been saved.`,
       });
-      router.push(Routes.EXPENSES);
     } catch (error) {
       toast({
         title: "Error",
@@ -180,9 +182,9 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
 
   async function onSubmit(values: ExpenseSchema) {
     if (isEditMode) {
-      updateExpense(values);
+      return updateExpense(values);
     } else {
-      saveExpense(values);
+      return saveExpense(values);
     }
   }
 
@@ -337,7 +339,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
         <Button
           className="w-full"
           type="submit"
-          disabled={form.formState.isSubmitting || !form.formState.isDirty}
+          disabled={isSubmitting || !form.formState.isDirty}
         >
           {isEditMode ? "Update Expense" : "Save Expense"}
         </Button>
