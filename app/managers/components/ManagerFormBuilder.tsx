@@ -16,32 +16,51 @@ import { Input } from "@/components/ui/input";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { DatabaseTable, createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Routes } from "@/hooks/useToolbar";
-import { Seat } from "@/entities";
+import { Manager, Seat } from "@/entities";
 
 type Props = {
   seats: Seat[];
+  manager?: Manager;
 };
 
 const formSchema = z.object({
   name: z.string({ required_error: "Manager name is required" }),
-  seats: z.array(z.object({
-    label: z.string(),
-    value: z.string(),
-  }))
+  seats: z.array(
+    z.object({
+      label: z.string(),
+      value: z.string(),
+    })
+  ),
 });
 
-export const ManagerFormBuilder = ({ seats }: Props) => {
+type FormValues = z.infer<typeof formSchema>;
+
+export const ManagerFormBuilder = ({ seats, manager }: Props) => {
   const supabaseClient = createClient();
   const { toast } = useToast();
   const router = useRouter();
-  const form = useForm<z.infer<typeof formSchema>>({
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: undefined,
-      seats: [],
-    },
+    defaultValues:
+      isEditMode && manager
+        ? {
+            name: manager.name,
+            seats: manager.seats.map((s) => {
+              const seat = seats.find((x) => x.id === s);
+              return {
+                label: seat?.name || "",
+                value: seat?.id.toString() || "",
+              };
+            }),
+          }
+        : {
+            name: undefined,
+            seats: [],
+          },
   });
 
   const seatMenuOption = React.useMemo(() => {
@@ -51,11 +70,16 @@ export const ManagerFormBuilder = ({ seats }: Props) => {
     }));
   }, [seats]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const createManager = async (values: FormValues) => {
     try {
       const { data, error } = await supabaseClient
         .from(DatabaseTable.Managers)
-        .insert([{ name: values.name, seats: values.seats.map(x => Number(x.value)) }])
+        .insert([
+          {
+            name: values.name,
+            seats: values.seats.map((x) => Number(x.value)),
+          },
+        ])
         .select();
       if (error) {
         throw error;
@@ -71,6 +95,42 @@ export const ManagerFormBuilder = ({ seats }: Props) => {
         description: "Manager could not be saved. Please try again later.",
         variant: "destructive",
       });
+    }
+  };
+
+  const updateManager = async (values: FormValues) => {
+    const payload = {
+      name: values.name,
+      seats: values.seats.map((x) => Number(x.value)),
+    };
+    try {
+      const { data, error } = await supabaseClient
+        .from(DatabaseTable.Managers)
+        .update(payload)
+        .eq("id", Number(id))
+        .select();
+      if (error) {
+        throw error;
+      }
+      toast({
+        title: "Manager updated",
+        description: `Expense "${data?.[0].name}" has been updated.`,
+      });
+      router.push(Routes.MANAGERS);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Manager could not be updated. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  async function onSubmit(values: FormValues) {
+    if (isEditMode) {
+      return updateManager(values);
+    } else {
+      return createManager(values);
     }
   }
 
@@ -108,7 +168,9 @@ export const ManagerFormBuilder = ({ seats }: Props) => {
             </FormItem>
           )}
         />
-        <Button type="submit">Save Manager</Button>
+        <Button type="submit">
+          {isEditMode ? "Update manager" : "Save manager"}
+        </Button>
       </form>
     </Form>
   );

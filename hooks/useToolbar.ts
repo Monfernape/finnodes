@@ -10,8 +10,9 @@ export enum Routes {
   ADD_SEATS = "/seats/add-seat",
   MANAGERS = "/managers",
   ADD_MANAGER = "/managers/add-manager",
+  EDIT_MANAGER = "/managers/edit-manager",
   REPORTS = "/reports",
-  NOT_FOUND = "/_not-found"
+  NOT_FOUND = "/_not-found",
 }
 
 export const useToolbar = () => {
@@ -34,13 +35,14 @@ export const useToolbar = () => {
           title: "Add Expense",
           backRoute: Routes.EXPENSES,
         };
-      case pathname.startsWith(Routes.EDIT_EXPENSE):
+      case pathname.startsWith(Routes.EDIT_EXPENSE): {
         // Extract the 'id' parameter from the pathname
         const id = pathname.substring(Routes.EDIT_EXPENSE.length + 1);
         return {
           title: `Edit Expense ${id}`,
           backRoute: Routes.EXPENSES,
         };
+      }
       case pathname === Routes.SEATS:
         return {
           title: "Seats",
@@ -56,6 +58,14 @@ export const useToolbar = () => {
           title: "Add Manager",
           backRoute: Routes.MANAGERS,
         };
+      case pathname.startsWith(Routes.EDIT_MANAGER): {
+        // Extract the 'id' parameter from the pathname
+        const id = pathname.substring(Routes.EDIT_MANAGER.length + 1);
+        return {
+          title: `Edit Manager`,
+          backRoute: Routes.EXPENSES,
+        };
+      }
       case pathname === Routes.REPORTS:
         return {
           title: "Reports",

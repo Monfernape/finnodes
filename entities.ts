@@ -4,6 +4,11 @@ export enum ExpenseType {
   PerSeat = "per_seat",
 }
 
+export enum ManagerStatus {
+  Active = "active",
+  Inactive = "inactive",
+}
+
 export type Expense = {
   id: number;
   title: string;
@@ -17,14 +22,15 @@ export type Seat = {
   id: number;
   name: string;
   created_at: string;
-}
+};
 
 export type Manager = {
   id: number;
   name: string;
   created_at: string;
-  seats: number[]
-}
+  seats: number[];
+  status: ManagerStatus;
+};
 
 export type ExpenseReport = {
   sharedExpense: number;
@@ -32,4 +38,4 @@ export type ExpenseReport = {
   perSeatExpense: number;
   totalExpense: number;
   managerName: string;
-}
+};
