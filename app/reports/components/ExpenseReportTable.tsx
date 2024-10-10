@@ -1,4 +1,3 @@
-"use client";
 import {
   TableHead,
   TableRow,
@@ -25,7 +24,6 @@ export const ExpenseReportTable = ({ expenseReport }: Props) => {
               <TableHead>Shared Expense</TableHead>
               <TableHead>Per Seat Expense</TableHead>
               <TableHead>Total Expense</TableHead>
-
             </TableRow>
           </TableHeader>
           <TableBody>

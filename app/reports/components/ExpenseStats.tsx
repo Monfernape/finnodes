@@ -1,5 +1,14 @@
 "use client";
-import { Bar, BarChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Expense, ExpenseReport } from "@/entities";
 import { useMemo } from "react";
@@ -48,15 +57,29 @@ type Props = {
 const getCurrentSadqaTurn = (fromDate: string) => {
   const currentDate = fromDate ? new Date(fromDate) : new Date();
   const currentMonthIndex = currentDate.getMonth();
-  const currentMonthName = currentDate.toLocaleString("default", { month: "long" });
-  const turns = ["Zubaid Rasool", "Hajaj Khan", "Usman Khalil", "Usman Qadir", "Zubaid Rasool", "Hajaj Khan", "Usman Khalil", "Usman Qadir", "Zubaid Rasool", "Hajaj Khan", "Usman Khalil", "Usman Qadir"] as const;
-  
+  const currentMonthName = currentDate.toLocaleString("default", {
+    month: "long",
+  });
+  const turns = [
+    "Usman Khalil",
+    "Usman Qadir",
+    "Usman Khalil",
+    "Usman Qadir",
+    "Usman Khalil",
+    "Usman Qadir",
+    "Usman Khalil",
+    "Usman Qadir",
+    "Usman Khalil",
+    "Usman Qadir",
+    "Usman Khalil",
+    "Usman Qadir",
+  ] as const;
+
   return {
     turn: turns[currentMonthIndex],
     month: currentMonthName,
-  }
-}
-
+  };
+};
 
 export function ExpenseStats({ expenses, expenseReport }: Props) {
   const searcParams = useSearchParams();
@@ -72,9 +95,11 @@ export function ExpenseStats({ expenses, expenseReport }: Props) {
     totalExpense: report.totalExpense,
   }));
 
-  const sadqaAmount = expenses.find(expense => expense.title.toLowerCase().includes("sadqa"))?.amount || 0;
+  const sadqaAmount =
+    expenses.find((expense) => expense.title.toLowerCase().includes("sadqa"))
+      ?.amount || 0;
 
-  const { turn, month} = useMemo(() => getCurrentSadqaTurn(from), [from]);
+  const { turn, month } = useMemo(() => getCurrentSadqaTurn(from), [from]);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
@@ -90,9 +115,7 @@ export function ExpenseStats({ expenses, expenseReport }: Props) {
               currency: "PKR",
             }).format(totalExpenses)}
           </div>
-          <p className="text-xs text-muted-foreground">
-            Not Ready
-          </p>
+          <p className="text-xs text-muted-foreground">Not Ready</p>
           <div className="h-[80px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
@@ -127,9 +150,7 @@ export function ExpenseStats({ expenses, expenseReport }: Props) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">Random Figure</div>
-          <p className="text-xs text-muted-foreground">
-            Not Ready
-          </p>
+          <p className="text-xs text-muted-foreground">Not Ready</p>
           <div className="mt-4 h-[80px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={expensePerManager}>
@@ -148,14 +169,10 @@ export function ExpenseStats({ expenses, expenseReport }: Props) {
           <CardTitle className="text-base font-normal">Sadqa Turn</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            {turn}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            For month of {month}
-          </p>
+          <div className="text-2xl font-bold">{turn}</div>
+          <p className="text-xs text-muted-foreground">For month of {month}</p>
           <div className="h-[80px] text-2xl font-bold py-4">
-          {new Intl.NumberFormat("en-PK", {
+            {new Intl.NumberFormat("en-PK", {
               style: "currency",
               currency: "PKR",
             }).format(sadqaAmount)}
