@@ -73,7 +73,7 @@ export const SeatsList = ({ seats, managers }: Props) => {
               <TableRow key={seat.id}>
                 <TableCell>{seat.name}</TableCell>
                 <TableCell>
-                  {managers.find((m) => m.seats.includes(m.id))?.name || "-"}
+                  {managers.find((m) => m.seats.includes(seat.id))?.name || "-"}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>

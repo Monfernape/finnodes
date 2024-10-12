@@ -1,7 +1,7 @@
 import React from "react";
 import { ExpensesList } from "@/app/expenses/components/ExpensesList";
 import { createClient } from "@/utils/supabase/server";
-import { Expense, ExpenseType, Manager, Seat } from "@/entities";
+import { Expense, ExpenseType, Manager, ManagerStatus, Seat } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/client";
 import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { ExpenseManagerFilter } from "./components/ExpenseManagerFilter";
@@ -50,9 +50,10 @@ const Expenses = async ({
   const { data: _managers } = await supabaseClient
     .from(DatabaseTable.Managers)
     .select()
+    .neq("status", ManagerStatus.Inactive)
     .returns<Manager[]>();
 
-    const { data: _seats } = await supabaseClient
+  const { data: _seats } = await supabaseClient
     .from(DatabaseTable.Seats)
     .select()
     .returns<Seat[]>();
@@ -89,7 +90,7 @@ const Expenses = async ({
           amount: expense.amount / managers.length,
         }));
 
-        expenses = [...perUnitExpenses, ...perSeatExpenses, ...sharedExpenses];
+      expenses = [...perUnitExpenses, ...perSeatExpenses, ...sharedExpenses];
     }
   }
 
@@ -104,7 +105,10 @@ const Expenses = async ({
         <ExpenseManagerFilter managers={managers} />
         <DateRangeFilter />
       </div>
-      <ExpenseListSummary manager={selectedManager} totalSum={totalSumOfExpenses} />
+      <ExpenseListSummary
+        manager={selectedManager}
+        totalSum={totalSumOfExpenses}
+      />
       <ExpensesList expenses={expenses} managers={managers} />
     </div>
   );

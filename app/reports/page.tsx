@@ -1,7 +1,14 @@
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/client";
-import { Seat, Manager, Expense, ExpenseType, ExpenseReport } from "@/entities";
+import {
+  Seat,
+  Manager,
+  Expense,
+  ExpenseType,
+  ExpenseReport,
+  ManagerStatus,
+} from "@/entities";
 import { ExpenseReportTable } from "./components/ExpenseReportTable";
 import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { ExpenseStats } from "./components/ExpenseStats";
@@ -49,10 +56,11 @@ const Page = async ({
     .from(DatabaseTable.Seats)
     .select()
     .returns<Seat[]>();
-    
+
   const { data: _managers } = await supabaseClient
     .from(DatabaseTable.Managers)
     .select()
+    .neq("status", ManagerStatus.Inactive)
     .returns<Manager[]>();
 
   const expenses = _expenses || [];
@@ -95,10 +103,13 @@ const Page = async ({
   return (
     <div className="flex flex-col">
       <div className="flex justify-end">
-      <DateRangeFilter />
+        <DateRangeFilter />
       </div>
       <ExpenseReportTable expenseReport={managersWithExpenseShare} />
-      <ExpenseStats expenses={expenses} expenseReport={managersWithExpenseShare} />
+      <ExpenseStats
+        expenses={expenses}
+        expenseReport={managersWithExpenseShare}
+      />
     </div>
   );
 };

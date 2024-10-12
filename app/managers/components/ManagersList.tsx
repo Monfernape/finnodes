@@ -125,6 +125,7 @@ export const ManagersList = ({ managers, seats }: Props) => {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
                         onClick={() => handleEditManager(manager.id)}
+                        disabled={manager.status === ManagerStatus.Inactive}
                       >
                         Edit
                       </DropdownMenuItem>
