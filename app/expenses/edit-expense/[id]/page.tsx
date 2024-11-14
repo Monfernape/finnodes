@@ -1,7 +1,7 @@
 import { ExpenseFormBuilder } from "@/app/expenses/components/ExpenseFormBuilder";
 import { createClient } from "@/utils/supabase/server";
 import { Manager, Expense, ManagerStatus } from "@/entities";
-import { DatabaseTable } from "@/utils/supabase/client";
+import { DatabaseTable } from "@/utils/supabase/db";
 
 const EditExpensePage = async ({ params }: { params: { id: string } }) => {
   const supabaseClient = createClient();

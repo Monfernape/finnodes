@@ -1,6 +1,6 @@
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
-import { DatabaseTable } from "@/utils/supabase/client";
+import { DatabaseTable } from "@/utils/supabase/db";
 import {
   Seat,
   Manager,

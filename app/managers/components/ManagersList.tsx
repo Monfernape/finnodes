@@ -17,10 +17,11 @@ import {
 import { Button } from "../../../components/ui/button";
 import { EllipsesIcon } from "../../../components/icons";
 import { useRouter } from "next/navigation";
-import { DatabaseTable, createClient } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import { useToast } from "../../../components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Routes } from "@/hooks/useToolbar";
+import { DatabaseTable } from "@/utils/supabase/db";
 
 type Props = {
   managers: Manager[];

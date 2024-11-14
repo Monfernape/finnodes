@@ -19,7 +19,7 @@ import {
 import { Button } from "../../../components/ui/button";
 import { EllipsesIcon, InfoIcon } from "../../../components/icons";
 import { useRouter, useSearchParams } from "next/navigation";
-import { DatabaseTable, createClient } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import { useToast } from "../../../components/ui/use-toast";
 import { capitalize } from "@/lib/string";
 import {
@@ -28,6 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { DatabaseTable } from "@/utils/supabase/db";
 
 const ExpenseTypeMapper = {
   [ExpenseType.Shared]: "Shared",
@@ -107,10 +108,12 @@ export const ExpensesList = ({ expenses, managers }: Props) => {
             <TableRow key={expense.id}>
               <TableCell>{capitalize(expense.title)}</TableCell>
               <TableCell>{ExpenseTypeMapper[expense.type]}</TableCell>
-              <TableCell>{new Intl.NumberFormat("en-PK", {
-              style: "currency",
-              currency: "PKR",
-            }).format(expense.amount)}</TableCell>
+              <TableCell>
+                {new Intl.NumberFormat("en-PK", {
+                  style: "currency",
+                  currency: "PKR",
+                }).format(expense.amount)}
+              </TableCell>
               <TableCell>{formatDate(expense.created_at)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>

@@ -14,11 +14,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { DatabaseTable, createClient } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { Routes } from "@/hooks/useToolbar";
 import { Manager, Seat } from "@/entities";
+import { DatabaseTable } from "@/utils/supabase/db";
 
 type Props = {
   seats: Seat[];

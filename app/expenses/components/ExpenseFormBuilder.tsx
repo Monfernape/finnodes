@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "@/components/icons";
-import { DatabaseTable, createClient } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { Routes } from "@/hooks/useToolbar";
@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
+import { DatabaseTable } from "@/utils/supabase/db";
 
 type Props = {
   managers: Manager[];

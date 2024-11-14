@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { DatabaseTable, createClient } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,15 +17,16 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { Routes } from "@/hooks/useToolbar";
+import { DatabaseTable } from "@/utils/supabase/db";
 
 const formSchema = z.object({
-  name: z.string({ required_error: "Name is required"}),
+  name: z.string({ required_error: "Name is required" }),
 });
 
 export const AddSeat = () => {
-    const supabaseClient = createClient();
-    const { toast } = useToast();
-    const router = useRouter();
+  const supabaseClient = createClient();
+  const { toast } = useToast();
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -58,7 +59,10 @@ export const AddSeat = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3 px-10">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col gap-3 px-10"
+      >
         <FormField
           control={form.control}
           name="name"

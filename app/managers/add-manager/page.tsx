@@ -1,7 +1,7 @@
 import React from "react";
 import { ManagerFormBuilder } from "../components/ManagerFormBuilder";
 import { createClient } from "@/utils/supabase/server";
-import { DatabaseTable } from "@/utils/supabase/client";
+import { DatabaseTable } from "@/utils/supabase/db";
 import { Seat } from "@/entities";
 
 const ManagersFormPage = async () => {

@@ -1,7 +1,7 @@
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
-import { DatabaseTable } from "@/utils/supabase/client";
-import { Seat, Manager, ManagerStatus } from "@/entities";
+import { DatabaseTable } from "@/utils/supabase/db";
+import { Seat, Manager } from "@/entities";
 import { ManagersList } from "./components/ManagersList";
 
 const Managers = async () => {
