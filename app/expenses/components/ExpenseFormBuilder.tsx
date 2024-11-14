@@ -108,7 +108,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
           }
         : {
             title: undefined,
-            type: ExpenseType.Shared,
+            type: ExpenseType.PerSeat,
             amount: undefined,
             created_at: new Date(),
           },
