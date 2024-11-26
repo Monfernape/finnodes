@@ -30,6 +30,7 @@ export type Manager = {
   created_at: string;
   seats: number[];
   status: ManagerStatus;
+  email: string;
 };
 
 export type ExpenseReport = {

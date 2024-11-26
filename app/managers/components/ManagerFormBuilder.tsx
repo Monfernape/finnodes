@@ -34,6 +34,7 @@ const formSchema = z.object({
       value: z.string(),
     })
   ),
+  email: z.string().email({ message: "Invalid email address" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -57,10 +58,12 @@ export const ManagerFormBuilder = ({ seats, manager }: Props) => {
                 value: seat?.id.toString() || "",
               };
             }),
+            email: manager.email,
           }
         : {
             name: undefined,
             seats: [],
+            email: undefined,
           },
   });
 
@@ -146,9 +149,22 @@ export const ManagerFormBuilder = ({ seats, manager }: Props) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Manager name</FormLabel>
+              <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input placeholder="Add name here..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="Add email here..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
