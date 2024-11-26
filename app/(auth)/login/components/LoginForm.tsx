@@ -17,8 +17,8 @@ export const LoginForm = () => {
   return (
     <Card className="w-[350px]">
       <CardHeader>
-        <CardTitle>Welcome</CardTitle>
-        <CardDescription>Sign in to your account</CardDescription>
+        <CardTitle>Welcome, Usman</CardTitle>
+        <CardDescription>You're supposed to be either Usman or..., well Usman but different one.</CardDescription>
       </CardHeader>
       <CardContent>
         <Button
