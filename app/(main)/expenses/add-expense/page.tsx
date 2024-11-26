@@ -1,4 +1,4 @@
-import { ExpenseFormBuilder } from "@/app/expenses/components/ExpenseFormBuilder";
+import { ExpenseFormBuilder } from "@/app/(main)/expenses/components/ExpenseFormBuilder";
 import { createClient } from "@/utils/supabase/server";
 import { Manager, ManagerStatus } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/db";

@@ -15,12 +15,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
-import { Button } from "../../../components/ui/button";
-import { EllipsesIcon, InfoIcon } from "../../../components/icons";
+} from "../../../../components/ui/dropdown-menu";
+import { Button } from "../../../../components/ui/button";
+import { EllipsesIcon, InfoIcon } from "../../../../components/icons";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { useToast } from "../../../components/ui/use-toast";
+import { useToast } from "../../../../components/ui/use-toast";
 import { capitalize } from "@/lib/string";
 import {
   Tooltip,

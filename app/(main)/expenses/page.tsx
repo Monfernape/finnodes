@@ -1,9 +1,9 @@
 import React from "react";
-import { ExpensesList } from "@/app/expenses/components/ExpensesList";
+import { ExpensesList } from "@/app/(main)/expenses/components/ExpensesList";
 import { createClient } from "@/utils/supabase/server";
 import { Expense, ExpenseType, Manager, ManagerStatus, Seat } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/db";
-import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
+import { DateRangeFilter } from "../../../components/shared/DateRangeFilter";
 import { ExpenseManagerFilter } from "./components/ExpenseManagerFilter";
 import { ExpenseListSummary } from "./components/ExpenseListSummary";
 

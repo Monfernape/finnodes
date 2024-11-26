@@ -10,7 +10,7 @@ import {
   ManagerStatus,
 } from "@/entities";
 import { ExpenseReportTable } from "./components/ExpenseReportTable";
-import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
+import { DateRangeFilter } from "../../../components/shared/DateRangeFilter";
 import { ExpenseStats } from "./components/ExpenseStats";
 
 const Page = async ({
