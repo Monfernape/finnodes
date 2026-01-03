@@ -1,34 +1,46 @@
 'use client'
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Github } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import { useSearchParams } from "next/navigation";
 
 export const LoginForm = () => {
-  const handleGitHubLogin = () => {
+  const supabase = useMemo(() => createClient(), []);
+  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
+
+  const handleGitHubLogin = async () => {
+    setLoading(true);
+    const next = searchParams.get("next") ?? "/expenses";
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+      next,
+    )}`;
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo,
+        scopes: "read:user user:email",
+      },
+    });
+
+    if (error) {
+      console.error("GitHub sign in failed", error);
+      setLoading(false);
+    }
   };
 
   return (
-    <Card className="w-[350px]">
-      <CardHeader>
-        <CardTitle>Welcome, Usman</CardTitle>
-        <CardDescription>You're supposed to be either Usman or..., well Usman but different one.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button
-          className="w-full"
-          onClick={handleGitHubLogin}
-        >
-          <Github className="mr-2 h-4 w-4" />
-          Sign in with GitHub
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="w-full space-y-3">
+      <Button
+        className="w-full"
+        onClick={handleGitHubLogin}
+        disabled={loading}
+      >
+        <Github className="mr-2 h-4 w-4" />
+        {loading ? "Redirecting..." : "Sign in with GitHub"}
+      </Button>
+    </div>
   );
 };

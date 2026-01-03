@@ -46,7 +46,7 @@ export const ExpenseManagerFilter = ({ managers }: Props) => {
 
   return (
     <Select onValueChange={onFilterChange} value={selectedFilter}>
-      <SelectTrigger>
+      <SelectTrigger className="w-full sm:w-56">
         <SelectValue placeholder="Select unit manager" />
       </SelectTrigger>
       <SelectContent>
