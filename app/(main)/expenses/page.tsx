@@ -10,13 +10,14 @@ import { ExpenseListSummary } from "./components/ExpenseListSummary";
 const Expenses = async ({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams: Promise<{
     from?: string;
     to?: string;
     manager?: string;
-  };
+  }>;
 }) => {
-  const supabaseClient = createClient();
+  const resolvedSearchParams = await searchParams;
+  const supabaseClient = await createClient();
   let currentDate = new Date();
 
   // Get the first day of the current month
@@ -34,9 +35,9 @@ const Expenses = async ({
   ).toISOString();
 
   // If 'from' and 'to' parameters are provided, update start and end date accordingly
-  if (searchParams && searchParams.from && searchParams.to) {
-    startDate = new Date(searchParams.from).toISOString();
-    endDate = new Date(searchParams.to).toISOString();
+  if (resolvedSearchParams?.from && resolvedSearchParams?.to) {
+    startDate = new Date(resolvedSearchParams.from).toISOString();
+    endDate = new Date(resolvedSearchParams.to).toISOString();
   }
 
   const { data } = await supabaseClient
@@ -63,9 +64,9 @@ const Expenses = async ({
   const seats = _seats || [];
   let selectedManager: Manager | undefined;
 
-  if (searchParams && searchParams.manager) {
+  if (resolvedSearchParams?.manager) {
     selectedManager = managers.find(
-      (manager) => manager.id.toString() === searchParams.manager
+      (manager) => manager.id.toString() === resolvedSearchParams.manager
     );
 
     if (selectedManager) {

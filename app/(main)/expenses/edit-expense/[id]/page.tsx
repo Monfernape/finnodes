@@ -3,8 +3,9 @@ import { createClient } from "@/utils/supabase/server";
 import { Manager, Expense, ManagerStatus } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/db";
 
-const EditExpensePage = async ({ params }: { params: { id: string } }) => {
-  const supabaseClient = createClient();
+const EditExpensePage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = await params;
+  const supabaseClient = await createClient();
   const { data: managers } = await supabaseClient
     .from(DatabaseTable.Managers)
     .select()
@@ -13,7 +14,7 @@ const EditExpensePage = async ({ params }: { params: { id: string } }) => {
   const { data: expense } = await supabaseClient
     .from(DatabaseTable.Expenses)
     .select()
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
   return <ExpenseFormBuilder managers={managers || []} expense={expense} />;
 };

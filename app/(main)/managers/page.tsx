@@ -5,7 +5,7 @@ import { Seat, Manager, ManagerStatus } from "@/entities";
 import { ManagersList } from "./components/ManagersList";
 
 const Managers = async () => {
-  const supabaseClient = createClient();
+  const supabaseClient = await createClient();
   const { data: seats } = await supabaseClient
     .from(DatabaseTable.Seats)
     .select()

@@ -4,8 +4,13 @@ import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { Seat } from "@/entities";
 
-const EditManagersForm = async ({ params }: { params: { id: string } }) => {
-  const supabaseClient = createClient();
+const EditManagersForm = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const { id } = await params;
+  const supabaseClient = await createClient();
   const { data: seats } = await supabaseClient
     .from(DatabaseTable.Seats)
     .select()
@@ -14,7 +19,7 @@ const EditManagersForm = async ({ params }: { params: { id: string } }) => {
   const { data: manager } = await supabaseClient
     .from(DatabaseTable.Managers)
     .select()
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
   return <ManagerFormBuilder seats={seats || []} manager={manager} />;
 };

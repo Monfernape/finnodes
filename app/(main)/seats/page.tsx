@@ -5,7 +5,7 @@ import { DatabaseTable } from "@/utils/supabase/db";
 import { Seat, Manager, ManagerStatus } from "@/entities";
 
 const Seats = async () => {
-  const supabaseClient = createClient();
+  const supabaseClient = await createClient();
   const { data: seats } = await supabaseClient
     .from(DatabaseTable.Seats)
     .select()

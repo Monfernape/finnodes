@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import Image from "next/image";
 import { LoginForm } from "./components/LoginForm";
 
@@ -19,7 +19,9 @@ const LoginPage = () => {
         />
         <h1 className="text-4xl font-bold leading-tight">Welcome to Finnodes</h1>
         <div className="w-full max-w-sm">
-          <LoginForm />
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
     </div>

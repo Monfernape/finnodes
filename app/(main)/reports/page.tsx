@@ -16,12 +16,13 @@ import { ExpenseStats } from "./components/ExpenseStats";
 const Page = async ({
   searchParams,
 }: {
-  searchParams?: {
-    from: string;
-    to: string;
-  };
+  searchParams: Promise<{
+    from?: string;
+    to?: string;
+  }>;
 }) => {
-  const supabaseClient = createClient();
+  const resolvedSearchParams = await searchParams;
+  const supabaseClient = await createClient();
   const currentDate = new Date();
 
   // Get the first day of the current month
@@ -39,9 +40,9 @@ const Page = async ({
   ).toISOString();
 
   // If 'from' and 'to' parameters are provided, update start and end date accordingly
-  if (searchParams && searchParams.from && searchParams.to) {
-    startDate = new Date(searchParams.from).toISOString();
-    endDate = new Date(searchParams.to).toISOString();
+  if (resolvedSearchParams?.from && resolvedSearchParams?.to) {
+    startDate = new Date(resolvedSearchParams.from).toISOString();
+    endDate = new Date(resolvedSearchParams.to).toISOString();
   }
 
   const { data: _expenses = [] } = await supabaseClient
