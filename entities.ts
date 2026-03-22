@@ -9,6 +9,22 @@ export enum ManagerStatus {
   Inactive = "inactive",
 }
 
+export enum LoanBorrowerType {
+  Seat = "seat",
+  Manager = "manager",
+}
+
+export enum LoanInstallmentFrequency {
+  Monthly = "monthly",
+  Quarterly = "quarterly",
+  SemiAnnual = "semi_annual",
+}
+
+export enum LoanStatus {
+  Active = "active",
+  Completed = "completed",
+}
+
 export type Expense = {
   id: number;
   title: string;
@@ -39,4 +55,48 @@ export type ExpenseReport = {
   perSeatExpense: number;
   totalExpense: number;
   managerName: string;
+};
+
+export type Loan = {
+  id: number;
+  borrower_type: LoanBorrowerType;
+  borrower_id: number;
+  principal_amount: number;
+  duration_months: number;
+  installment_frequency: LoanInstallmentFrequency;
+  expected_installment_amount: number;
+  start_date: string;
+  status: LoanStatus;
+  total_paid: number;
+  completed_at: string | null;
+  created_at: string;
+};
+
+export type LoanPayment = {
+  id: number;
+  loan_id: number;
+  amount: number;
+  paid_at: string;
+  note: string | null;
+  created_at: string;
+};
+
+export type LoanScheduleItem = {
+  installmentNumber: number;
+  dueDate: string;
+  amount: number;
+  coveredAmount: number;
+  remainingAmount: number;
+  status: "paid" | "partial" | "pending";
+};
+
+export type LoanRecoveryItem = {
+  loanId: number;
+  borrowerName: string;
+  borrowerType: LoanBorrowerType;
+  amountDueThisMonth: number;
+  paidThisMonth: number;
+  remainingThisTurn: number;
+  nextDueDate: string | null;
+  status: LoanStatus;
 };

@@ -6,6 +6,9 @@ export enum Routes {
   EXPENSES = "/expenses",
   ADD_EXPENSE = "/expenses/add-expense",
   EDIT_EXPENSE = "/expenses/edit-expense",
+  LOANS = "/loans",
+  ADD_LOAN = "/loans/add-loan",
+  EDIT_LOAN = "/loans/edit-loan",
   SEATS = "/seats",
   ADD_SEATS = "/seats/add-seat",
   MANAGERS = "/managers",
@@ -30,6 +33,23 @@ export const useToolbar = () => {
           title: "Expenses",
           addRoute: Routes.ADD_EXPENSE,
         };
+      case pathname === Routes.LOANS:
+        return {
+          title: "Loans",
+          addRoute: Routes.ADD_LOAN,
+        };
+      case pathname === Routes.ADD_LOAN:
+        return {
+          title: "Add Loan",
+          backRoute: Routes.LOANS,
+        };
+      case pathname.startsWith(Routes.EDIT_LOAN): {
+        const id = pathname.substring(Routes.EDIT_LOAN.length + 1);
+        return {
+          title: `Edit Loan ${id}`,
+          backRoute: Routes.LOANS,
+        };
+      }
       case pathname === Routes.ADD_EXPENSE:
         return {
           title: "Add Expense",

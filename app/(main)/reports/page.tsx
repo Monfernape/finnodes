@@ -8,10 +8,14 @@ import {
   ExpenseType,
   ExpenseReport,
   ManagerStatus,
+  Loan,
+  LoanPayment,
 } from "@/entities";
 import { ExpenseReportTable } from "./components/ExpenseReportTable";
 import { DateRangeFilter } from "../../../components/shared/DateRangeFilter";
 import { ExpenseStats } from "./components/ExpenseStats";
+import { LoanRecoveryReport } from "./components/LoanRecoveryReport";
+import { getLoanRecoveryItems } from "@/lib/loan";
 
 const Page = async ({
   searchParams,
@@ -63,10 +67,37 @@ const Page = async ({
     .select()
     .neq("status", ManagerStatus.Inactive)
     .returns<Manager[]>();
+  const { data: _loans } = await supabaseClient
+    .from(DatabaseTable.Loans)
+    .select()
+    .returns<Loan[]>();
+  const { data: _loanPayments } = await supabaseClient
+    .from(DatabaseTable.LoanPayments)
+    .select()
+    .returns<LoanPayment[]>();
 
   const expenses = _expenses || [];
   const seats = _seats || [];
   const managers = _managers || [];
+  const loans = _loans || [];
+  const loanPayments = _loanPayments || [];
+  const loanPaymentsByLoanId = loanPayments.reduce(
+    (acc, payment) => {
+      if (!acc[payment.loan_id]) {
+        acc[payment.loan_id] = [];
+      }
+      acc[payment.loan_id].push(payment);
+      return acc;
+    },
+    {} as Record<number, LoanPayment[]>
+  );
+  const loanRecoveryItems = getLoanRecoveryItems(
+    loans,
+    loanPaymentsByLoanId,
+    seats,
+    managers,
+    resolvedSearchParams?.from ? new Date(resolvedSearchParams.from) : new Date()
+  );
 
   const expenseGroups = expenses.reduce((acc, expense) => {
     if (!acc[expense.type]) {
@@ -111,6 +142,9 @@ const Page = async ({
         expenses={expenses}
         expenseReport={managersWithExpenseShare}
       />
+      <div className="pt-4">
+        <LoanRecoveryReport items={loanRecoveryItems} />
+      </div>
     </div>
   );
 };
