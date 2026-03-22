@@ -4,4 +4,6 @@ export enum DatabaseTable {
   Managers = "managers",
   Loans = "loans",
   LoanPayments = "loan_payments",
+  SalarySheets = "salary_sheets",
+  SalarySheetItems = "salary_sheet_items",
 }

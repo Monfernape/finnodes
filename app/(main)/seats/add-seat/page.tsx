@@ -1,9 +1,9 @@
 import React from 'react'
-import { AddSeat } from '../components/AddSeat'
+import { SeatFormBuilder } from '../components/AddSeat'
 
 const AddSeatPage = () => {
   return (
-    <AddSeat />
+    <SeatFormBuilder />
   )
 }
 

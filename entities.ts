@@ -9,6 +9,11 @@ export enum ManagerStatus {
   Inactive = "inactive",
 }
 
+export enum SeatStatus {
+  Active = "active",
+  Inactive = "inactive",
+}
+
 export enum LoanBorrowerType {
   Seat = "seat",
   Manager = "manager",
@@ -37,6 +42,41 @@ export type Expense = {
 export type Seat = {
   id: number;
   name: string;
+  status: SeatStatus;
+  bank_linked: boolean;
+  cnic: string | null;
+  account_number: string | null;
+  designation: string | null;
+  date_of_joining: string | null;
+  gross_salary: number;
+  net_salary: number;
+  created_at: string;
+};
+
+export type SalarySheet = {
+  id: number;
+  month: number;
+  year: number;
+  issued_on: string;
+  recipient_name: string;
+  recipient_bank: string;
+  salutation: string;
+  letter_body: string;
+  created_at: string;
+};
+
+export type SalarySheetItem = {
+  id: number;
+  salary_sheet_id: number;
+  seat_id: number | null;
+  name: string;
+  cnic: string;
+  account_number: string;
+  designation: string;
+  date_of_joining: string;
+  gross_salary: number;
+  net_salary: number;
+  sort_order: number;
   created_at: string;
 };
 

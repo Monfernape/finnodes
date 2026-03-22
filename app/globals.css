@@ -74,3 +74,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+@page {
+  size: A4;
+  margin: 16mm;
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+}

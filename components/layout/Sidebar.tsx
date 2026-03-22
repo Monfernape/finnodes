@@ -10,7 +10,7 @@ import {
 } from "@/components/icons";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { HandCoinsIcon, LogOutIcon } from "lucide-react";
+import { HandCoinsIcon, LogOutIcon, WalletCardsIcon } from "lucide-react";
 
 type SidebarProps = {
   onNavigate?: () => void;
@@ -36,6 +36,11 @@ const SIDEBAR_ITEMS = [
     title: "Managers",
     icon: UsersIcon,
     href: "/managers",
+  },
+  {
+    title: "Salaries",
+    icon: WalletCardsIcon,
+    href: "/salaries",
   },
   {
     title: "Reports",

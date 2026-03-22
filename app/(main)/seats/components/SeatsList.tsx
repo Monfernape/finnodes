@@ -8,7 +8,6 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Manager, Seat } from "@/entities";
-import { formatDate } from "@/lib/date";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,8 +31,8 @@ export const SeatsList = ({ seats, managers }: Props) => {
   const { toast } = useToast();
   const supabaseClient = createClient();
 
-  const handleEditSeat = (expenseId: number) => {
-    router.push(`/expenses/${expenseId}/edit`);
+  const handleEditSeat = (seatId: number) => {
+    router.push(`/seats/edit-seat/${seatId}`);
   };
 
   const handleDeleteSeat = async (seatId: number) => {
@@ -66,6 +65,10 @@ export const SeatsList = ({ seats, managers }: Props) => {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Manager</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Bank linked</TableHead>
+              <TableHead>Gross</TableHead>
+              <TableHead>Net</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -76,6 +79,10 @@ export const SeatsList = ({ seats, managers }: Props) => {
                 <TableCell>
                   {managers.find((m) => m.seats.includes(seat.id))?.name || "-"}
                 </TableCell>
+                <TableCell className="capitalize">{seat.status}</TableCell>
+                <TableCell>{seat.bank_linked ? "Yes" : "No"}</TableCell>
+                <TableCell>{seat.gross_salary}</TableCell>
+                <TableCell>{seat.net_salary}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

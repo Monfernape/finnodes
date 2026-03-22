@@ -11,9 +11,12 @@ export enum Routes {
   EDIT_LOAN = "/loans/edit-loan",
   SEATS = "/seats",
   ADD_SEATS = "/seats/add-seat",
+  EDIT_SEAT = "/seats/edit-seat",
   MANAGERS = "/managers",
   ADD_MANAGER = "/managers/add-manager",
   EDIT_MANAGER = "/managers/edit-manager",
+  SALARIES = "/salaries",
+  ADD_SALARY_SHEET = "/salaries/add-sheet",
   REPORTS = "/reports",
   NOT_FOUND = "/_not-found",
 }
@@ -68,6 +71,17 @@ export const useToolbar = () => {
           title: "Seats",
           addRoute: Routes.ADD_SEATS,
         };
+      case pathname === Routes.ADD_SEATS:
+        return {
+          title: "Add Seat",
+          backRoute: Routes.SEATS,
+        };
+      case pathname.startsWith(Routes.EDIT_SEAT): {
+        return {
+          title: "Edit Seat",
+          backRoute: Routes.SEATS,
+        };
+      }
       case pathname === Routes.MANAGERS:
         return {
           title: "Managers",
@@ -80,10 +94,32 @@ export const useToolbar = () => {
         };
       case pathname.startsWith(Routes.EDIT_MANAGER): {
         // Extract the 'id' parameter from the pathname
-        const id = pathname.substring(Routes.EDIT_MANAGER.length + 1);
         return {
           title: `Edit Manager`,
-          backRoute: Routes.EXPENSES,
+          backRoute: Routes.MANAGERS,
+        };
+      }
+      case pathname === Routes.SALARIES:
+        return {
+          title: "Salaries",
+          addRoute: Routes.ADD_SALARY_SHEET,
+        };
+      case pathname === Routes.ADD_SALARY_SHEET:
+        return {
+          title: "Create Salary Sheet",
+          backRoute: Routes.SALARIES,
+        };
+      case pathname.startsWith(`${Routes.SALARIES}/`) &&
+        pathname.endsWith("/preview"): {
+        return {
+          title: "Salary Preview",
+          backRoute: Routes.SALARIES,
+        };
+      }
+      case pathname.startsWith(`${Routes.SALARIES}/`): {
+        return {
+          title: "Salary Sheet",
+          backRoute: Routes.SALARIES,
         };
       }
       case pathname === Routes.REPORTS:
