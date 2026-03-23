@@ -43,9 +43,6 @@ export const SalarySheetPreview = ({ sheet, items }: Props) => {
               </th>
               <th className="border border-black px-3 py-2 font-bold">D.O.J</th>
               <th className="border border-black px-3 py-2 font-bold">
-                GROSS SALARY
-              </th>
-              <th className="border border-black px-3 py-2 font-bold">
                 NET SALARY
               </th>
             </tr>
@@ -70,9 +67,6 @@ export const SalarySheetPreview = ({ sheet, items }: Props) => {
                 </td>
                 <td className="border border-black px-3 py-2 align-bottom">
                   {formatJoinDate(item.date_of_joining)}
-                </td>
-                <td className="border border-black px-3 py-2 text-right align-bottom">
-                  {numberFormatter.format(item.gross_salary)}
                 </td>
                 <td className="border border-black px-3 py-2 text-right align-bottom">
                   {numberFormatter.format(item.net_salary)}
