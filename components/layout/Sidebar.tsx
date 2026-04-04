@@ -1,53 +1,19 @@
 "use client";
-import React, { useMemo, useState } from "react";
+
 import Link from "next/link";
 import Image from "next/image";
-import {
-  UsersIcon,
-  SeatIcon,
-  ReportIcon,
-  ExpenseIcon,
-} from "@/components/icons";
+import React, { useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { LogOutIcon } from "lucide-react";
+
 import { createClient } from "@/utils/supabase/client";
-import { HandCoinsIcon, LogOutIcon, WalletCardsIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+import { NAVIGATION_ITEMS } from "./navigation";
 
 type SidebarProps = {
   onNavigate?: () => void;
 };
-
-const SIDEBAR_ITEMS = [
-  {
-    title: "Expenses",
-    icon: ExpenseIcon,
-    href: "/expenses",
-  },
-  {
-    title: "Seats",
-    icon: SeatIcon,
-    href: "/seats",
-  },
-  {
-    title: "Loans",
-    icon: HandCoinsIcon,
-    href: "/loans",
-  },
-  {
-    title: "Managers",
-    icon: UsersIcon,
-    href: "/managers",
-  },
-  {
-    title: "Salaries",
-    icon: WalletCardsIcon,
-    href: "/salaries",
-  },
-  {
-    title: "Reports",
-    icon: ReportIcon,
-    href: "/reports",
-  },
-];
 
 export const Sidebar = ({ onNavigate }: SidebarProps) => {
   const pathname = usePathname();
@@ -63,24 +29,43 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
 
   return (
     <div className="flex h-full max-h-screen flex-col">
-      <div className="flex items-center justify-center border-b px-6 py-4">
-        <Image
-          src={`/images/devnodes.png`}
-          alt="DevNodes Icon"
-          width={150}
-          height={48}
-          priority
-        />
+      <div className="flex h-20 items-center border-b px-5">
+        <Link
+          href="/expenses"
+          onClick={onNavigate}
+          className="flex min-w-0 items-center gap-3 rounded-2xl"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <Image
+              src="/icons/icon-192.png"
+              alt="FinNodes logo"
+              width={40}
+              height={40}
+              priority
+              className="h-10 w-10 object-contain"
+            />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[1.75rem] font-semibold leading-none tracking-tight text-gray-950">
+              FinNodes
+            </p>
+            <p className="truncate pt-1 text-sm leading-none text-gray-500">
+              Finance portal
+            </p>
+          </div>
+        </Link>
       </div>
       <div className="flex-1 overflow-auto py-2">
         <nav className="grid items-start gap-2 px-4 text-sm font-medium">
-          {SIDEBAR_ITEMS.map((item, index) => (
+          {NAVIGATION_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50 ${pathname === item.href ? "bg-gray-100 dark:bg-gray-800" : ""
-                }`}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
+                pathname === item.href && "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
+              )}
             >
               <item.icon className="h-4 w-4" />
               {item.title}

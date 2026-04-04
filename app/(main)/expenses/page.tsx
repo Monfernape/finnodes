@@ -40,24 +40,24 @@ const Expenses = async ({
     endDate = new Date(resolvedSearchParams.to).toISOString();
   }
 
-  const { data } = await supabaseClient
-    .from(DatabaseTable.Expenses)
-    .select()
-    .order("created_at", { ascending: false })
-    .gt("created_at", startDate)
-    .lt("created_at", endDate)
-    .returns<Expense[]>();
-
-  const { data: _managers } = await supabaseClient
-    .from(DatabaseTable.Managers)
-    .select()
-    .neq("status", ManagerStatus.Inactive)
-    .returns<Manager[]>();
-
-  const { data: _seats } = await supabaseClient
-    .from(DatabaseTable.Seats)
-    .select()
-    .returns<Seat[]>();
+  const [{ data }, { data: _managers }, { data: _seats }] = await Promise.all([
+    supabaseClient
+      .from(DatabaseTable.Expenses)
+      .select()
+      .order("created_at", { ascending: false })
+      .gt("created_at", startDate)
+      .lt("created_at", endDate)
+      .returns<Expense[]>(),
+    supabaseClient
+      .from(DatabaseTable.Managers)
+      .select()
+      .neq("status", ManagerStatus.Inactive)
+      .returns<Manager[]>(),
+    supabaseClient
+      .from(DatabaseTable.Seats)
+      .select()
+      .returns<Seat[]>(),
+  ]);
 
   let expenses = data || [];
   const managers = _managers || [];

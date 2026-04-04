@@ -10,24 +10,26 @@ export const PageTitle = () => {
   const { title, backRoute, addRoute } = toolbarMetaData || {};
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-4 sm:px-6 dark:border-gray-800">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6 dark:border-gray-800">
+      <div className="flex min-w-0 items-center gap-3">
         <MobileSidebar />
         {backRoute && (
           <Link
             href={backRoute}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:hover:bg-gray-800 dark:focus:ring-gray-300"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:hover:bg-gray-800 dark:focus:ring-gray-300"
           >
             <ArrowLeftIcon className="h-5 w-5" />
             <span className="sr-only">Back</span>
           </Link>
         )}
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="truncate text-[1.75rem] font-semibold leading-none tracking-tight">
+          {title}
+        </h1>
       </div>
       {addRoute && (
         <Link
           href={addRoute}
-          className="inline-flex h-9 items-center justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus:ring-gray-300"
+          className="inline-flex h-11 items-center justify-center rounded-full bg-gray-900 px-5 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus:ring-gray-300"
         >
           Add New
         </Link>

@@ -2,7 +2,12 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/access-denied"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth/callback",
+  "/access-denied",
+  "/manifest.webmanifest",
+];
 
 const normalizeEmail = (email: string | null) => email?.trim().toLowerCase() ?? null;
 

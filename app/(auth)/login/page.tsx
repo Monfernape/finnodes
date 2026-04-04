@@ -17,7 +17,7 @@ const LoginPage = () => {
           height={72}
           priority
         />
-        <h1 className="text-4xl font-bold leading-tight">Welcome to Finnodes</h1>
+        <h1 className="text-4xl font-bold leading-tight">Welcome to FinNodes</h1>
         <div className="w-full max-w-sm">
           <Suspense fallback={null}>
             <LoginForm />

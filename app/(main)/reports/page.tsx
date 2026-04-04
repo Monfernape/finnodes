@@ -1,4 +1,5 @@
 import React from "react";
+import dynamic from "next/dynamic";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import {
@@ -13,9 +14,25 @@ import {
 } from "@/entities";
 import { ExpenseReportTable } from "./components/ExpenseReportTable";
 import { DateRangeFilter } from "../../../components/shared/DateRangeFilter";
-import { ExpenseStats } from "./components/ExpenseStats";
 import { LoanRecoveryReport } from "./components/LoanRecoveryReport";
 import { getLoanRecoveryItems } from "@/lib/loan";
+
+const ExpenseStats = dynamic(
+  () =>
+    import("./components/ExpenseStats").then((module) => module.ExpenseStats),
+  {
+    loading: () => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-52 animate-pulse rounded-xl border bg-muted/40"
+          />
+        ))}
+      </div>
+    ),
+  }
+);
 
 const Page = async ({
   searchParams,
@@ -49,32 +66,38 @@ const Page = async ({
     endDate = new Date(resolvedSearchParams.to).toISOString();
   }
 
-  const { data: _expenses = [] } = await supabaseClient
-    .from(DatabaseTable.Expenses)
-    .select()
-    .order("created_at", { ascending: false })
-    .gt("created_at", startDate)
-    .lt("created_at", endDate)
-    .returns<Expense[]>();
-
-  const { data: _seats } = await supabaseClient
-    .from(DatabaseTable.Seats)
-    .select()
-    .returns<Seat[]>();
-
-  const { data: _managers } = await supabaseClient
-    .from(DatabaseTable.Managers)
-    .select()
-    .neq("status", ManagerStatus.Inactive)
-    .returns<Manager[]>();
-  const { data: _loans } = await supabaseClient
-    .from(DatabaseTable.Loans)
-    .select()
-    .returns<Loan[]>();
-  const { data: _loanPayments } = await supabaseClient
-    .from(DatabaseTable.LoanPayments)
-    .select()
-    .returns<LoanPayment[]>();
+  const [
+    { data: _expenses = [] },
+    { data: _seats },
+    { data: _managers },
+    { data: _loans },
+    { data: _loanPayments },
+  ] = await Promise.all([
+    supabaseClient
+      .from(DatabaseTable.Expenses)
+      .select()
+      .order("created_at", { ascending: false })
+      .gt("created_at", startDate)
+      .lt("created_at", endDate)
+      .returns<Expense[]>(),
+    supabaseClient
+      .from(DatabaseTable.Seats)
+      .select()
+      .returns<Seat[]>(),
+    supabaseClient
+      .from(DatabaseTable.Managers)
+      .select()
+      .neq("status", ManagerStatus.Inactive)
+      .returns<Manager[]>(),
+    supabaseClient
+      .from(DatabaseTable.Loans)
+      .select()
+      .returns<Loan[]>(),
+    supabaseClient
+      .from(DatabaseTable.LoanPayments)
+      .select()
+      .returns<LoanPayment[]>(),
+  ]);
 
   const expenses = _expenses || [];
   const seats = _seats || [];
