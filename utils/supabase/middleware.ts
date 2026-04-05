@@ -1,6 +1,11 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  ALLOWED_EMAIL_COOKIE,
+  ALLOWED_EMAIL_COOKIE_MAX_AGE,
+  isEmailAllowListed,
+  normalizeEmail,
+} from "@/utils/auth/allowlist";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -8,8 +13,6 @@ const PUBLIC_PATHS = [
   "/access-denied",
   "/manifest.webmanifest",
 ];
-
-const normalizeEmail = (email: string | null) => email?.trim().toLowerCase() ?? null;
 
 const getPublicRedirect = (request: NextRequest, pathname: string) => {
   const url = request.nextUrl.clone();
@@ -22,38 +25,6 @@ const copyCookies = (from: NextResponse, to: NextResponse) => {
   from.cookies.getAll().forEach((cookie) => {
     to.cookies.set(cookie);
   });
-};
-
-const getEnvAllowList = () =>
-  (process.env.ALLOWED_EMAILS ?? "")
-    .split(",")
-    .map((email) => normalizeEmail(email))
-    .filter(Boolean);
-
-const isEmailAllowListed = async (
-  supabase: SupabaseClient,
-  email: string | null,
-): Promise<boolean> => {
-  const normalizedEmail = normalizeEmail(email);
-  if (!normalizedEmail) return false;
-
-  const envAllowList = getEnvAllowList();
-  if (envAllowList.includes(normalizedEmail)) {
-    return true;
-  }
-
-  const { data, error } = await supabase
-    .from("allowed_emails")
-    .select("email")
-    .eq("email", normalizedEmail)
-    .maybeSingle();
-
-  if (error) {
-    console.warn("Allowlist lookup failed, falling back to env list", error);
-    return false;
-  }
-
-  return Boolean(data);
 };
 
 export const updateSession = async (request: NextRequest) => {
@@ -122,10 +93,13 @@ export const updateSession = async (request: NextRequest) => {
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const user = session?.user ?? null;
 
     if (!user && !isPublicRoute) {
+      response.cookies.delete(ALLOWED_EMAIL_COOKIE);
       const redirectUrl = getPublicRedirect(request, "/login");
       const redirectResponse = NextResponse.redirect(redirectUrl);
       copyCookies(response, redirectResponse);
@@ -133,10 +107,18 @@ export const updateSession = async (request: NextRequest) => {
     }
 
     if (user) {
-      const isAllowed = await isEmailAllowListed(supabase, user.email ?? null);
+      const normalizedEmail = normalizeEmail(user.email ?? null);
+      const cachedAllowedEmail = normalizeEmail(
+        request.cookies.get(ALLOWED_EMAIL_COOKIE)?.value ?? null,
+      );
+      const isAllowed =
+        normalizedEmail !== null && cachedAllowedEmail === normalizedEmail
+          ? true
+          : await isEmailAllowListed(supabase, normalizedEmail);
 
       if (!isAllowed) {
         await supabase.auth.signOut();
+        response.cookies.delete(ALLOWED_EMAIL_COOKIE);
         const redirectUrl = request.nextUrl.clone();
         redirectUrl.pathname = "/access-denied";
         redirectUrl.search = "";
@@ -144,6 +126,17 @@ export const updateSession = async (request: NextRequest) => {
         const redirectResponse = NextResponse.redirect(redirectUrl);
         copyCookies(response, redirectResponse);
         return redirectResponse;
+      }
+
+      if (normalizedEmail && cachedAllowedEmail !== normalizedEmail) {
+        response.cookies.set({
+          name: ALLOWED_EMAIL_COOKIE,
+          value: normalizedEmail,
+          httpOnly: true,
+          maxAge: ALLOWED_EMAIL_COOKIE_MAX_AGE,
+          path: "/",
+          sameSite: "lax",
+        });
       }
     }
 

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
+import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
 
 import { MOBILE_MORE_NAV, MOBILE_PRIMARY_NAV, NAVIGATION_ITEMS, SIGN_OUT_NAV } from "./navigation";
 
@@ -25,6 +26,8 @@ export function MobileBottomNav() {
   const supabase = useMemo(() => createClient(), []);
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+
+  useRoutePrefetch(NAVIGATION_ITEMS.map((item) => item.href));
 
   const isMoreActive = NAVIGATION_ITEMS.some(
     (item) =>
@@ -49,6 +52,7 @@ export function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               className={cn(
                 "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[0.7rem] font-medium text-gray-500 transition-colors",
                 isActive && "bg-gray-900 text-white"
@@ -94,6 +98,7 @@ export function MobileBottomNav() {
                   <DialogClose asChild key={item.href}>
                     <Link
                       href={item.href}
+                      prefetch
                       className={cn(
                         "flex items-center gap-3 rounded-2xl px-4 py-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-950",
                         isActive && "bg-gray-100 text-gray-950"

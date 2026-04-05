@@ -8,6 +8,7 @@ import { LogOutIcon } from "lucide-react";
 
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
+import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
 
 import { NAVIGATION_ITEMS } from "./navigation";
 
@@ -21,6 +22,8 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
   const supabase = useMemo(() => createClient(), []);
   const [signingOut, setSigningOut] = useState(false);
 
+  useRoutePrefetch(["/expenses", ...NAVIGATION_ITEMS.map((item) => item.href)]);
+
   const handleSignOut = async () => {
     setSigningOut(true);
     await supabase.auth.signOut();
@@ -32,6 +35,7 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
       <div className="flex h-20 items-center border-b px-5">
         <Link
           href="/expenses"
+          prefetch
           onClick={onNavigate}
           className="flex min-w-0 items-center gap-3 rounded-2xl"
         >
@@ -61,6 +65,7 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
