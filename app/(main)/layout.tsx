@@ -8,12 +8,12 @@ export default function MainLayout({
   return (
     <div className="min-h-screen bg-background">
       <div className="flex min-h-screen w-full">
-        <div className="hidden border-r lg:block">
+        <div className="hidden shrink-0 border-r lg:block lg:w-72">
           <Sidebar />
         </div>
-        <div className="flex min-h-screen w-full flex-col">
+        <div className="flex min-h-screen min-w-0 w-full flex-col">
           <PageTitle />
-          <main className="flex flex-1 flex-col gap-4 px-4 pb-28 pt-4 md:gap-8 md:px-6 md:pb-6 md:pt-6">
+          <main className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-28 pt-4 md:gap-8 md:px-6 md:pb-6 md:pt-6">
             {children}
           </main>
         </div>

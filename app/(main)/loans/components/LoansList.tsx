@@ -263,7 +263,7 @@ export const LoansList = ({ loans, payments, seats, managers }: Props) => {
   return (
     <>
       <div className="py-4">
-        <Table>
+        <Table className="min-w-[1100px]">
           <TableHeader>
             <TableRow>
               <TableHead>Borrower</TableHead>

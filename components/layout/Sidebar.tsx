@@ -31,7 +31,7 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
   };
 
   return (
-    <div className="flex h-full max-h-screen flex-col">
+    <aside className="sticky top-0 flex h-screen flex-col bg-background">
       <div className="flex h-20 items-center border-b px-5">
         <Link
           href="/expenses"
@@ -91,6 +91,6 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
           {signingOut ? "Signing out..." : "Sign out"}
         </button>
       </div>
-    </div>
+    </aside>
   );
 };
