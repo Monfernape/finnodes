@@ -25,3 +25,9 @@
   sidebar items and mobile bottom nav items intentionally use both `prefetch` on `Link` and `useRoutePrefetch(...)`.
 - If changing navigation structure, keep the current “primary mobile tabs + More sheet” pattern unless explicitly redesigning it.
 - If changing cached static assets used by the PWA or service worker, verify they are included in `STATIC_ASSETS` and that the cache version is bumped.
+
+## Type Safety
+
+- Do not use type assertions such as `as`, angle-bracket assertions, or assertion-based shortcuts to silence TypeScript.
+- Fix the type at the source when possible.
+- If a value is genuinely unknown at runtime, narrow it with a type guard before use.
