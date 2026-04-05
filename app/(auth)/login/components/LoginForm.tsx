@@ -1,7 +1,7 @@
 'use client'
 import React, { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Github } from "lucide-react";
+import { GithubIcon } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useSearchParams } from "next/navigation";
 
@@ -38,7 +38,7 @@ export const LoginForm = () => {
         onClick={handleGitHubLogin}
         disabled={loading}
       >
-        <Github className="mr-2 h-4 w-4" />
+        <GithubIcon className="mr-2 h-4 w-4" />
         {loading ? "Redirecting..." : "Sign in with GitHub"}
       </Button>
     </div>

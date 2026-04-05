@@ -1,10 +1,10 @@
 "use client";
 import { useToolbar } from "@/hooks/useToolbar";
 import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import Link from "next/link";
 import React from "react";
 import { ArrowLeftIcon } from "../icons";
-import { MobileSidebar } from "./MobileSidebar";
 
 export const PageTitle = () => {
   const toolbarMetaData = useToolbar();
@@ -15,7 +15,7 @@ export const PageTitle = () => {
   return (
     <header className="sticky top-0 z-30 flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6 dark:border-gray-800">
       <div className="flex min-w-0 items-center gap-3">
-        <MobileSidebar />
+        <SidebarTrigger className="h-11 w-11 rounded-full border-gray-200 bg-white/90 shadow-sm backdrop-blur hover:bg-white lg:hidden" />
         {backRoute && (
           <Link
             href={backRoute}

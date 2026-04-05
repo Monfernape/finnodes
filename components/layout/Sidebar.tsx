@@ -4,11 +4,21 @@ import Link from "next/link";
 import Image from "next/image";
 import React, { useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOutIcon } from "lucide-react";
+import { LogOutIcon, X } from "lucide-react";
 
 import { createClient } from "@/utils/supabase/client";
-import { cn } from "@/lib/utils";
 import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
+import { Button } from "@/components/ui/button";
+import {
+  Sidebar as UISidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
 
 import { NAVIGATION_ITEMS } from "./navigation";
 
@@ -21,23 +31,35 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [signingOut, setSigningOut] = useState(false);
+  const { isMobile, setOpenMobile } = useSidebar();
 
   useRoutePrefetch(["/expenses", ...NAVIGATION_ITEMS.map((item) => item.href)]);
+
+  const handleNavigate = () => {
+    onNavigate?.();
+
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   const handleSignOut = async () => {
     setSigningOut(true);
     await supabase.auth.signOut();
+    if (isMobile) {
+      setOpenMobile(false);
+    }
     router.push("/login");
   };
 
   return (
-    <aside className="sticky top-0 flex h-screen flex-col bg-background">
-      <div className="flex h-20 items-center border-b px-5">
+    <UISidebar>
+      <SidebarHeader className="relative flex items-start px-3 pb-2 pt-4">
         <Link
           href="/expenses"
           prefetch
-          onClick={onNavigate}
-          className="flex min-w-0 items-center gap-3 rounded-2xl"
+          onClick={handleNavigate}
+          className="flex min-w-0 items-center gap-3 rounded-2xl p-2"
         >
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <Image
@@ -58,27 +80,34 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
             </p>
           </div>
         </Link>
-      </div>
-      <div className="flex-1 overflow-auto py-2">
-        <nav className="grid items-start gap-2 px-4 text-sm font-medium">
+        {isMobile && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpenMobile(false)}
+            className="absolute right-3 top-3 h-10 w-10 rounded-full bg-white/90 shadow-sm backdrop-blur"
+            aria-label="Close navigation"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
+      </SidebarHeader>
+      <SidebarContent className="py-2">
+        <SidebarMenu className="px-4">
           {NAVIGATION_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
-                pathname === item.href && "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.title}
-            </Link>
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton asChild isActive={pathname === item.href}>
+                <Link href={item.href} prefetch onClick={handleNavigate}>
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           ))}
-        </nav>
-      </div>
-      <div className="border-t px-4 py-3">
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter className="px-4 py-3">
         <button
           type="button"
           onClick={handleSignOut}
@@ -90,7 +119,7 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
           <LogOutIcon className="h-4 w-4" />
           {signingOut ? "Signing out..." : "Sign out"}
         </button>
-      </div>
-    </aside>
+      </SidebarFooter>
+    </UISidebar>
   );
 };
