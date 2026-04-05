@@ -4,9 +4,9 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "FinNodes",
     short_name: "FinNodes",
-    id: "/login",
+    id: "/",
     description: "Finance portal for DevNodes to manage company expenses",
-    start_url: "/login",
+    start_url: "/",
     scope: "/",
     display: "standalone",
     background_color: "#ffffff",

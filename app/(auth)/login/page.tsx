@@ -1,8 +1,20 @@
 import React, { Suspense } from "react";
 import Image from "next/image";
-import { LoginForm } from "./components/LoginForm";
+import { redirect } from "next/navigation";
 
-const LoginPage = () => {
+import { LoginForm } from "./components/LoginForm";
+import { createClient } from "@/utils/supabase/server";
+
+const LoginPage = async () => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/expenses");
+  }
+
   return (
     <div className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-gradient-to-br from-white via-slate-50 to-slate-100 px-4 py-12 sm:py-16">
       <div className="absolute -left-16 -top-16 h-56 w-56 rounded-full bg-slate-200/35 blur-3xl" />
