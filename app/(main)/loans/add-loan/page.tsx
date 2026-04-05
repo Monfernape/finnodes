@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { LoanFormBuilder } from "../components/LoanFormBuilder";
 import { Manager, ManagerStatus, Seat } from "@/entities";
+
+export const metadata: Metadata = {
+  title: "Add Loan",
+};
 
 const AddLoanPage = async () => {
   const supabaseClient = await createClient();

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import React from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@/utils/supabase/server";
@@ -16,6 +17,10 @@ import { ExpenseReportTable } from "./components/ExpenseReportTable";
 import { DateRangeFilter } from "../../../components/shared/DateRangeFilter";
 import { LoanRecoveryReport } from "./components/LoanRecoveryReport";
 import { getLoanRecoveryItems } from "@/lib/loan";
+
+export const metadata: Metadata = {
+  title: "Reports",
+};
 
 const ExpenseStats = dynamic(
   () =>

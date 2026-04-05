@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import React from "react";
 import { SeatFormBuilder } from "../../components/AddSeat";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
+
+export const metadata: Metadata = {
+  title: "Edit Seat",
+};
 
 const EditSeatPage = async ({
   params,

@@ -12,7 +12,10 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "FinNodes",
+  title: {
+    default: "FinNodes",
+    template: "%s | FinNodes",
+  },
   description: "Finance portal for DevNodes to manage company expenses",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
@@ -21,6 +24,8 @@ export const metadata: Metadata = {
     title: "FinNodes",
   },
   icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
     apple: "/icons/apple-touch-icon.png",
   },
 };

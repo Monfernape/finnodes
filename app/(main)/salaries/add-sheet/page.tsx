@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { Seat, SeatStatus } from "@/entities";
 import { SalarySheetCreate } from "../components/SalarySheetCreate";
+
+export const metadata: Metadata = {
+  title: "Create Salary Sheet",
+};
 
 const AddSalarySheetPage = async () => {
   const supabaseClient = await createClient();

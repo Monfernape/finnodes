@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import React from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
@@ -6,6 +7,10 @@ import { SalarySheet, SalarySheetItem } from "@/entities";
 import { SalarySheetPreview } from "../../components/SalarySheetPreview";
 import { PrintButton } from "../../components/PrintButton";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = {
+  title: "Salary Preview",
+};
 
 const SalarySheetPreviewPage = async ({
   params,

@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { SalarySheet, SalarySheetItem } from "@/entities";
 import { SalarySheetEditor } from "../components/SalarySheetEditor";
+
+export const metadata: Metadata = {
+  title: "Salary Sheet",
+};
 
 const SalarySheetPage = async ({
   params,

@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import React, { Suspense } from "react";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { LoginForm } from "./components/LoginForm";
 import { createClient } from "@/utils/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Login",
+};
 
 const LoginPage = async () => {
   const supabase = await createClient();
