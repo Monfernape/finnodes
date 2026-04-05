@@ -28,10 +28,10 @@ const LoginPage = async () => {
 
       <div className="relative z-10 flex w-full max-w-xl flex-col items-center gap-6 text-center text-slate-900">
         <Image
-          src="/images/devnodes.png"
-          alt="DevNodes"
-          width={200}
-          height={72}
+          src="/icons/apple-touch-icon.png"
+          alt="FinNodes"
+          width={120}
+          height={120}
           priority
         />
         <h1 className="text-4xl font-bold leading-tight">Welcome to FinNodes</h1>
