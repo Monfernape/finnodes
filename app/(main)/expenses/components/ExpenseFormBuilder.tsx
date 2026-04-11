@@ -134,7 +134,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
       if (error) {
         throw error;
       }
-      router.push(Routes.EXPENSES);
+      router.push(Routes.HOME);
       toast({
         title: "Expense saved",
         description: `Expense "${data?.[0].title}" has been saved.`,
@@ -171,7 +171,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
         title: "Expense updated",
         description: `Expense "${data?.[0].title}" has been updated.`,
       });
-      router.push(Routes.EXPENSES);
+      router.push(Routes.HOME);
     } catch (error) {
       toast({
         title: "Error",

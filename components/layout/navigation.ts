@@ -18,7 +18,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   {
     title: "Expenses",
     icon: ExpenseIcon,
-    href: "/expenses",
+    href: "/",
   },
   {
     title: "Seats",

@@ -20,6 +20,9 @@ import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
 
 import { MOBILE_MORE_NAV, MOBILE_PRIMARY_NAV, NAVIGATION_ITEMS, SIGN_OUT_NAV } from "./navigation";
 
+const isNavItemActive = (pathname: string, href: string) =>
+  href === "/" ? pathname === "/" || pathname === "/expenses" : pathname === href;
+
 export function MobileBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -32,7 +35,7 @@ export function MobileBottomNav() {
   const isMoreActive = NAVIGATION_ITEMS.some(
     (item) =>
       !MOBILE_PRIMARY_NAV.find((primaryItem) => primaryItem.href === item.href) &&
-      pathname === item.href
+      isNavItemActive(pathname, item.href)
   );
 
   const handleSignOut = async () => {
@@ -46,7 +49,7 @@ export function MobileBottomNav() {
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden">
       <nav className="pointer-events-auto mx-auto flex max-w-md items-center justify-between rounded-[1.5rem] border border-gray-200/80 bg-white/95 px-2 py-2 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur">
         {MOBILE_PRIMARY_NAV.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = isNavItemActive(pathname, item.href);
 
           return (
             <Link
@@ -92,7 +95,7 @@ export function MobileBottomNav() {
                     (primaryItem) => primaryItem.href === item.href
                   )
               ).map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = isNavItemActive(pathname, item.href);
 
                 return (
                   <DialogClose asChild key={item.href}>

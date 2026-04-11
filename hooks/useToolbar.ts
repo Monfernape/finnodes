@@ -21,17 +21,16 @@ export enum Routes {
   NOT_FOUND = "/_not-found",
 }
 
+const isExpensesRoute = (pathname: string) =>
+  pathname === Routes.HOME || pathname === Routes.EXPENSES;
+
 export const useToolbar = () => {
   // Get current route from Next.js
   const pathname = usePathname();
 
   const toolbarMetaData = useMemo(() => {
     switch (true) {
-      case pathname === Routes.HOME:
-        return {
-          title: "Home",
-        };
-      case pathname === Routes.EXPENSES:
+      case isExpensesRoute(pathname):
         return {
           title: "Expenses",
           addRoute: Routes.ADD_EXPENSE,
@@ -56,14 +55,14 @@ export const useToolbar = () => {
       case pathname === Routes.ADD_EXPENSE:
         return {
           title: "Add Expense",
-          backRoute: Routes.EXPENSES,
+          backRoute: Routes.HOME,
         };
       case pathname.startsWith(Routes.EDIT_EXPENSE): {
         // Extract the 'id' parameter from the pathname
         const id = pathname.substring(Routes.EDIT_EXPENSE.length + 1);
         return {
           title: `Edit Expense ${id}`,
-          backRoute: Routes.EXPENSES,
+          backRoute: Routes.HOME,
         };
       }
       case pathname === Routes.SEATS:

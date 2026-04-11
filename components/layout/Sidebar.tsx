@@ -22,6 +22,9 @@ import {
 
 import { NAVIGATION_ITEMS } from "./navigation";
 
+const isNavItemActive = (pathname: string, href: string) =>
+  href === "/" ? pathname === "/" || pathname === "/expenses" : pathname === href;
+
 type SidebarProps = {
   onNavigate?: () => void;
 };
@@ -33,7 +36,7 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
   const [signingOut, setSigningOut] = useState(false);
   const { isMobile, setOpenMobile } = useSidebar();
 
-  useRoutePrefetch(["/expenses", ...NAVIGATION_ITEMS.map((item) => item.href)]);
+  useRoutePrefetch(["/", ...NAVIGATION_ITEMS.map((item) => item.href)]);
 
   const handleNavigate = () => {
     onNavigate?.();
@@ -56,7 +59,7 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
     <UISidebar>
       <SidebarHeader className="relative flex items-start px-3 pb-2 pt-4">
         <Link
-          href="/expenses"
+          href="/"
           prefetch
           onClick={handleNavigate}
           className="flex min-w-0 items-center gap-3 rounded-2xl p-2"
@@ -97,7 +100,10 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
         <SidebarMenu className="px-4">
           {NAVIGATION_ITEMS.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild isActive={pathname === item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={isNavItemActive(pathname, item.href)}
+              >
                 <Link href={item.href} prefetch onClick={handleNavigate}>
                   <item.icon className="h-4 w-4" />
                   <span>{item.title}</span>
