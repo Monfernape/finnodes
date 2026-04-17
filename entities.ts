@@ -30,6 +30,12 @@ export enum LoanStatus {
   Completed = "completed",
 }
 
+export enum SalarySheetType {
+  Full = "full",
+  First = "first",
+  Second = "second",
+}
+
 export type Expense = {
   id: number;
   title: string;
@@ -57,6 +63,7 @@ export type SalarySheet = {
   id: number;
   month: number;
   year: number;
+  sheet_type: SalarySheetType;
   issued_on: string;
   recipient_name: string;
   recipient_bank: string;

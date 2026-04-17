@@ -8,7 +8,13 @@ import { DatabaseTable } from "@/utils/supabase/db";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatSalaryMonth, getSalarySheetTotals } from "@/lib/salary";
+import { Badge } from "@/components/ui/badge";
+import {
+  formatCurrency,
+  formatSalaryMonth,
+  formatSalarySheetType,
+  getSalarySheetTotals,
+} from "@/lib/salary";
 
 type Props = {
   sheets: SalarySheet[];
@@ -63,7 +69,12 @@ export const SalarySheetsList = ({ sheets, items }: Props) => {
         return (
           <Card key={sheet.id}>
             <CardHeader>
-              <CardTitle>{formatSalaryMonth(sheet.month, sheet.year)}</CardTitle>
+              <div className="flex items-start justify-between gap-3">
+                <CardTitle>{formatSalaryMonth(sheet.month, sheet.year)}</CardTitle>
+                <Badge variant="outline">
+                  {formatSalarySheetType(sheet.sheet_type)}
+                </Badge>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1 text-sm text-muted-foreground">
@@ -94,7 +105,7 @@ export const SalarySheetsList = ({ sheets, items }: Props) => {
       {sheets.length === 0 && (
         <Card className="md:col-span-2 xl:col-span-3">
           <CardContent className="py-10 text-center text-muted-foreground">
-            No salary sheets yet. Create the first month from the toolbar.
+            No salary sheets yet. Create the first sheet from the toolbar.
           </CardContent>
         </Card>
       )}

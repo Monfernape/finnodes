@@ -1,4 +1,4 @@
-import { Seat, SeatStatus, SalarySheetItem } from "@/entities";
+import { SalarySheetType, Seat, SeatStatus, SalarySheetItem } from "@/entities";
 
 export const SALARY_MONTHS = [
   "January",
@@ -17,6 +17,18 @@ export const SALARY_MONTHS = [
 
 export const formatSalaryMonth = (month: number, year: number) =>
   `${SALARY_MONTHS[month - 1]} ${year}`;
+
+export const formatSalarySheetType = (sheetType: SalarySheetType) => {
+  switch (sheetType) {
+    case SalarySheetType.First:
+      return "First dispatch";
+    case SalarySheetType.Second:
+      return "Second dispatch";
+    case SalarySheetType.Full:
+    default:
+      return "Full salary";
+  }
+};
 
 export const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-PK", {
@@ -51,7 +63,25 @@ export const getSalarySheetTotals = (items: SalarySheetItem[]) => {
   );
 };
 
-export const getSeatDefaultSheetRows = (seats: Seat[]) => {
+const getDispatchAmount = (amount: number, sheetType: SalarySheetType) => {
+  const amountInCents = Math.round(amount * 100);
+  const firstHalfInCents = Math.floor(amountInCents / 2);
+
+  switch (sheetType) {
+    case SalarySheetType.First:
+      return firstHalfInCents / 100;
+    case SalarySheetType.Second:
+      return (amountInCents - firstHalfInCents) / 100;
+    case SalarySheetType.Full:
+    default:
+      return amount;
+  }
+};
+
+export const getSeatDefaultSheetRows = (
+  seats: Seat[],
+  sheetType: SalarySheetType
+) => {
   return seats
     .filter((seat) => seat.status === SeatStatus.Active && seat.bank_linked)
     .map((seat, index) => ({
@@ -61,8 +91,8 @@ export const getSeatDefaultSheetRows = (seats: Seat[]) => {
       account_number: seat.account_number || "",
       designation: seat.designation || "",
       date_of_joining: seat.date_of_joining || "",
-      gross_salary: seat.gross_salary.toString(),
-      net_salary: seat.net_salary.toString(),
+      gross_salary: getDispatchAmount(seat.gross_salary, sheetType).toString(),
+      net_salary: getDispatchAmount(seat.net_salary, sheetType).toString(),
       sort_order: index,
     }));
 };

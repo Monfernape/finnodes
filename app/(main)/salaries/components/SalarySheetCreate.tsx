@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format, parseISO } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
-import { Seat } from "@/entities";
+import { SalarySheetType, Seat } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/db";
-import { getSeatDefaultSheetRows } from "@/lib/salary";
+import { cn } from "@/lib/utils";
+import { formatSalarySheetType, getSeatDefaultSheetRows } from "@/lib/salary";
 import { Routes } from "@/hooks/useToolbar";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -29,6 +33,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { SALARY_MONTHS } from "@/lib/salary";
 
 const today = new Date();
@@ -36,6 +45,7 @@ const today = new Date();
 const formSchema = z.object({
   month: z.string().min(1),
   year: z.string().min(4),
+  sheet_type: z.nativeEnum(SalarySheetType),
   issued_on: z.string().min(1, "Issue date is required"),
   recipient_name: z.string().min(1, "Recipient name is required"),
   recipient_bank: z.string().min(1, "Recipient bank is required"),
@@ -56,6 +66,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
     defaultValues: {
       month: `${today.getMonth() + 1}`,
       year: `${today.getFullYear()}`,
+      sheet_type: SalarySheetType.Full,
       issued_on: today.toISOString().slice(0, 10),
       recipient_name: "The Payroll Manager,",
       recipient_bank: "Bank Alfalah Multan.",
@@ -68,6 +79,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const month = Number(values.month);
     const year = Number(values.year);
+    const sheetType = values.sheet_type;
     const incompleteSeats = seats.filter(
       (seat) =>
         !seat.cnic ||
@@ -93,6 +105,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
         .select("id")
         .eq("month", month)
         .eq("year", year)
+        .eq("sheet_type", sheetType)
         .maybeSingle();
       if (existingSheetError) {
         throw existingSheetError;
@@ -109,6 +122,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
           {
             month,
             year,
+            sheet_type: sheetType,
             issued_on: values.issued_on,
             recipient_name: values.recipient_name.trim(),
             recipient_bank: values.recipient_bank.trim(),
@@ -122,7 +136,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
         throw createSheetError;
       }
 
-      const defaultRows = getSeatDefaultSheetRows(seats);
+      const defaultRows = getSeatDefaultSheetRows(seats, sheetType);
       if (defaultRows.length > 0) {
         const { error: createItemsError } = await supabaseClient
           .from(DatabaseTable.SalarySheetItems)
@@ -141,7 +155,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
       }
 
       toast({
-        title: "Salary sheet created",
+        title: `${formatSalarySheetType(sheetType)} sheet created`,
       });
       router.push(`${Routes.SALARIES}/${createdSheet.id}`);
     } catch (error) {
@@ -199,17 +213,73 @@ export const SalarySheetCreate = ({ seats }: Props) => {
                   </FormControl>
                   <FormMessage />
                 </FormItem>
+                )}
+              />
+            <FormField
+              control={form.control}
+              name="sheet_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sheet type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select sheet type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={SalarySheetType.Full}>
+                        {formatSalarySheetType(SalarySheetType.Full)}
+                      </SelectItem>
+                      <SelectItem value={SalarySheetType.First}>
+                        {formatSalarySheetType(SalarySheetType.First)}
+                      </SelectItem>
+                      <SelectItem value={SalarySheetType.Second}>
+                        {formatSalarySheetType(SalarySheetType.Second)}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
             <FormField
               control={form.control}
               name="issued_on"
               render={({ field }) => (
-                <FormItem className="md:col-span-2">
+                <FormItem className="md:col-span-2 flex flex-col">
                   <FormLabel>Letter date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(parseISO(field.value), "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? parseISO(field.value) : undefined}
+                        onSelect={(date) =>
+                          field.onChange(date ? format(date, "yyyy-MM-dd") : "")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

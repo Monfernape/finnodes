@@ -11,6 +11,7 @@ const SalariesPage = async () => {
     .select()
     .order("year", { ascending: false })
     .order("month", { ascending: false })
+    .order("sheet_type", { ascending: false })
     .returns<SalarySheet[]>();
   const { data: items } = await supabaseClient
     .from(DatabaseTable.SalarySheetItems)

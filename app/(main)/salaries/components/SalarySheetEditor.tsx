@@ -3,12 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { format, parseISO } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createClient } from "@/utils/supabase/client";
 import { SalarySheet, SalarySheetItem } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/db";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +24,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { formatCurrency, formatSalaryMonth } from "@/lib/salary";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  formatCurrency,
+  formatSalaryMonth,
+  formatSalarySheetType,
+} from "@/lib/salary";
 
 const itemSchema = z.object({
   id: z.number().optional(),
@@ -212,8 +225,13 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
               Sheet
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-2xl font-semibold">
-            {formatSalaryMonth(sheet.month, sheet.year)}
+          <CardContent className="space-y-1">
+            <p className="text-2xl font-semibold">
+              {formatSalaryMonth(sheet.month, sheet.year)}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {formatSalarySheetType(sheet.sheet_type)}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -249,17 +267,45 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
                 </Button>
                 <Button type="submit">Save changes</Button>
               </div>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="issued_on"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>Letter date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(parseISO(field.value), "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? parseISO(field.value) : undefined}
+                          onSelect={(date) =>
+                            field.onChange(date ? format(date, "yyyy-MM-dd") : "")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
