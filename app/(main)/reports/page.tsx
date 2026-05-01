@@ -17,6 +17,7 @@ import { ExpenseReportTable } from "./components/ExpenseReportTable";
 import { DateRangeFilter } from "../../../components/shared/DateRangeFilter";
 import { LoanRecoveryReport } from "./components/LoanRecoveryReport";
 import { getLoanRecoveryItems } from "@/lib/loan";
+import { getDateRangeBounds } from "@/lib/date";
 
 export const metadata: Metadata = {
   title: "Reports",
@@ -49,27 +50,10 @@ const Page = async ({
 }) => {
   const resolvedSearchParams = await searchParams;
   const supabaseClient = await createClient();
-  const currentDate = new Date();
-
-  // Get the first day of the current month
-  let startDate = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    1
-  ).toISOString();
-
-  // Get the last day of the current month
-  let endDate = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
-  ).toISOString();
-
-  // If 'from' and 'to' parameters are provided, update start and end date accordingly
-  if (resolvedSearchParams?.from && resolvedSearchParams?.to) {
-    startDate = new Date(resolvedSearchParams.from).toISOString();
-    endDate = new Date(resolvedSearchParams.to).toISOString();
-  }
+  const { startDate, endDate } = getDateRangeBounds({
+    from: resolvedSearchParams?.from,
+    to: resolvedSearchParams?.to,
+  });
 
   const [
     { data: _expenses = [] },
@@ -82,7 +66,7 @@ const Page = async ({
       .from(DatabaseTable.Expenses)
       .select()
       .order("created_at", { ascending: false })
-      .gt("created_at", startDate)
+      .gte("created_at", startDate)
       .lt("created_at", endDate)
       .returns<Expense[]>(),
     supabaseClient

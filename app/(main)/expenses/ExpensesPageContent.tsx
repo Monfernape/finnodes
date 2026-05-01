@@ -1,6 +1,7 @@
 import React from "react";
 
 import { Expense, ExpenseType, Manager, ManagerStatus, Seat } from "@/entities";
+import { getDateRangeBounds } from "@/lib/date";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { createClient } from "@/utils/supabase/server";
 
@@ -22,31 +23,17 @@ export const ExpensesPageContent = async ({
 }) => {
   const resolvedSearchParams = await searchParams;
   const supabaseClient = await createClient();
-  const currentDate = new Date();
-
-  let startDate = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    1
-  ).toISOString();
-
-  let endDate = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
-  ).toISOString();
-
-  if (resolvedSearchParams?.from && resolvedSearchParams?.to) {
-    startDate = new Date(resolvedSearchParams.from).toISOString();
-    endDate = new Date(resolvedSearchParams.to).toISOString();
-  }
+  const { startDate, endDate } = getDateRangeBounds({
+    from: resolvedSearchParams?.from,
+    to: resolvedSearchParams?.to,
+  });
 
   const [{ data }, { data: _managers }, { data: _seats }] = await Promise.all([
     supabaseClient
       .from(DatabaseTable.Expenses)
       .select()
       .order("created_at", { ascending: false })
-      .gt("created_at", startDate)
+      .gte("created_at", startDate)
       .lt("created_at", endDate)
       .returns<Expense[]>(),
     supabaseClient
