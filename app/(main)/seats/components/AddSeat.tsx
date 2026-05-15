@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { markRouteStale } from "@/hooks/useRefreshStaleRoutes";
 
 const formSchema = z.object({
   name: z.string({ required_error: "Name is required" }).min(1, "Name is required"),
@@ -127,6 +128,7 @@ export const SeatFormBuilder = ({ seat }: Props) => {
         title: "Seat saved",
         description: `Seat "${data?.[0].name}" has been saved.`,
       });
+      markRouteStale(Routes.SEATS);
       router.push(Routes.SEATS);
     } catch (error) {
       toast({
@@ -151,8 +153,8 @@ export const SeatFormBuilder = ({ seat }: Props) => {
         title: "Seat updated",
         description: `Seat "${data?.[0].name}" has been updated.`,
       });
+      markRouteStale(Routes.SEATS);
       router.push(Routes.SEATS);
-      router.refresh();
     } catch (error) {
       toast({
         title: "Error",

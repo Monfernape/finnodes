@@ -56,6 +56,7 @@ import {
   getLoanTotalPaid,
 } from "@/lib/loan";
 import { formatDate } from "@/lib/date";
+import { markRouteStale } from "@/hooks/useRefreshStaleRoutes";
 
 type Props = {
   seats: Seat[];
@@ -163,6 +164,7 @@ export const LoanFormBuilder = ({
         title: "Loan saved",
         description: `Loan for "${data?.[0].borrower_type}" has been saved.`,
       });
+      markRouteStale(Routes.LOANS);
       router.push(Routes.LOANS);
     } catch (error) {
       toast({
@@ -207,8 +209,8 @@ export const LoanFormBuilder = ({
       toast({
         title: "Loan updated",
       });
+      markRouteStale(Routes.LOANS);
       router.push(Routes.LOANS);
-      router.refresh();
     } catch (error) {
       toast({
         title: "Error",

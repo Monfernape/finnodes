@@ -42,6 +42,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DatabaseTable } from "@/utils/supabase/db";
+import { markRouteStale } from "@/hooks/useRefreshStaleRoutes";
 
 type Props = {
   managers: Manager[];
@@ -134,6 +135,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
       if (error) {
         throw error;
       }
+      markRouteStale(Routes.HOME);
       router.push(Routes.HOME);
       toast({
         title: "Expense saved",
@@ -171,6 +173,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
         title: "Expense updated",
         description: `Expense "${data?.[0].title}" has been updated.`,
       });
+      markRouteStale(Routes.HOME);
       router.push(Routes.HOME);
     } catch (error) {
       toast({

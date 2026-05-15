@@ -20,6 +20,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Routes } from "@/hooks/useToolbar";
 import { Manager, Seat } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/db";
+import { markRouteStale } from "@/hooks/useRefreshStaleRoutes";
 
 type Props = {
   seats: Seat[];
@@ -92,6 +93,7 @@ export const ManagerFormBuilder = ({ seats, manager }: Props) => {
         title: "Manager saved",
         description: `Manager "${data?.[0].name}" has been saved.`,
       });
+      markRouteStale(Routes.MANAGERS);
       router.push(Routes.MANAGERS);
     } catch (error) {
       toast({
@@ -120,6 +122,7 @@ export const ManagerFormBuilder = ({ seats, manager }: Props) => {
         title: "Manager updated",
         description: `Expense "${data?.[0].name}" has been updated.`,
       });
+      markRouteStale(Routes.MANAGERS);
       router.push(Routes.MANAGERS);
     } catch (error) {
       toast({

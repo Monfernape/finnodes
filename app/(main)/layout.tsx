@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 
 import { MobileBottomNav, PageTitle, Sidebar } from "@/components/layout";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { RefreshStaleRoutes } from "@/hooks/useRefreshStaleRoutes";
 
 export default function MainLayout({
   children,
@@ -17,6 +18,7 @@ export default function MainLayout({
         } as CSSProperties
       }
     >
+      <RefreshStaleRoutes />
       <Sidebar />
       <SidebarInset className="bg-background">
         <PageTitle />
