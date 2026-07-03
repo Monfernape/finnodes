@@ -1,4 +1,4 @@
-const CACHE_VERSION = "finnodes-v3";
+const CACHE_VERSION = "finnodes-v4";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const STATIC_ASSETS = ["/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png"];
 
@@ -45,6 +45,10 @@ self.addEventListener("fetch", (event) => {
         }
 
         return fetch(request).then((response) => {
+          if (!response.ok || response.type === "opaqueredirect") {
+            return response;
+          }
+
           const responseClone = response.clone();
           caches.open(STATIC_CACHE).then((cache) => cache.put(request, responseClone));
           return response;
