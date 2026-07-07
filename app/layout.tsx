@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { GeistSans } from "geist/font/sans";
 
 import { PwaRegistration } from "@/components/shared/PwaRegistration";
@@ -47,11 +46,6 @@ export default function AppLayout({
         <PwaRegistration />
         {children}
         <Toaster />
-        <Script
-          id="ze-snippet"
-          src="https://static.zdassets.com/ekr/snippet.js?key=e94e73b0-6bc4-4c3c-a89a-3e5f2f2ba6d0"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );

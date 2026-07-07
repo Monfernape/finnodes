@@ -39,9 +39,9 @@ export async function GET(request: NextRequest) {
   await supabase.auth.exchangeCodeForSession(code);
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const normalizedEmail = normalizeEmail(session?.user?.email ?? null);
+    data: { user },
+  } = await supabase.auth.getUser();
+  const normalizedEmail = normalizeEmail(user?.email ?? null);
 
   if (normalizedEmail && (await isEmailAllowListed(supabase, normalizedEmail))) {
     response.cookies.set({
