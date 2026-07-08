@@ -93,10 +93,8 @@ export const updateSession = async (request: NextRequest) => {
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const user = session?.user ?? null;
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user && !isPublicRoute) {
       response.cookies.delete(ALLOWED_EMAIL_COOKIE);
