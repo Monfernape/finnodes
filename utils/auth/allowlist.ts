@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const ALLOWED_EMAIL_COOKIE = "finnodes-allowed-email";
-export const ALLOWED_EMAIL_COOKIE_MAX_AGE = 60 * 60 * 24;
+export const ALLOWED_EMAIL_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
 export const normalizeEmail = (email: string | null) =>
   email?.trim().toLowerCase() ?? null;
