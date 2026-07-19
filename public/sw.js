@@ -1,4 +1,4 @@
-const CACHE_VERSION = "finnodes-v4";
+const CACHE_VERSION = "devnodes-v1";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const STATIC_ASSETS = ["/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png"];
 

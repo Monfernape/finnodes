@@ -18,23 +18,41 @@ import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
 import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
 
-import { MOBILE_MORE_NAV, MOBILE_PRIMARY_NAV, NAVIGATION_ITEMS, SIGN_OUT_NAV } from "./navigation";
+import {
+  MOBILE_MORE_NAV,
+  MOBILE_PRIMARY_NAV,
+  NAVIGATION_ITEMS,
+  SIGN_OUT_NAV,
+  getMobilePrimaryNavItems,
+  getNavigationItems,
+} from "./navigation";
+import type { PeopleRole } from "@/utils/auth/people-access";
 
 const isNavItemActive = (pathname: string, href: string) =>
-  href === "/" ? pathname === "/" || pathname === "/expenses" : pathname === href;
+  href === "/"
+    ? pathname === "/" || pathname === "/expenses"
+    : pathname === href || pathname.startsWith(`${href}/`);
 
-export function MobileBottomNav() {
+type MobileBottomNavProps = {
+  role?: PeopleRole | null;
+};
+
+export function MobileBottomNav({
+  role,
+}: MobileBottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const navigationItems = useMemo(() => getNavigationItems(role), [role]);
+  const primaryItems = useMemo(() => getMobilePrimaryNavItems(role), [role]);
 
-  useRoutePrefetch(NAVIGATION_ITEMS.map((item) => item.href));
+  useRoutePrefetch(navigationItems.map((item) => item.href));
 
-  const isMoreActive = NAVIGATION_ITEMS.some(
+  const isMoreActive = navigationItems.some(
     (item) =>
-      !MOBILE_PRIMARY_NAV.find((primaryItem) => primaryItem.href === item.href) &&
+      !primaryItems.find((primaryItem) => primaryItem.href === item.href) &&
       isNavItemActive(pathname, item.href)
   );
 
@@ -48,7 +66,7 @@ export function MobileBottomNav() {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden">
       <nav className="pointer-events-auto mx-auto flex max-w-md items-center justify-between rounded-[1.5rem] border border-gray-200/80 bg-white/95 px-2 py-2 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur">
-        {MOBILE_PRIMARY_NAV.map((item) => {
+        {primaryItems.map((item) => {
           const isActive = isNavItemActive(pathname, item.href);
 
           return (
@@ -85,13 +103,13 @@ export function MobileBottomNav() {
             <DialogHeader className="border-b border-gray-100 px-5 pb-4 pt-5 text-left">
               <DialogTitle>More</DialogTitle>
               <DialogDescription>
-                Quick access to the rest of FinNodes.
+                Quick access to the rest of DevNodes.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-2 px-3 pt-4">
-              {NAVIGATION_ITEMS.filter(
+              {navigationItems.filter(
                 (item) =>
-                  !MOBILE_PRIMARY_NAV.find(
+                  !primaryItems.find(
                     (primaryItem) => primaryItem.href === item.href
                   )
               ).map((item) => {

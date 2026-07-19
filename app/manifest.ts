@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "FinNodes",
-    short_name: "FinNodes",
+    name: "DevNodes",
+    short_name: "DevNodes",
     id: "/",
-    description: "Finance portal for DevNodes to manage company expenses",
+    description: "Mobile-first company workspace for DevNodes operations",
     start_url: "/",
     scope: "/",
     display: "standalone",

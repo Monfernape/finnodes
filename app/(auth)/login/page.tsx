@@ -10,31 +10,48 @@ export const metadata: Metadata = {
   title: "Login",
 };
 
-const LoginPage = async () => {
+const LoginPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    code?: string;
+    next?: string;
+  }>;
+}) => {
+  const { code, next } = await searchParams;
+  if (code) {
+    const callbackParams = new URLSearchParams({
+      code,
+      next: next ?? "/",
+    });
+    redirect(`/auth/callback?${callbackParams.toString()}`);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/expenses");
+    redirect("/");
   }
 
   return (
-    <div className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-gradient-to-br from-white via-slate-50 to-slate-100 px-4 py-12 sm:py-16">
-      <div className="absolute -left-16 -top-16 h-56 w-56 rounded-full bg-slate-200/35 blur-3xl" />
-      <div className="absolute -right-12 bottom-10 h-56 w-56 rounded-full bg-slate-300/30 blur-3xl" />
-      <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-white/90 to-white/95" />
-
+    <div className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-white px-4 py-12 sm:py-16">
       <div className="relative z-10 flex w-full max-w-xl flex-col items-center gap-6 text-center text-slate-900">
         <Image
           src="/icons/apple-touch-icon.png"
-          alt="FinNodes"
+          alt="DevNodes"
           width={120}
           height={120}
           priority
         />
-        <h1 className="text-4xl font-bold leading-tight">Welcome to FinNodes</h1>
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold leading-tight">Welcome to DevNodes</h1>
+          <p className="text-sm leading-6 text-gray-500">
+            Sign in with the email connected to your DevNodes access.
+          </p>
+        </div>
         <div className="w-full max-w-sm">
           <Suspense fallback={null}>
             <LoginForm />

@@ -20,23 +20,28 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { NAVIGATION_ITEMS } from "./navigation";
+import { NAVIGATION_ITEMS, getNavigationItems } from "./navigation";
+import type { PeopleRole } from "@/utils/auth/people-access";
 
 const isNavItemActive = (pathname: string, href: string) =>
-  href === "/" ? pathname === "/" || pathname === "/expenses" : pathname === href;
+  href === "/"
+    ? pathname === "/" || pathname === "/expenses"
+    : pathname === href || pathname.startsWith(`${href}/`);
 
 type SidebarProps = {
   onNavigate?: () => void;
+  role?: PeopleRole | null;
 };
 
-export const Sidebar = ({ onNavigate }: SidebarProps) => {
+export const Sidebar = ({ onNavigate, role }: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [signingOut, setSigningOut] = useState(false);
   const { isMobile, setOpenMobile } = useSidebar();
+  const navigationItems = useMemo(() => getNavigationItems(role), [role]);
 
-  useRoutePrefetch(["/", ...NAVIGATION_ITEMS.map((item) => item.href)]);
+  useRoutePrefetch(["/", ...navigationItems.map((item) => item.href)]);
 
   const handleNavigate = () => {
     onNavigate?.();
@@ -67,7 +72,7 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <Image
               src="/icons/icon-192.png"
-              alt="FinNodes logo"
+              alt="DevNodes logo"
               width={40}
               height={40}
               priority
@@ -76,10 +81,10 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
           </div>
           <div className="min-w-0">
             <p className="truncate text-[1.75rem] font-semibold leading-none tracking-tight text-gray-950">
-              FinNodes
+              DevNodes
             </p>
             <p className="truncate pt-1 text-sm leading-none text-gray-500">
-              Finance portal
+              Company workspace
             </p>
           </div>
         </Link>
@@ -98,7 +103,7 @@ export const Sidebar = ({ onNavigate }: SidebarProps) => {
       </SidebarHeader>
       <SidebarContent className="py-2">
         <SidebarMenu className="px-4">
-          {NAVIGATION_ITEMS.map((item) => (
+          {navigationItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild

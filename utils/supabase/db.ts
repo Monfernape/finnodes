@@ -6,4 +6,13 @@ export enum DatabaseTable {
   LoanPayments = "loan_payments",
   SalarySheets = "salary_sheets",
   SalarySheetItems = "salary_sheet_items",
+  OneOnOneYears = "one_on_one_years",
+  OneOnOnes = "one_on_ones",
+  OneOnOneActionItems = "one_on_one_action_items",
+  ManagerPrivateNotes = "manager_private_notes",
+  ReviewCycles = "review_cycles",
+  PerformanceReviews = "performance_reviews",
+  ReviewSections = "review_sections",
+  FeedbackRequests = "feedback_requests",
+  ProjectAssignments = "project_assignments",
 }

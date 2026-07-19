@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const ALLOWED_EMAIL_COOKIE = "finnodes-allowed-email";
-export const ALLOWED_EMAIL_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+export const ALLOWED_EMAIL_COOKIE = "devnodes-allowed-email";
+export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+export const ALLOWED_EMAIL_COOKIE_MAX_AGE = AUTH_COOKIE_MAX_AGE;
 
 export const normalizeEmail = (email: string | null) =>
   email?.trim().toLowerCase() ?? null;
@@ -27,7 +28,7 @@ export const isEmailAllowListed = async (
   const { data, error } = await supabase
     .from("allowed_emails")
     .select("email")
-    .eq("email", normalizedEmail)
+    .ilike("email", normalizedEmail)
     .maybeSingle();
 
   if (error) {

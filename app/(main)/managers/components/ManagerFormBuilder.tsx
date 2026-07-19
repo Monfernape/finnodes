@@ -178,7 +178,7 @@ export const ManagerFormBuilder = ({ seats, manager }: Props) => {
           name="seats"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Select seats</FormLabel>
+              <FormLabel>Select employees</FormLabel>
               <MultiSelect
                 selected={field.value}
                 options={seatMenuOption}

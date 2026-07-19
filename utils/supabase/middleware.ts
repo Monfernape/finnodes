@@ -3,15 +3,17 @@ import { type NextRequest, NextResponse } from "next/server";
 import {
   ALLOWED_EMAIL_COOKIE,
   ALLOWED_EMAIL_COOKIE_MAX_AGE,
-  isEmailAllowListed,
+  AUTH_COOKIE_MAX_AGE,
   normalizeEmail,
 } from "@/utils/auth/allowlist";
+import { PeopleRole, resolvePeopleAccess } from "@/utils/auth/people-access";
 
 const PUBLIC_PATHS = [
   "/login",
   "/auth/callback",
   "/access-denied",
   "/manifest.webmanifest",
+  "/sw.js",
 ];
 
 const getPublicRedirect = (request: NextRequest, pathname: string) => {
@@ -21,13 +23,52 @@ const getPublicRedirect = (request: NextRequest, pathname: string) => {
   return url;
 };
 
+const EMPLOYEE_ALLOWED_PATHS = [
+  "/me",
+  "/auth/callback",
+  "/login",
+  "/access-denied",
+  "/manifest.webmanifest",
+  "/sw.js",
+];
+
+const isEmployeeAllowedPath = (pathname: string) =>
+  EMPLOYEE_ALLOWED_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+
 const copyCookies = (from: NextResponse, to: NextResponse) => {
   from.cookies.getAll().forEach((cookie) => {
     to.cookies.set(cookie);
   });
 };
 
+const getRequestOrigin = (request: NextRequest) => {
+  const host = request.headers.get("host");
+  const protocol =
+    request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "");
+
+  if (!host) {
+    return request.nextUrl.origin;
+  }
+
+  return `${protocol}://${host}`;
+};
+
 export const updateSession = async (request: NextRequest) => {
+  if (
+    request.nextUrl.pathname !== "/auth/callback" &&
+    request.nextUrl.searchParams.has("code")
+  ) {
+    const callbackUrl = new URL("/auth/callback", getRequestOrigin(request));
+    request.nextUrl.searchParams.forEach((value, key) => {
+      callbackUrl.searchParams.set(key, value);
+    });
+    callbackUrl.searchParams.set(
+      "next",
+      callbackUrl.searchParams.get("next") ?? request.nextUrl.pathname,
+    );
+    return NextResponse.redirect(callbackUrl);
+  }
+
   const isPublicRoute = PUBLIC_PATHS.some((path) =>
     request.nextUrl.pathname.startsWith(path),
   );
@@ -66,6 +107,7 @@ export const updateSession = async (request: NextRequest) => {
               name,
               value,
               ...options,
+              maxAge: AUTH_COOKIE_MAX_AGE,
             });
           },
           remove(name: string, options: CookieOptions) {
@@ -84,14 +126,13 @@ export const updateSession = async (request: NextRequest) => {
               name,
               value: "",
               ...options,
+              maxAge: 0,
             });
           },
         },
       },
     );
 
-    // This will refresh session if expired - required for Server Components
-    // https://supabase.com/docs/guides/auth/server-side/nextjs
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -109,12 +150,17 @@ export const updateSession = async (request: NextRequest) => {
       const cachedAllowedEmail = normalizeEmail(
         request.cookies.get(ALLOWED_EMAIL_COOKIE)?.value ?? null,
       );
-      const isAllowed =
-        normalizedEmail !== null && cachedAllowedEmail === normalizedEmail
-          ? true
-          : await isEmailAllowListed(supabase, normalizedEmail);
+      const cachedManager =
+        normalizedEmail !== null && cachedAllowedEmail === normalizedEmail;
+      const access = cachedManager
+        ? {
+            role: PeopleRole.Manager,
+            email: normalizedEmail,
+            seatId: null,
+          }
+        : await resolvePeopleAccess(supabase, user);
 
-      if (!isAllowed) {
+      if (!access) {
         await supabase.auth.signOut();
         response.cookies.delete(ALLOWED_EMAIL_COOKIE);
         const redirectUrl = request.nextUrl.clone();
@@ -126,15 +172,32 @@ export const updateSession = async (request: NextRequest) => {
         return redirectResponse;
       }
 
-      if (normalizedEmail && cachedAllowedEmail !== normalizedEmail) {
+      if (
+        access.role === PeopleRole.Manager &&
+        cachedAllowedEmail !== access.email
+      ) {
         response.cookies.set({
           name: ALLOWED_EMAIL_COOKIE,
-          value: normalizedEmail,
+          value: access.email,
           httpOnly: true,
           maxAge: ALLOWED_EMAIL_COOKIE_MAX_AGE,
           path: "/",
           sameSite: "lax",
         });
+      } else if (access.role !== PeopleRole.Manager && cachedAllowedEmail) {
+        response.cookies.delete(ALLOWED_EMAIL_COOKIE);
+      }
+
+      if (
+        access.role === PeopleRole.Employee &&
+        !isEmployeeAllowedPath(request.nextUrl.pathname)
+      ) {
+        const redirectUrl = request.nextUrl.clone();
+        redirectUrl.pathname = "/me/one-on-ones";
+        redirectUrl.search = "";
+        const redirectResponse = NextResponse.redirect(redirectUrl);
+        copyCookies(response, redirectResponse);
+        return redirectResponse;
       }
     }
 

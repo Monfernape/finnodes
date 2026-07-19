@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-const STALE_ROUTES_STORAGE_KEY = "finnodes:stale-routes";
+const STALE_ROUTES_STORAGE_KEY = "devnodes:stale-routes";
 
 const getStoredRoutes = () => {
   if (typeof window === "undefined") {

@@ -2,7 +2,7 @@
 
 Use this guide when changing layout, navigation, responsive behavior, loading states, or interaction design.
 
-FinNodes should feel as close as possible to a native mobile app on phones. Prefer touch-first layouts, fast perceived performance, smooth transitions, and navigation patterns that feel app-like rather than browser-like.
+DevNodes should feel as close as possible to a native mobile app on phones. Prefer touch-first layouts, fast perceived performance, smooth transitions, and navigation patterns that feel app-like rather than browser-like.
 
 ## Core Standard
 

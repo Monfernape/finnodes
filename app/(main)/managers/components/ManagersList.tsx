@@ -75,7 +75,7 @@ export const ManagersList = ({ managers, seats }: Props) => {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Seats</TableHead>
+              <TableHead>Employees</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
