@@ -147,9 +147,23 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+site_url = "https://finnodes.devnodes.co"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = [
+  "https://finnodes.devnodes.co",
+  "https://finnodes.devnodes.co/auth/callback",
+  "https://finnodes.devnodes.co/**",
+  "http://localhost:3001",
+  "http://localhost:3001/auth/callback",
+  "http://localhost:3001/**",
+  "http://127.0.0.1:3001",
+  "http://127.0.0.1:3001/auth/callback",
+  "http://127.0.0.1:3001/**",
+  "http://localhost:3000",
+  "http://localhost:3000/auth/callback",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:3000/auth/callback",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to the local API URL (http://127.0.0.1:<port>/auth/v1).
@@ -226,6 +240,14 @@ otp_expiry = 3600
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.magic_link]
+subject = "Your DevNodes sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.signup]
+subject = "Your DevNodes sign-in code"
+content_path = "./supabase/templates/signup.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

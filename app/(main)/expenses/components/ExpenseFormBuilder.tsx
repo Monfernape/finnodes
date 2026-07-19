@@ -60,7 +60,7 @@ const EXPENSE_TYPES = [
   },
   {
     value: ExpenseType.PerSeat,
-    label: "Per Seat",
+    label: "Per Employee",
   },
 ];
 
@@ -230,7 +230,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
                       Per Unit - Expense is calculated per unit - i.e. Employee
                       salary
                       <br />
-                      Per Seat - Expense is calculated per seat - i.e. Rent,
+                      Per Employee - Expense is calculated per employee - i.e. Rent,
                       kitchen items
                     </TooltipContent>
                   </Tooltip>

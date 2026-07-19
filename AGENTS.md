@@ -1,6 +1,6 @@
-# FinNodes
+# DevNodes
 
-FinNodes is a mobile-first finance portal built with Next.js, Supabase, and TypeScript.
+DevNodes is a mobile-first company workspace built with Next.js, Supabase, and TypeScript.
 
 ## Essentials
 

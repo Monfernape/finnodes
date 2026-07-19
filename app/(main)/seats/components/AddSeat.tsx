@@ -31,6 +31,7 @@ import { markRouteStale } from "@/hooks/useRefreshStaleRoutes";
 
 const formSchema = z.object({
   name: z.string({ required_error: "Name is required" }).min(1, "Name is required"),
+  login_email: z.string().email("Enter a valid email").optional().or(z.literal("")),
   status: z.nativeEnum(SeatStatus),
   bank_linked: z.boolean(),
   cnic: z.string().optional(),
@@ -79,18 +80,21 @@ const formSchema = z.object({
 
 type Props = {
   seat?: Seat;
+  afterSaveHref?: string;
 };
 
-export const SeatFormBuilder = ({ seat }: Props) => {
+export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
   const supabaseClient = createClient();
   const { toast } = useToast();
   const router = useRouter();
   const { id } = useParams();
-  const isEditMode = Boolean(id) && Boolean(seat);
+  const seatId = seat?.id ?? (id ? Number(id) : null);
+  const isEditMode = Boolean(seatId) && Boolean(seat);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: seat?.name || "",
+      login_email: seat?.login_email || "",
       status: seat?.status || SeatStatus.Active,
       bank_linked: seat?.bank_linked || false,
       cnic: seat?.cnic || "",
@@ -105,6 +109,7 @@ export const SeatFormBuilder = ({ seat }: Props) => {
 
   const mapPayload = (values: z.infer<typeof formSchema>) => ({
     name: values.name.trim(),
+    login_email: values.login_email?.trim().toLowerCase() || null,
     status: values.status,
     bank_linked: values.bank_linked,
     cnic: values.cnic?.trim() || null,
@@ -125,15 +130,15 @@ export const SeatFormBuilder = ({ seat }: Props) => {
         throw error;
       }
       toast({
-        title: "Seat saved",
-        description: `Seat "${data?.[0].name}" has been saved.`,
+        title: "Employee saved",
+        description: `Employee "${data?.[0].name}" has been saved.`,
       });
-      markRouteStale(Routes.SEATS);
-      router.push(Routes.SEATS);
+      markRouteStale(Routes.EMPLOYEES);
+      router.push(afterSaveHref ?? Routes.EMPLOYEES);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Seat could not be saved. Please try again later.",
+        description: "Employee could not be saved. Please try again later.",
         variant: "destructive",
       });
     }
@@ -144,21 +149,21 @@ export const SeatFormBuilder = ({ seat }: Props) => {
       const { data, error } = await supabaseClient
         .from(DatabaseTable.Seats)
         .update(mapPayload(values))
-        .eq("id", Number(id))
+        .eq("id", Number(seatId))
         .select();
       if (error) {
         throw error;
       }
       toast({
-        title: "Seat updated",
-        description: `Seat "${data?.[0].name}" has been updated.`,
+        title: "Employee updated",
+        description: `Employee "${data?.[0].name}" has been updated.`,
       });
-      markRouteStale(Routes.SEATS);
-      router.push(Routes.SEATS);
+      markRouteStale(Routes.EMPLOYEES);
+      router.push(afterSaveHref ?? Routes.EMPLOYEES);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Seat could not be updated. Please try again later.",
+        description: "Employee could not be updated. Please try again later.",
         variant: "destructive",
       });
     }
@@ -191,6 +196,25 @@ export const SeatFormBuilder = ({ seat }: Props) => {
                   <FormLabel>Employee name</FormLabel>
                   <FormControl>
                     <Input autoFocus placeholder="Add name here..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="login_email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Login email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="employee@example.com"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -331,7 +355,7 @@ export const SeatFormBuilder = ({ seat }: Props) => {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit">{isEditMode ? "Update seat" : "Save seat"}</Button>
+          <Button type="submit">{isEditMode ? "Update employee" : "Save employee"}</Button>
         </div>
       </form>
     </Form>

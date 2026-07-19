@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Seats",
+  title: "Employees",
 };
 
 export default function SeatsLayout({

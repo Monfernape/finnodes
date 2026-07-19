@@ -33,7 +33,7 @@ import { DatabaseTable } from "@/utils/supabase/db";
 const ExpenseTypeMapper = {
   [ExpenseType.Shared]: "Shared",
   [ExpenseType.PerUnit]: "Per Unit",
-  [ExpenseType.PerSeat]: "Per Seat",
+  [ExpenseType.PerSeat]: "Per Employee",
 };
 
 type Props = {
