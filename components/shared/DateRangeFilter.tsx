@@ -77,7 +77,7 @@ export function DateRangeFilter({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-full sm:w-[280px] justify-start text-left font-normal",
+              "w-full justify-start rounded-xl text-left font-normal sm:w-[280px]",
               !dateRange && "text-muted-foreground"
             )}
           >
@@ -103,7 +103,7 @@ export function DateRangeFilter({
             defaultMonth={dateRange?.from}
             selected={dateRange}
             onSelect={handleDateRangeChange}
-            numberOfMonths={2}
+            numberOfMonths={1}
           />
         </PopoverContent>
       </Popover>

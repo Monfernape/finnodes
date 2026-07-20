@@ -20,7 +20,7 @@ export const PageTitle = () => {
           <Link
             href={backRoute}
             prefetch
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:hover:bg-gray-800 dark:focus:ring-gray-300"
+            className="touch-feedback inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:hover:bg-gray-800 dark:focus:ring-gray-300"
           >
             <ArrowLeftIcon className="h-5 w-5" />
             <span className="sr-only">Back</span>
@@ -34,7 +34,7 @@ export const PageTitle = () => {
         <Link
           href={addRoute}
           prefetch
-          className="inline-flex h-11 items-center justify-center rounded-full bg-gray-900 px-5 py-2 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus:ring-gray-300"
+          className="touch-feedback inline-flex h-11 items-center justify-center rounded-full bg-gray-900 px-5 py-2 text-sm font-medium text-gray-50 shadow-sm hover:bg-gray-900/90 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus:ring-gray-300"
         >
           Add New
         </Link>

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Manager } from "@/entities";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React from "react";
+import { useState } from "react";
 
 type Props = {
   managers: Manager[];
@@ -18,7 +18,9 @@ const DEFAULT_FILTER = "ALL";
 
 export const ExpenseManagerFilter = ({ managers }: Props) => {
   const searchParams = useSearchParams();
-  const [selectedFilter, setSelectedFilter] = React.useState(searchParams.get("manager") || DEFAULT_FILTER);
+  const [selectedFilter, setSelectedFilter] = useState(
+    searchParams.get("manager") || DEFAULT_FILTER
+  );
 
   const router = useRouter();
   const pathname = usePathname();
@@ -41,13 +43,13 @@ export const ExpenseManagerFilter = ({ managers }: Props) => {
     }
 
     const updatedSearchParams = params.toString();
-    router.push(pathname + "?" + updatedSearchParams);
+    router.push(updatedSearchParams ? `${pathname}?${updatedSearchParams}` : pathname);
   };
 
   return (
     <Select onValueChange={onFilterChange} value={selectedFilter}>
-      <SelectTrigger className="w-full sm:w-56">
-        <SelectValue placeholder="Select unit manager" />
+      <SelectTrigger className="w-full border-0 shadow-none sm:w-56 sm:border sm:shadow-sm" aria-label="Filter expenses by manager">
+        <SelectValue placeholder="All managers" />
       </SelectTrigger>
       <SelectContent>
         {filterOptions.map((manager) => (

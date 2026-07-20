@@ -171,7 +171,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="mx-auto w-full max-w-2xl px-4 sm:px-6"
+        className="mx-auto w-full max-w-2xl pb-24 sm:px-6 sm:pb-6"
       >
         <Card>
           <CardHeader>
@@ -331,7 +331,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
                   <FormLabel>Letter body</FormLabel>
                   <FormControl>
                     <textarea
-                      className="min-h-32 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="min-h-32 w-full rounded-xl border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:text-sm"
                       {...field}
                     />
                   </FormControl>
@@ -339,8 +339,10 @@ export const SalarySheetCreate = ({ seats }: Props) => {
                 </FormItem>
               )}
             />
-            <div className="md:col-span-2 flex justify-end">
-              <Button type="submit">Create or open sheet</Button>
+            <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-20 -mx-4 border-t bg-background/95 px-4 pb-3 pt-3 backdrop-blur-xl sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none md:col-span-2">
+              <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Opening…" : "Create or open sheet"}
+              </Button>
             </div>
           </CardContent>
         </Card>

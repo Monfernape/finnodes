@@ -145,13 +145,21 @@ export const ManagerFormBuilder = ({ seats, manager }: Props) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-3 px-10"
+        className="mx-auto grid w-full max-w-3xl gap-5 pb-24 sm:rounded-2xl sm:border sm:bg-card sm:p-6 sm:pb-6 sm:shadow-sm lg:grid-cols-2"
       >
+        <div className="space-y-1 lg:col-span-2">
+          <h2 className="text-lg font-semibold tracking-tight">
+            {isEditMode ? "Manager details" : "New manager"}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Add contact information and assign employees.
+          </p>
+        </div>
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="lg:col-span-2">
               <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input placeholder="Add name here..." {...field} />
@@ -188,9 +196,17 @@ export const ManagerFormBuilder = ({ seats, manager }: Props) => {
             </FormItem>
           )}
         />
-        <Button type="submit">
-          {isEditMode ? "Update manager" : "Save manager"}
-        </Button>
+        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-20 -mx-4 border-t bg-background/95 px-4 pb-3 pt-3 backdrop-blur-xl sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none lg:col-span-2 lg:flex lg:justify-end">
+          <Button type="submit" className="w-full lg:w-auto" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting
+              ? isEditMode
+                ? "Updating…"
+                : "Saving…"
+              : isEditMode
+                ? "Update manager"
+                : "Save manager"}
+          </Button>
+        </div>
       </form>
     </Form>
   );

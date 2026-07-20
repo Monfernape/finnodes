@@ -90,8 +90,8 @@ export const ExpensesPageContent = async ({
   );
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+      <div className="grid grid-cols-1 gap-2 rounded-2xl border border-border/70 bg-card p-2 shadow-sm sm:flex sm:flex-wrap sm:items-center sm:justify-end">
         <ExpenseManagerFilter managers={managers} />
         <DateRangeFilter className="w-full sm:w-auto" />
       </div>

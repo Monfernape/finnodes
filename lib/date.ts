@@ -92,3 +92,11 @@ export const formatDate = (dateString: string) => {
   const seconds = ("0" + date.getSeconds()).slice(-2);
   return `${day}/${month}/${year} at ${hours}:${minutes}:${seconds} ${ampm}`;
 };
+
+export const formatShortDate = (dateString: string) =>
+  new Intl.DateTimeFormat("en-GB", {
+    timeZone: APP_TIME_ZONE,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(dateString));
