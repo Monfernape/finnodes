@@ -98,11 +98,13 @@ export const updateSession = async (request: NextRequest) => {
               value,
               ...options,
             });
+            const previousResponse = response;
             response = NextResponse.next({
               request: {
                 headers: request.headers,
               },
             });
+            copyCookies(previousResponse, response);
             response.cookies.set({
               name,
               value,
@@ -117,11 +119,13 @@ export const updateSession = async (request: NextRequest) => {
               value: "",
               ...options,
             });
+            const previousResponse = response;
             response = NextResponse.next({
               request: {
                 headers: request.headers,
               },
             });
+            copyCookies(previousResponse, response);
             response.cookies.set({
               name,
               value: "",
