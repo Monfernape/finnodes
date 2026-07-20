@@ -76,11 +76,12 @@ const loanFormSchema = z.object({
 
 type LoanFormValues = z.infer<typeof loanFormSchema>;
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-PK", {
-    style: "currency",
-    currency: "PKR",
-  }).format(amount);
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-PK", {
+      style: "currency",
+      currency: "PKR",
+      maximumFractionDigits: 0,
+    }).format(amount);
 
 export const LoanFormBuilder = ({
   seats,
@@ -229,9 +230,20 @@ export const LoanFormBuilder = ({
   };
 
   return (
-    <div className="flex flex-col gap-6 px-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="mx-auto grid w-full max-w-3xl gap-5 pb-24 sm:rounded-2xl sm:border sm:bg-card sm:p-6 sm:pb-6 sm:shadow-sm lg:grid-cols-2"
+        >
+          <div className="space-y-1 lg:col-span-2">
+            <h2 className="text-lg font-semibold tracking-tight">
+              {isEditMode ? "Loan details" : "New loan"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Set the borrower, principal, and repayment schedule.
+            </p>
+          </div>
           <FormField
             control={form.control}
             name="borrower_type"
@@ -372,7 +384,7 @@ export const LoanFormBuilder = ({
               </FormItem>
             )}
           />
-          <Card className="border-dashed">
+          <Card className="border-dashed lg:col-span-2">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Installment preview</CardTitle>
             </CardHeader>
@@ -383,9 +395,17 @@ export const LoanFormBuilder = ({
               </span>
             </CardContent>
           </Card>
-          <Button type="submit">
-            {isEditMode ? "Update loan" : "Save loan"}
-          </Button>
+          <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-20 -mx-4 border-t bg-background/95 px-4 pb-3 pt-3 backdrop-blur-xl sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none lg:col-span-2 lg:flex lg:justify-end">
+            <Button type="submit" className="w-full lg:w-auto" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting
+                ? isEditMode
+                  ? "Updating…"
+                  : "Saving…"
+                : isEditMode
+                  ? "Update loan"
+                  : "Save loan"}
+            </Button>
+          </div>
         </form>
       </Form>
 

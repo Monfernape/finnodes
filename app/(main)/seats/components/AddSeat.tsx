@@ -181,7 +181,7 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 sm:px-6 lg:px-10"
+        className="mx-auto flex w-full max-w-5xl flex-col gap-4 pb-24 sm:gap-6 sm:px-6 sm:pb-6 lg:px-10"
       >
         <Card>
           <CardHeader>
@@ -354,8 +354,16 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end">
-          <Button type="submit">{isEditMode ? "Update employee" : "Save employee"}</Button>
+        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-20 -mx-4 border-t bg-background/95 px-4 pb-3 pt-3 backdrop-blur-xl sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+          <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting
+              ? isEditMode
+                ? "Updating…"
+                : "Saving…"
+              : isEditMode
+                ? "Update employee"
+                : "Save employee"}
+          </Button>
         </div>
       </form>
     </Form>

@@ -196,8 +196,16 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full flex flex-col gap-3 px-10"
+        className="mx-auto grid w-full max-w-3xl gap-5 pb-24 sm:rounded-2xl sm:border sm:bg-card sm:p-6 sm:pb-6 sm:shadow-sm lg:grid-cols-2"
       >
+        <div className="space-y-1 lg:col-span-2">
+          <h2 className="text-lg font-semibold tracking-tight">
+            {isEditMode ? "Expense details" : "New expense"}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Add the amount, allocation method, and transaction date.
+          </p>
+        </div>
         <FormField
           control={form.control}
           name="title"
@@ -216,26 +224,27 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
-                Expense type{" "}
+              <div className="flex items-center gap-1.5">
+                <FormLabel>Expense type</FormLabel>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <InfoIcon style={{ width: 20, paddingTop: 14 }} />
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="touch-feedback inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label="About expense types"
+                      >
+                        <InfoIcon className="h-4 w-4" />
+                      </button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      Shared - Expense is shared among all managers. i.e.
-                      Ahmed's lunch
-                      <br />
-                      Per Unit - Expense is calculated per unit - i.e. Employee
-                      salary
-                      <br />
-                      Per Employee - Expense is calculated per employee - i.e. Rent,
-                      kitchen items
+                    <TooltipContent className="max-w-xs space-y-1.5 p-3 text-xs">
+                      <p><strong>Shared:</strong> divided across managers.</p>
+                      <p><strong>Per unit:</strong> assigned to one manager.</p>
+                      <p><strong>Per employee:</strong> divided by employee count.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </FormLabel>
+              </div>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -320,7 +329,7 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
                       ) : (
                         <span>Pick a date</span>
                       )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-60" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
@@ -340,13 +349,21 @@ export const ExpenseFormBuilder = ({ managers, expense }: Props) => {
             </FormItem>
           )}
         />
-        <Button
-          className="w-full"
-          type="submit"
-          disabled={isSubmitting || !form.formState.isDirty}
-        >
-          {isEditMode ? "Update Expense" : "Save Expense"}
-        </Button>
+        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-20 -mx-4 border-t bg-background/95 px-4 pb-3 pt-3 backdrop-blur-xl sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none lg:col-span-2 lg:flex lg:justify-end">
+          <Button
+            className="w-full lg:w-auto"
+            type="submit"
+            disabled={isSubmitting || !form.formState.isDirty}
+          >
+            {isSubmitting
+              ? isEditMode
+                ? "Updating…"
+                : "Saving…"
+              : isEditMode
+                ? "Update expense"
+                : "Save expense"}
+          </Button>
+        </div>
       </form>
     </Form>
   );

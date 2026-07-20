@@ -65,9 +65,9 @@ import {
   getLoanTotalPaid,
   getNextPendingInstallment,
 } from "@/lib/loan";
-import { formatDate } from "@/lib/date";
+import { formatDate, formatShortDate } from "@/lib/date";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { BanknoteIcon, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -167,6 +167,7 @@ export const LoansList = ({ loans, payments, seats, managers }: Props) => {
     new Intl.NumberFormat("en-PK", {
       style: "currency",
       currency: "PKR",
+      maximumFractionDigits: 0,
     }).format(amount);
 
   const recordPayment = async (
@@ -260,18 +261,133 @@ export const LoansList = ({ loans, payments, seats, managers }: Props) => {
     );
   };
 
+  const renderActions = (
+    loan: Loan,
+    hasPayments: boolean,
+    remaining: number,
+    nextInstallment: ReturnType<typeof getNextPendingInstallment>
+  ) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          size="icon"
+          variant="ghost"
+          aria-label={`Actions for ${getLoanBorrowerName(loan, seats, managers)}`}
+          className="transition-opacity md:opacity-40 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+        >
+          <EllipsesIcon className="h-5 w-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="max-w-64">
+        <DropdownMenuItem onClick={() => handleEditLoan(loan.id)}>
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={loan.status === LoanStatus.Completed}
+          onClick={() => openActionDialog(loan.id, "payment")}
+        >
+          Record payment
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={!nextInstallment || loan.status === LoanStatus.Completed}
+          onClick={() => openActionDialog(loan.id, "installment")}
+        >
+          Mark installment completed
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={remaining <= 0 || loan.status === LoanStatus.Completed}
+          onClick={() => openActionDialog(loan.id, "complete")}
+        >
+          Mark loan completed
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-red-600 focus:bg-red-50 focus:text-red-700"
+          disabled={hasPayments}
+          onClick={() => handleDeleteLoan(loan.id)}
+        >
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <>
-      <div className="py-4">
-        <Table className="min-w-[1100px]">
+      <section className="mx-auto w-full max-w-6xl overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+        <div className="border-b px-4 py-3 sm:px-5">
+          <h2 className="font-semibold tracking-tight">Loans</h2>
+          <p className="text-xs text-muted-foreground">
+            {loans.length} {loans.length === 1 ? "loan" : "loans"}
+          </p>
+        </div>
+
+        {loans.length === 0 ? (
+          <div className="px-6 py-14 text-center text-sm text-muted-foreground">
+            No loans have been recorded.
+          </div>
+        ) : (
+          <>
+            <div className="divide-y md:hidden">
+              {loans.map((loan) => {
+                const loanPayments = paymentsByLoanId[loan.id] || [];
+                const remaining = getLoanRemainingAmount(loan, loanPayments);
+                const monthSnapshot = getLoanMonthlySnapshot(loan, loanPayments);
+                const hasPayments = loanPayments.length > 0;
+                const nextInstallment = getNextPendingInstallment(loan, loanPayments);
+
+                return (
+                  <article key={loan.id} className="flex items-start gap-3 px-4 py-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                      <BanknoteIcon className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="truncate text-sm font-medium">
+                          {getLoanBorrowerName(loan, seats, managers)}
+                        </h3>
+                        <Badge
+                          className={
+                            loan.status === LoanStatus.Completed
+                              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                              : "bg-amber-100 text-amber-700 hover:bg-amber-100"
+                          }
+                        >
+                          {loan.status === LoanStatus.Completed ? "Completed" : "Active"}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {LoanBorrowerTypeLabel[loan.borrower_type]} · Started {formatShortDate(loan.start_date)}
+                      </p>
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-xl bg-muted/70 p-2.5">
+                          <p className="text-muted-foreground">Remaining</p>
+                          <p className="mt-0.5 font-semibold tabular-nums">{formatCurrency(remaining)}</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/70 p-2.5">
+                          <p className="text-muted-foreground">Due this turn</p>
+                          <p className="mt-0.5 font-semibold tabular-nums">
+                            {formatCurrency(monthSnapshot.remainingThisTurn)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="-mr-2 shrink-0">
+                      {renderActions(loan, hasPayments, remaining, nextInstallment)}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+        <Table className="hidden min-w-[1100px] md:table">
           <TableHeader>
             <TableRow>
               <TableHead>Borrower</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Principal</TableHead>
-              <TableHead>Total Paid</TableHead>
-              <TableHead>Remaining</TableHead>
-              <TableHead>Current Month Due</TableHead>
+              <TableHead className="text-right">Principal</TableHead>
+              <TableHead className="text-right">Total Paid</TableHead>
+              <TableHead className="text-right">Remaining</TableHead>
+              <TableHead className="text-right">Current Month Due</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -297,10 +413,10 @@ export const LoansList = ({ loans, payments, seats, managers }: Props) => {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell>{formatCurrency(loan.principal_amount)}</TableCell>
-                  <TableCell>{formatCurrency(totalPaid)}</TableCell>
-                  <TableCell>{formatCurrency(remaining)}</TableCell>
-                  <TableCell>{formatCurrency(monthSnapshot.remainingThisTurn)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrency(loan.principal_amount)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrency(totalPaid)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrency(remaining)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrency(monthSnapshot.remainingThisTurn)}</TableCell>
                   <TableCell>
                     <Badge
                       className={
@@ -314,50 +430,16 @@ export const LoansList = ({ loans, payments, seats, managers }: Props) => {
                   </TableCell>
                   <TableCell>{formatDate(loan.start_date)}</TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="icon" variant="ghost">
-                          <EllipsesIcon className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditLoan(loan.id)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={loan.status === LoanStatus.Completed}
-                          onClick={() => openActionDialog(loan.id, "payment")}
-                        >
-                          Record payment
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={!nextInstallment || loan.status === LoanStatus.Completed}
-                          onClick={() => openActionDialog(loan.id, "installment")}
-                        >
-                          Mark installment completed
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={remaining <= 0 || loan.status === LoanStatus.Completed}
-                          onClick={() => openActionDialog(loan.id, "complete")}
-                        >
-                          Mark loan completed
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-500"
-                          disabled={hasPayments}
-                          onClick={() => handleDeleteLoan(loan.id)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {renderActions(loan, hasPayments, remaining, nextInstallment)}
                   </TableCell>
                 </TableRow>
               );
             })}
           </TableBody>
         </Table>
-      </div>
+          </>
+        )}
+      </section>
       <Dialog open={Boolean(actionMode && selectedLoan)} onOpenChange={(open) => !open && closeActionDialog()}>
         <DialogContent>
           <DialogHeader>

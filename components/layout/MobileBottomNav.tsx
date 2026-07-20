@@ -65,7 +65,7 @@ export function MobileBottomNav({
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden">
-      <nav className="pointer-events-auto mx-auto flex max-w-md items-center justify-between rounded-[1.5rem] border border-gray-200/80 bg-white/95 px-2 py-2 shadow-[0_16px_40px_rgba(15,23,42,0.16)] backdrop-blur">
+      <nav aria-label="Primary navigation" className="pointer-events-auto mx-auto flex max-w-md items-center justify-between rounded-[1.5rem] border border-gray-200/70 bg-white/95 px-2 py-2 shadow-[0_16px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
         {primaryItems.map((item) => {
           const isActive = isNavItemActive(pathname, item.href);
 
@@ -75,9 +75,10 @@ export function MobileBottomNav({
               href={item.href}
               prefetch
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[0.7rem] font-medium text-gray-500 transition-colors",
+                "touch-feedback flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[0.7rem] font-medium text-gray-500",
                 isActive && "bg-gray-900 text-white"
               )}
+              aria-current={isActive ? "page" : undefined}
             >
               <item.icon className="h-5 w-5 shrink-0" />
               <span className="truncate">{item.title}</span>
@@ -90,7 +91,7 @@ export function MobileBottomNav({
             <button
               type="button"
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[0.7rem] font-medium text-gray-500 transition-colors",
+                "touch-feedback flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[0.7rem] font-medium text-gray-500",
                 isMoreActive && "bg-gray-900 text-white"
               )}
               aria-label="Open more navigation items"

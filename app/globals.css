@@ -4,6 +4,9 @@
  
 @layer base {
   :root {
+    --motion-fast: 140ms;
+    --motion-ui: 200ms;
+    --ease-out-ui: cubic-bezier(0.23, 1, 0.32, 1);
     --background: 0 0% 100%;
     --foreground: 20 14.3% 4.1%;
 
@@ -96,12 +99,37 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
   }
 
   html,
   body {
     min-height: 100%;
     overscroll-behavior-y: contain;
+  }
+}
+
+@layer utilities {
+  .touch-feedback {
+    transition-duration: var(--motion-fast);
+    transition-property: transform, background-color, border-color, color,
+      box-shadow, opacity;
+    transition-timing-function: var(--ease-out-ui);
+  }
+
+  .touch-feedback:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 

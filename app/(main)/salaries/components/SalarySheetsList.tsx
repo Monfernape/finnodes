@@ -67,7 +67,7 @@ export const SalarySheetsList = ({ sheets, items }: Props) => {
         const totals = getSalarySheetTotals(sheetItems);
 
         return (
-          <Card key={sheet.id}>
+          <Card key={sheet.id} className="overflow-hidden">
             <CardHeader>
               <div className="flex items-start justify-between gap-3">
                 <CardTitle>{formatSalaryMonth(sheet.month, sheet.year)}</CardTitle>
@@ -77,13 +77,27 @@ export const SalarySheetsList = ({ sheets, items }: Props) => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-1 text-sm text-muted-foreground">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="col-span-2 rounded-xl bg-muted/70 p-3">
+                  <p className="text-xs text-muted-foreground">Employees</p>
+                  <p className="mt-0.5 font-semibold">{sheetItems.length}</p>
+                </div>
+                <div className="rounded-xl bg-muted/70 p-3">
+                  <p className="text-xs text-muted-foreground">Gross total</p>
+                  <p className="mt-0.5 truncate font-semibold tabular-nums">{formatCurrency(totals.gross)}</p>
+                </div>
+                <div className="rounded-xl bg-muted/70 p-3">
+                  <p className="text-xs text-muted-foreground">Net total</p>
+                  <p className="mt-0.5 truncate font-semibold tabular-nums">{formatCurrency(totals.net)}</p>
+                </div>
+              </div>
+              <div className="sr-only">
                 <p>{sheetItems.length} employees</p>
                 <p>Gross total: {formatCurrency(totals.gross)}</p>
                 <p>Net total: {formatCurrency(totals.net)}</p>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button asChild>
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild className="col-span-2 sm:col-span-1">
                   <Link href={`/salaries/${sheet.id}`}>Open sheet</Link>
                 </Button>
                 <Button variant="outline" asChild>
@@ -92,7 +106,7 @@ export const SalarySheetsList = ({ sheets, items }: Props) => {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="text-red-600 hover:text-red-700"
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
                   onClick={() => deleteSheet(sheet.id)}
                 >
                   Delete

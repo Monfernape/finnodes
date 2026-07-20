@@ -145,16 +145,16 @@ const Page = async ({
   });
 
   return (
-    <div className="flex flex-col">
-      <div className="flex justify-end">
-        <DateRangeFilter />
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+      <div className="rounded-2xl border border-border/70 bg-card p-2 shadow-sm sm:flex sm:justify-end">
+        <DateRangeFilter className="w-full sm:w-auto" />
       </div>
       <ExpenseReportTable expenseReport={managersWithExpenseShare} />
       <ExpenseStats
         expenses={expenses}
         expenseReport={managersWithExpenseShare}
       />
-      <div className="pt-4">
+      <div>
         <LoanRecoveryReport items={loanRecoveryItems} />
       </div>
     </div>
