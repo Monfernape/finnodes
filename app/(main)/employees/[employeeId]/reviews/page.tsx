@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { PerformanceReviewCreator } from "@/components/people/PerformanceReviewCreator";
+import { ReopenReviewSubmissionButton } from "@/components/people/ReopenReviewSubmissionButton";
 import {
   FeedbackResponseForm,
   PeerReviewAssignmentForm,
@@ -11,8 +12,10 @@ import { DatabaseTable } from "@/utils/supabase/db";
 import {
   PerformanceReview,
   FeedbackRequest,
+  FeedbackRequestStatus,
   ReviewCycle,
   ReviewSection,
+  ReviewSectionStatus,
   ReviewSectionType,
   Seat,
   SeatStatus,
@@ -95,6 +98,14 @@ export default async function EmployeeReviewsPage({
   const assignedSubjectIds = (peerFeedbackRequests ?? [])
     .map((request) => request.subject_seat_id)
     .filter((id) => id !== seatId);
+  const canReopenSubmission =
+    byType.get(ReviewSectionType.SelfReview)?.status ===
+      ReviewSectionStatus.Submitted ||
+    byType.get(ReviewSectionType.ManagerFeedback)?.status ===
+      ReviewSectionStatus.Submitted ||
+    (peerFeedbackRequests ?? []).some(
+      (request) => request.status === FeedbackRequestStatus.Submitted,
+    );
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
@@ -115,6 +126,15 @@ export default async function EmployeeReviewsPage({
       />
       {selectedReview && (
         <div className="space-y-4">
+          {canReopenSubmission && (
+            <div className="flex justify-end">
+              <ReopenReviewSubmissionButton
+                employeeName={employee.name}
+                performanceReviewId={selectedReview.id}
+                reviewerSeatId={seatId}
+              />
+            </div>
+          )}
           <ReviewSectionForm
             performanceReviewId={selectedReview.id}
             sectionType={ReviewSectionType.SelfReview}
