@@ -40,43 +40,21 @@ const formSchema = z.object({
   date_of_joining: z.string().optional(),
   gross_salary: z.string({ required_error: "Gross salary is required" }).min(1),
   net_salary: z.string({ required_error: "Net salary is required" }).min(1),
-}).superRefine((values, ctx) => {
-  if (!values.bank_linked) {
-    return;
-  }
-
-  if (!values.cnic?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["cnic"],
-      message: "CNIC is required for bank-linked employees",
-    });
-  }
-
-  if (!values.account_number?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["account_number"],
-      message: "Account number is required for bank-linked employees",
-    });
-  }
-
-  if (!values.designation?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["designation"],
-      message: "Designation is required for bank-linked employees",
-    });
-  }
-
-  if (!values.date_of_joining?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["date_of_joining"],
-      message: "Date of joining is required for bank-linked employees",
-    });
-  }
 });
+
+function getSaveErrorDescription(error: unknown, action: "saved" | "updated") {
+  if (typeof error === "object" && error !== null && "code" in error) {
+    if (error.code === "23505") {
+      return "That login email is already assigned to another employee.";
+    }
+
+    if (error.code === "PGRST116") {
+      return "This employee could not be found or you no longer have permission to edit it.";
+    }
+  }
+
+  return `Employee could not be ${action}. Please try again later.`;
+}
 
 type Props = {
   seat?: Seat;
@@ -105,8 +83,6 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
       net_salary: seat?.net_salary?.toString() || "",
     },
   });
-  const isBankLinked = form.watch("bank_linked");
-
   const mapPayload = (values: z.infer<typeof formSchema>) => ({
     name: values.name.trim(),
     login_email: values.login_email?.trim().toLowerCase() || null,
@@ -125,20 +101,21 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
       const { data, error } = await supabaseClient
         .from(DatabaseTable.Seats)
         .insert([mapPayload(values)])
-        .select();
+        .select("id, name")
+        .single();
       if (error) {
         throw error;
       }
       toast({
         title: "Employee saved",
-        description: `Employee "${data?.[0].name}" has been saved.`,
+        description: `Employee "${data.name}" has been saved.`,
       });
       markRouteStale(Routes.EMPLOYEES);
       router.push(afterSaveHref ?? Routes.EMPLOYEES);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Employee could not be saved. Please try again later.",
+        description: getSaveErrorDescription(error, "saved"),
         variant: "destructive",
       });
     }
@@ -150,20 +127,21 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
         .from(DatabaseTable.Seats)
         .update(mapPayload(values))
         .eq("id", Number(seatId))
-        .select();
+        .select("id, name")
+        .single();
       if (error) {
         throw error;
       }
       toast({
         title: "Employee updated",
-        description: `Employee "${data?.[0].name}" has been updated.`,
+        description: `Employee "${data.name}" has been updated.`,
       });
       markRouteStale(Routes.EMPLOYEES);
       router.push(afterSaveHref ?? Routes.EMPLOYEES);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Employee could not be updated. Please try again later.",
+        description: getSaveErrorDescription(error, "updated"),
         variant: "destructive",
       });
     }
@@ -304,7 +282,7 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
               name="cnic"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>CNIC {isBankLinked ? "" : "(optional)"}</FormLabel>
+                  <FormLabel>CNIC (optional)</FormLabel>
                   <FormControl>
                     <Input placeholder="36302-1589867-7" {...field} />
                   </FormControl>
@@ -317,7 +295,7 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
               name="account_number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Account number {isBankLinked ? "" : "(optional)"}</FormLabel>
+                  <FormLabel>Account number (optional)</FormLabel>
                   <FormControl>
                     <Input placeholder="07361008725061" {...field} />
                   </FormControl>
@@ -330,7 +308,7 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
               name="designation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Designation {isBankLinked ? "" : "(optional)"}</FormLabel>
+                  <FormLabel>Designation (optional)</FormLabel>
                   <FormControl>
                     <Input placeholder="Software Engineer I" {...field} />
                   </FormControl>
@@ -343,7 +321,7 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
               name="date_of_joining"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Date of joining {isBankLinked ? "" : "(optional)"}</FormLabel>
+                  <FormLabel>Date of joining (optional)</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
