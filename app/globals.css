@@ -192,7 +192,50 @@
     background: white !important;
   }
 
-  .print-hidden {
+  /* App chrome never belongs on paper: sidebar (desktop wrapper + mobile
+     sheet), page header and bottom nav are all dropped. */
+  .print-hidden,
+  [data-sidebar],
+  .group.peer {
     display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* The single region that reaches the PDF. */
+  .print-area {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    /* Without this browsers strip the table header fill and the red date. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Let the table use the full sheet instead of its on-screen scroller. */
+  .print-area .print-table-scroll {
+    overflow: visible !important;
+  }
+
+  .print-area table {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Repeat column headings on each page and never split a row across pages. */
+  .print-area thead {
+    display: table-header-group;
+  }
+
+  .print-area tr {
+    break-inside: avoid;
   }
 }

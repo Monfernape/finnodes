@@ -41,7 +41,7 @@ const SalarySheetPreviewPage = async ({
         <Button variant="outline" asChild>
           <Link href={`/salaries/${sheet.id}`}>Back to editor</Link>
         </Button>
-        <PrintButton />
+        <PrintButton sheet={sheet} items={items || []} />
       </div>
       <SalarySheetPreview sheet={sheet} items={items || []} />
     </div>

@@ -36,6 +36,15 @@ import {
   formatSalarySheetType,
 } from "@/lib/salary";
 
+const amountSchema = (label: string) =>
+  z
+    .string()
+    .min(1, `${label} is required`)
+    .refine(
+      (value) => value.trim() !== "" && Number.isFinite(Number(value)),
+      `${label} must be a number`
+    );
+
 const itemSchema = z.object({
   id: z.number().optional(),
   seat_id: z.number().nullable().optional(),
@@ -43,9 +52,11 @@ const itemSchema = z.object({
   cnic: z.string().min(1, "CNIC is required"),
   account_number: z.string().min(1, "Account number is required"),
   designation: z.string().min(1, "Designation is required"),
-  date_of_joining: z.string().min(1, "Date of joining is required"),
-  gross_salary: z.string().min(1, "Gross salary is required"),
-  net_salary: z.string().min(1, "Net salary is required"),
+  date_of_joining: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date of joining is required"),
+  gross_salary: amountSchema("Gross salary"),
+  net_salary: amountSchema("Net salary"),
 });
 
 const formSchema = z.object({
@@ -62,14 +73,35 @@ type Props = {
   items: SalarySheetItem[];
 };
 
+// Normalises a sheet into the exact shape the save writes, so the persisted
+// record and the edited form can be compared field by field.
+const buildSnapshot = (values: z.infer<typeof formSchema>) =>
+  JSON.stringify({
+    issued_on: values.issued_on,
+    recipient_name: values.recipient_name.trim(),
+    recipient_bank: values.recipient_bank.trim(),
+    salutation: values.salutation.trim(),
+    letter_body: values.letter_body.trim(),
+    items: values.items.map((item, index) => ({
+      seat_id: item.seat_id || null,
+      name: item.name.trim(),
+      cnic: item.cnic.trim(),
+      account_number: item.account_number.trim(),
+      designation: item.designation.trim(),
+      date_of_joining: item.date_of_joining,
+      gross_salary: Number(item.gross_salary),
+      net_salary: Number(item.net_salary),
+      sort_order: index,
+    })),
+  });
+
 export const SalarySheetEditor = ({ sheet, items }: Props) => {
   const router = useRouter();
   const supabaseClient = createClient();
   const { toast } = useToast();
   const initialIds = React.useMemo(() => items.map((item) => item.id), [items]);
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
+  const persistedValues = React.useMemo(
+    () => ({
       issued_on: sheet.issued_on,
       recipient_name: sheet.recipient_name,
       recipient_bank: sheet.recipient_bank,
@@ -88,7 +120,16 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
           gross_salary: item.gross_salary.toString(),
           net_salary: item.net_salary.toString(),
         })),
-    },
+    }),
+    [sheet, items]
+  );
+  const persistedSnapshot = React.useMemo(
+    () => buildSnapshot(persistedValues),
+    [persistedValues]
+  );
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: persistedValues,
   });
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -118,6 +159,14 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (buildSnapshot(values) === persistedSnapshot) {
+      toast({
+        title: "No changes to save",
+        description: "This salary sheet already matches what you have on screen.",
+      });
+      return;
+    }
+
     try {
       const { error: sheetError } = await supabaseClient
         .from(DatabaseTable.SalarySheets)
@@ -140,6 +189,7 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
         const { error: deleteError } = await supabaseClient
           .from(DatabaseTable.SalarySheetItems)
           .delete()
+          .eq("salary_sheet_id", sheet.id)
           .in("id", removedIds);
         if (deleteError) {
           throw deleteError;
@@ -182,7 +232,7 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
         }))
         .filter((item) => !item.id);
       if (newRows.length > 0) {
-        const { error: insertError } = await supabaseClient
+        const { data: insertedRows, error: insertError } = await supabaseClient
           .from(DatabaseTable.SalarySheetItems)
           .insert(
             newRows.map((item) => ({
@@ -197,10 +247,18 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
               net_salary: Number(item.net_salary),
               sort_order: item.sort_order,
             }))
-          );
+          )
+          .select()
+          .returns<SalarySheetItem[]>();
         if (insertError) {
           throw insertError;
         }
+        (insertedRows || []).forEach((row, index) => {
+          const formIndex = newRows[index]?.sort_order;
+          if (formIndex !== undefined) {
+            form.setValue(`items.${formIndex}.id`, row.id);
+          }
+        });
       }
 
       toast({
@@ -208,9 +266,16 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
       });
       router.refresh();
     } catch (error) {
+      console.error("Salary sheet update failed", error);
+      const reason =
+        error && typeof error === "object" && "message" in error
+          ? String((error as { message: unknown }).message)
+          : "";
       toast({
         title: "Error",
-        description: "Salary sheet could not be updated. Please try again later.",
+        description: reason
+          ? `Salary sheet could not be updated: ${reason}`
+          : "Salary sheet could not be updated. Please try again later.",
         variant: "destructive",
       });
     }

@@ -18,7 +18,7 @@ export const SalarySheetPreview = ({ sheet, items }: Props) => {
   });
 
   return (
-    <div className="mx-auto w-full max-w-[960px] bg-white p-6 text-black shadow sm:p-10">
+    <div className="print-area mx-auto w-full max-w-[960px] bg-white p-6 text-black shadow sm:p-10">
       <div className="mb-10 flex justify-end">
         <p className="text-lg font-semibold text-red-600">
           {formatPreviewDate(sheet.issued_on)}
@@ -37,7 +37,7 @@ export const SalarySheetPreview = ({ sheet, items }: Props) => {
         <p className="pl-8 whitespace-pre-line">{sheet.letter_body}</p>
       </div>
 
-      <div className="mt-8 overflow-x-auto">
+      <div className="print-table-scroll mt-8 overflow-x-auto">
         <table className="w-full min-w-[900px] border-collapse text-left text-sm">
           <thead>
             <tr className="bg-[#f4b183]">

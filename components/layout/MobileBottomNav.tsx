@@ -64,7 +64,7 @@ export function MobileBottomNav({
   };
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden">
+    <div className="print-hidden pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden">
       <nav aria-label="Primary navigation" className="pointer-events-auto mx-auto flex max-w-md items-center justify-between rounded-[1.5rem] border border-gray-200/70 bg-white/95 px-2 py-2 shadow-[0_16px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
         {primaryItems.map((item) => {
           const isActive = isNavItemActive(pathname, item.href);

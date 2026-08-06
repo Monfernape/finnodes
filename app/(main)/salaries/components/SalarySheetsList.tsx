@@ -97,7 +97,7 @@ export const SalarySheetsList = ({ sheets, items }: Props) => {
                 <p>Net total: {formatCurrency(totals.net)}</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Button asChild className="col-span-2 sm:col-span-1">
+                <Button asChild className="col-span-2">
                   <Link href={`/salaries/${sheet.id}`}>Open sheet</Link>
                 </Button>
                 <Button variant="outline" asChild>
@@ -105,8 +105,8 @@ export const SalarySheetsList = ({ sheets, items }: Props) => {
                 </Button>
                 <Button
                   type="button"
-                  variant="ghost"
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  variant="outline"
+                  className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   onClick={() => deleteSheet(sheet.id)}
                 >
                   Delete

@@ -13,7 +13,7 @@ export const PageTitle = () => {
   useRoutePrefetch([backRoute, addRoute]);
 
   return (
-    <header className="sticky top-0 z-30 flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6 dark:border-gray-800">
+    <header className="print-hidden sticky top-0 z-30 flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-background/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6 dark:border-gray-800">
       <div className="flex min-w-0 items-center gap-3">
         <SidebarTrigger className="h-11 w-11 rounded-full border-gray-200 bg-white/90 shadow-sm backdrop-blur hover:bg-white lg:hidden" />
         {backRoute && (
