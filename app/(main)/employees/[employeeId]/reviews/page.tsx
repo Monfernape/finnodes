@@ -7,6 +7,11 @@ import {
   PeerReviewAssignmentForm,
 } from "@/components/people/FeedbackRequestForm";
 import { ReviewSectionForm } from "@/components/people/ReviewSectionForm";
+import { ReviewModeSwitcher } from "@/components/people/ReviewModeSwitcher";
+import {
+  PerformanceReviewPreview,
+  type PerformanceReviewPreviewSection,
+} from "@/components/people/PerformanceReviewPreview";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import {
@@ -23,6 +28,7 @@ import {
 import {
   MANAGER_FEEDBACK_PROMPTS,
   MANAGER_REVIEW_PROMPTS,
+  PEER_FEEDBACK_PROMPTS,
   SELF_REVIEW_PROMPTS,
 } from "@/lib/people";
 import { getServerPeopleAccess } from "@/utils/auth/server-access";
@@ -106,6 +112,53 @@ export default async function EmployeeReviewsPage({
     (peerFeedbackRequests ?? []).some(
       (request) => request.status === FeedbackRequestStatus.Submitted,
     );
+  const selectedCycle = selectedReview
+    ? (cycles ?? []).find(
+        (reviewCycle) => reviewCycle.id === selectedReview.review_cycle_id,
+      )
+    : null;
+  const previewSections: PerformanceReviewPreviewSection[] = selectedReview
+    ? [
+        {
+          title: "Self review",
+          status:
+            byType.get(ReviewSectionType.SelfReview)?.status ??
+            ReviewSectionStatus.Draft,
+          prompts: SELF_REVIEW_PROMPTS,
+          answers:
+            byType.get(ReviewSectionType.SelfReview)?.answers ?? {},
+        },
+        {
+          title: "Manager review",
+          status:
+            byType.get(ReviewSectionType.ManagerReview)?.status ??
+            ReviewSectionStatus.Draft,
+          prompts: MANAGER_REVIEW_PROMPTS,
+          answers:
+            byType.get(ReviewSectionType.ManagerReview)?.answers ?? {},
+        },
+        {
+          title: "Manager feedback from employee",
+          status:
+            byType.get(ReviewSectionType.ManagerFeedback)?.status ??
+            ReviewSectionStatus.Draft,
+          prompts: MANAGER_FEEDBACK_PROMPTS,
+          answers:
+            byType.get(ReviewSectionType.ManagerFeedback)?.answers ?? {},
+        },
+        ...(peerFeedbackRequests ?? []).map((request) => ({
+          title: `Peer review: ${
+            seatsById.get(request.subject_seat_id)?.name ?? "Employee"
+          }`,
+          status: request.status,
+          prompts:
+            request.prompt_set.length > 0
+              ? request.prompt_set
+              : PEER_FEEDBACK_PROMPTS,
+          answers: request.answers,
+        })),
+      ]
+    : [];
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
@@ -125,84 +178,94 @@ export default async function EmployeeReviewsPage({
         selectedReviewId={selectedReview?.id ?? null}
       />
       {selectedReview && (
-        <div className="space-y-4">
-          {canReopenSubmission && (
-            <div className="flex justify-end">
-              <ReopenReviewSubmissionButton
-                employeeName={employee.name}
-                performanceReviewId={selectedReview.id}
-                reviewerSeatId={seatId}
-              />
-            </div>
-          )}
-          <ReviewSectionForm
-            performanceReviewId={selectedReview.id}
-            sectionType={ReviewSectionType.SelfReview}
-            title="Self review"
-            prompts={SELF_REVIEW_PROMPTS}
-            authorEmail={employee.login_email ?? access?.email ?? ""}
-            initialSection={byType.get(ReviewSectionType.SelfReview) ?? null}
-            afterSaveHref={`/employees/${seatId}/reviews`}
-            canEdit={false}
-          />
-          <ReviewSectionForm
-            performanceReviewId={selectedReview.id}
-            sectionType={ReviewSectionType.ManagerReview}
-            title="Manager review"
-            prompts={MANAGER_REVIEW_PROMPTS}
-            authorEmail={access?.email ?? ""}
-            initialSection={byType.get(ReviewSectionType.ManagerReview) ?? null}
-            afterSaveHref={`/employees/${seatId}/reviews`}
-            canEdit
-            canPublish
-          />
-          <ReviewSectionForm
-            performanceReviewId={selectedReview.id}
-            sectionType={ReviewSectionType.ManagerFeedback}
-            title="Manager feedback from employee"
-            prompts={MANAGER_FEEDBACK_PROMPTS}
-            authorEmail={employee.login_email ?? ""}
-            initialSection={byType.get(ReviewSectionType.ManagerFeedback) ?? null}
-            afterSaveHref={`/employees/${seatId}/reviews`}
-            canEdit={false}
-          />
-          <section className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <div>
-              <h2 className="text-base font-semibold text-gray-950">
-                Peer reviews
-              </h2>
-              <p className="text-sm text-gray-500">
-                Assign peers for {employee.name} to review in this cycle.
-              </p>
-            </div>
-            <PeerReviewAssignmentForm
-              seats={activeSeats ?? []}
-              managerEmail={access?.email ?? ""}
-              reviewerSeatId={seatId}
-              performanceReviewId={selectedReview.id}
-              existingSubjectSeatIds={assignedSubjectIds}
-              afterSaveHref={`/employees/${seatId}/reviews`}
+        <ReviewModeSwitcher
+          preview={
+            <PerformanceReviewPreview
+              employeeName={employee.name}
+              reviewName={`${selectedCycle?.name ?? "Performance"} review`}
+              sections={previewSections}
             />
-            {(peerFeedbackRequests ?? []).length === 0 && (
-              <p className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">
-                No peer reviews assigned yet.
-              </p>
-            )}
-            {(peerFeedbackRequests ?? []).map((request) => {
-              const peer = seatsById.get(request.subject_seat_id);
-
-              return (
-                <FeedbackResponseForm
-                  key={request.id}
-                  request={request}
-                  canEdit={false}
-                  title={`Peer review: ${peer?.name ?? "Employee"}`}
-                  description={`Assigned to ${employee.name}`}
+          }
+        >
+          <div className="space-y-4">
+            {canReopenSubmission && (
+              <div className="flex justify-end">
+                <ReopenReviewSubmissionButton
+                  employeeName={employee.name}
+                  performanceReviewId={selectedReview.id}
+                  reviewerSeatId={seatId}
                 />
-              );
-            })}
-          </section>
-        </div>
+              </div>
+            )}
+            <ReviewSectionForm
+              performanceReviewId={selectedReview.id}
+              sectionType={ReviewSectionType.SelfReview}
+              title="Self review"
+              prompts={SELF_REVIEW_PROMPTS}
+              authorEmail={employee.login_email ?? access?.email ?? ""}
+              initialSection={byType.get(ReviewSectionType.SelfReview) ?? null}
+              afterSaveHref={`/employees/${seatId}/reviews`}
+              canEdit={false}
+            />
+            <ReviewSectionForm
+              performanceReviewId={selectedReview.id}
+              sectionType={ReviewSectionType.ManagerReview}
+              title="Manager review"
+              prompts={MANAGER_REVIEW_PROMPTS}
+              authorEmail={access?.email ?? ""}
+              initialSection={byType.get(ReviewSectionType.ManagerReview) ?? null}
+              afterSaveHref={`/employees/${seatId}/reviews`}
+              canEdit
+              canPublish
+            />
+            <ReviewSectionForm
+              performanceReviewId={selectedReview.id}
+              sectionType={ReviewSectionType.ManagerFeedback}
+              title="Manager feedback from employee"
+              prompts={MANAGER_FEEDBACK_PROMPTS}
+              authorEmail={employee.login_email ?? ""}
+              initialSection={byType.get(ReviewSectionType.ManagerFeedback) ?? null}
+              afterSaveHref={`/employees/${seatId}/reviews`}
+              canEdit={false}
+            />
+            <section className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div>
+                <h2 className="text-base font-semibold text-gray-950">
+                  Peer reviews
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Assign peers for {employee.name} to review in this cycle.
+                </p>
+              </div>
+              <PeerReviewAssignmentForm
+                seats={activeSeats ?? []}
+                managerEmail={access?.email ?? ""}
+                reviewerSeatId={seatId}
+                performanceReviewId={selectedReview.id}
+                existingSubjectSeatIds={assignedSubjectIds}
+                afterSaveHref={`/employees/${seatId}/reviews`}
+              />
+              {(peerFeedbackRequests ?? []).length === 0 && (
+                <p className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">
+                  No peer reviews assigned yet.
+                </p>
+              )}
+              {(peerFeedbackRequests ?? []).map((request) => {
+                const peer = seatsById.get(request.subject_seat_id);
+
+                return (
+                  <FeedbackResponseForm
+                    key={request.id}
+                    request={request}
+                    canEdit={false}
+                    title={`Peer review: ${peer?.name ?? "Employee"}`}
+                    description={`Assigned to ${employee.name}`}
+                  />
+                );
+              })}
+            </section>
+          </div>
+        </ReviewModeSwitcher>
       )}
     </div>
   );
