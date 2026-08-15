@@ -13,6 +13,7 @@ export enum DatabaseTable {
   ReviewCycles = "review_cycles",
   PerformanceReviews = "performance_reviews",
   ReviewSections = "review_sections",
+  ReviewNotificationOutbox = "review_notification_outbox",
   FeedbackRequests = "feedback_requests",
   ProjectAssignments = "project_assignments",
 }
