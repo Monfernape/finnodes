@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DuplicateSheetDialog } from "./DuplicateSheetDialog";
 import {
   formatCurrency,
   formatSalaryMonth,
@@ -103,10 +104,11 @@ export const SalarySheetsList = ({ sheets, items }: Props) => {
                 <Button variant="outline" asChild>
                   <Link href={`/salaries/${sheet.id}/preview`}>Preview</Link>
                 </Button>
+                <DuplicateSheetDialog sheet={sheet} />
                 <Button
                   type="button"
                   variant="outline"
-                  className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  className="col-span-2 border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   onClick={() => deleteSheet(sheet.id)}
                 >
                   Delete
