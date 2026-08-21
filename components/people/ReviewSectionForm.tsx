@@ -10,9 +10,10 @@ import { createClient } from "@/utils/supabase/client";
 import { DatabaseTable } from "@/utils/supabase/db";
 import {
   ReviewSectionStatus,
+  ReviewSectionType,
   type ReviewSection,
-  type ReviewSectionType,
 } from "@/entities";
+import { saveManagerReview } from "@/lib/people/review-actions";
 
 type ReviewSectionFormProps = {
   performanceReviewId: number;
@@ -49,6 +50,41 @@ export function ReviewSectionForm({
 
   const save = async (nextStatus: ReviewSectionStatus) => {
     setSaving(true);
+
+    if (sectionType === ReviewSectionType.ManagerReview) {
+      try {
+        const result = await saveManagerReview({
+          performanceReviewId,
+          answers,
+          status: nextStatus,
+        });
+        const warning = result.ok && result.warning;
+
+        toast({
+          title: result.title,
+          description: result.description,
+          variant: !result.ok || warning ? "destructive" : "default",
+        });
+
+        if (!result.ok) {
+          return;
+        }
+
+        router.push(afterSaveHref);
+        router.refresh();
+      } catch {
+        toast({
+          title: "Could not save manager review",
+          description: "Refresh the page and try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setSaving(false);
+      }
+
+      return;
+    }
+
     const payload = {
       performance_review_id: performanceReviewId,
       section_type: sectionType,
@@ -133,7 +169,7 @@ export function ReviewSectionForm({
               disabled={saving}
               className="rounded-full"
             >
-              Publish
+              Share with employee
             </Button>
           )}
         </div>
