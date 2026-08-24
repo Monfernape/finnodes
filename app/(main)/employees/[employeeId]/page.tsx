@@ -18,18 +18,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import {
+  ExperienceLetter,
   Manager,
   ManagerStatus,
   OneOnOne,
   PerformanceReview,
+  SalarySlip,
   Seat,
   SeatStatus,
 } from "@/entities";
+import {
+  ExperienceLettersList,
+  SalarySlipsList,
+} from "@/components/documents/DocumentLists";
 import { getCurrentYear, getMonthName } from "@/lib/people";
 
 const EMPLOYEE_TABS = [
   { label: "Profile", value: "profile" },
   { label: "Notes", value: "notes" },
+  { label: "Salary slips", value: "salary-slips" },
+  { label: "Experience letters", value: "experience-letters" },
   { label: "Edit", value: "edit" },
 ];
 
@@ -155,8 +163,14 @@ export default async function EmployeePage({
 
   const supabase = await createClient();
   const year = getCurrentYear();
-  const [{ data: employee }, { data: managers }, { data: oneOnOnes }, { data: reviews }] =
-    await Promise.all([
+  const [
+    { data: employee },
+    { data: managers },
+    { data: oneOnOnes },
+    { data: reviews },
+    { data: salarySlips },
+    { data: experienceLetters },
+  ] = await Promise.all([
       supabase.from(DatabaseTable.Seats).select().eq("id", id).maybeSingle<Seat>(),
       supabase
         .from(DatabaseTable.Managers)
@@ -176,11 +190,31 @@ export default async function EmployeePage({
         .order("created_at", { ascending: false })
         .limit(1)
         .returns<PerformanceReview[]>(),
+      supabase
+        .from(DatabaseTable.SalarySlips)
+        .select()
+        .eq("seat_id", id)
+        .order("year", { ascending: false })
+        .order("month", { ascending: false })
+        .returns<SalarySlip[]>(),
+      supabase
+        .from(DatabaseTable.ExperienceLetters)
+        .select()
+        .eq("seat_id", id)
+        .order("issued_on", { ascending: false })
+        .returns<ExperienceLetter[]>(),
     ]);
 
   if (!employee) notFound();
 
-  const activeTab = tab === "notes" || tab === "edit" || tab === "form" ? tab : "profile";
+  const activeTab =
+    tab === "notes" ||
+    tab === "edit" ||
+    tab === "form" ||
+    tab === "salary-slips" ||
+    tab === "experience-letters"
+      ? tab
+      : "profile";
   const normalizedTab = activeTab === "form" ? "edit" : activeTab;
   const manager = managers?.find((item) => item.seats.includes(employee.id));
   const latestOneOnOne = [...(oneOnOnes ?? [])].sort((a, b) => b.month - a.month)[0];
@@ -304,6 +338,22 @@ export default async function EmployeePage({
           </div>
         )}
       </section>
+
+      {normalizedTab === "salary-slips" && (
+        <SalarySlipsList
+          slips={salarySlips ?? []}
+          basePath={`/employees/${employee.id}/salary-slips`}
+          createPath={`/employees/${employee.id}/salary-slips/new`}
+        />
+      )}
+
+      {normalizedTab === "experience-letters" && (
+        <ExperienceLettersList
+          letters={experienceLetters ?? []}
+          basePath={`/employees/${employee.id}/experience-letters`}
+          createPath={`/employees/${employee.id}/experience-letters/new`}
+        />
+      )}
 
       {normalizedTab === "notes" && (
         <section className="grid items-stretch gap-3 md:grid-cols-2">

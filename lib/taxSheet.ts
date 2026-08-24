@@ -59,6 +59,22 @@ export type TaxSheet = {
   tax: number;
 };
 
+export type TaxSheetSummary = {
+  taxYearId: number;
+  monthsCovered: number;
+  taxableEmployees: number;
+  taxablePay: number;
+  tax: number;
+};
+
+export const summariseTaxSheet = (sheet: TaxSheet): TaxSheetSummary => ({
+  taxYearId: sheet.taxYear.id,
+  monthsCovered: sheet.monthsCovered,
+  taxableEmployees: sheet.employees.length,
+  taxablePay: sheet.taxablePay,
+  tax: sheet.tax,
+});
+
 export const buildTaxSheet = (
   taxYear: TaxYear,
   slabs: TaxSlab[],

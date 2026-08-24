@@ -4,7 +4,8 @@ import { getServerPeopleAccess } from "@/utils/auth/server-access";
 import { PeopleRole } from "@/utils/auth/people-access";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
-import { Seat, TaxSlab, TaxYear } from "@/entities";
+import { SalarySheet, SalarySheetItem, TaxSlab, TaxYear } from "@/entities";
+import { buildTaxSheet, summariseTaxSheet } from "@/lib/taxSheet";
 import { TaxYearsList } from "./components/TaxYearsList";
 
 const TaxPage = async () => {
@@ -25,16 +26,34 @@ const TaxPage = async () => {
     .select()
     .order("sort_order", { ascending: true })
     .returns<TaxSlab[]>();
-  const { data: seats } = await supabaseClient
-    .from(DatabaseTable.Seats)
+  const { data: salarySheets } = await supabaseClient
+    .from(DatabaseTable.SalarySheets)
     .select()
-    .returns<Seat[]>();
+    .returns<SalarySheet[]>();
+  const { data: items } = await supabaseClient
+    .from(DatabaseTable.SalarySheetItems)
+    .select()
+    .returns<SalarySheetItem[]>();
+
+  // Each card previews the sheet it opens, so the figures are built from the
+  // same source rather than from a separate projection. Summarised here so the
+  // browser never receives every salary row.
+  const summaries = (taxYears || []).map((taxYear) =>
+    summariseTaxSheet(
+      buildTaxSheet(
+        taxYear,
+        (slabs || []).filter((slab) => slab.tax_year_id === taxYear.id),
+        salarySheets || [],
+        items || []
+      )
+    )
+  );
 
   return (
     <TaxYearsList
       taxYears={taxYears || []}
       slabs={slabs || []}
-      seats={seats || []}
+      summaries={summaries}
     />
   );
 };

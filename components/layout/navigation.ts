@@ -1,9 +1,11 @@
 import {
+  FileTextIcon,
   HandCoinsIcon,
   LayoutGridIcon,
   LogOutIcon,
   NotebookPenIcon,
   PercentIcon,
+  ReceiptTextIcon,
   StarIcon,
   UsersIcon,
   WalletCardsIcon,
@@ -67,6 +69,16 @@ export const EMPLOYEE_NAVIGATION_ITEMS: NavigationItem[] = [
     icon: StarIcon,
     href: "/me/reviews",
   },
+  {
+    title: "Salary Slips",
+    icon: ReceiptTextIcon,
+    href: "/me/salary-slips",
+  },
+  {
+    title: "Experience Letters",
+    icon: FileTextIcon,
+    href: "/me/experience-letters",
+  },
 ];
 
 export const MOBILE_PRIMARY_NAV: NavigationItem[] = [
@@ -74,7 +86,10 @@ export const MOBILE_PRIMARY_NAV: NavigationItem[] = [
   NAVIGATION_ITEMS[1],
 ];
 
-export const EMPLOYEE_MOBILE_PRIMARY_NAV = EMPLOYEE_NAVIGATION_ITEMS;
+export const EMPLOYEE_MOBILE_PRIMARY_NAV = [
+  EMPLOYEE_NAVIGATION_ITEMS[0],
+  EMPLOYEE_NAVIGATION_ITEMS[1],
+];
 
 export const MOBILE_MORE_NAV = {
   title: "More",

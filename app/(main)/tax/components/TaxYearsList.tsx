@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { Seat, TaxSlab, TaxYear } from "@/entities";
+import { TaxSlab, TaxYear } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,20 +14,27 @@ import {
   formatTaxCurrency,
   formatTaxYearLabel,
   formatTaxYearPeriod,
-  getSeatTaxRows,
-  getTaxTotals,
 } from "@/lib/tax";
+import type { TaxSheetSummary } from "@/lib/taxSheet";
 
 type Props = {
   taxYears: TaxYear[];
   slabs: TaxSlab[];
-  seats: Seat[];
+  summaries: TaxSheetSummary[];
 };
 
-export const TaxYearsList = ({ taxYears, slabs, seats }: Props) => {
+export const TaxYearsList = ({ taxYears, slabs, summaries }: Props) => {
   const router = useRouter();
   const supabaseClient = createClient();
   const { toast } = useToast();
+
+  const summaryByYearId = summaries.reduce(
+    (acc, summary) => {
+      acc[summary.taxYearId] = summary;
+      return acc;
+    },
+    {} as Record<number, TaxSheetSummary>
+  );
 
   const slabsByYearId = slabs.reduce(
     (acc, slab) => {
@@ -67,7 +74,7 @@ export const TaxYearsList = ({ taxYears, slabs, seats }: Props) => {
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {taxYears.map((taxYear) => {
         const yearSlabs = slabsByYearId[taxYear.id] || [];
-        const totals = getTaxTotals(getSeatTaxRows(seats, yearSlabs, taxYear));
+        const summary = summaryByYearId[taxYear.id];
 
         return (
           <Card key={taxYear.id} className="overflow-hidden">
@@ -87,26 +94,30 @@ export const TaxYearsList = ({ taxYears, slabs, seats }: Props) => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="rounded-xl bg-muted/70 p-3">
-                  <p className="text-xs text-muted-foreground">Taxable staff</p>
-                  <p className="mt-0.5 font-semibold">{totals.taxable}</p>
+                  <p className="text-xs text-muted-foreground">Months covered</p>
+                  <p className="mt-0.5 font-semibold">
+                    {summary ? `${summary.monthsCovered} of 12` : "—"}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-muted/70 p-3">
-                  <p className="text-xs text-muted-foreground">Surcharge</p>
+                  <p className="text-xs text-muted-foreground">
+                    Taxable employees
+                  </p>
                   <p className="mt-0.5 font-semibold">
-                    {taxYear.surcharge_threshold === null
-                      ? "None"
-                      : `${Number(taxYear.surcharge_rate)}%`}
+                    {summary ? summary.taxableEmployees : "—"}
                   </p>
                 </div>
                 <div className="col-span-2 rounded-xl bg-muted/70 p-3">
                   <p className="text-xs text-muted-foreground">
-                    Annual tax across active staff
+                    Tax for the year
                   </p>
                   <p className="mt-0.5 truncate font-semibold tabular-nums">
-                    {formatTaxCurrency(totals.annualTax)}
+                    {summary ? formatTaxCurrency(summary.tax) : "—"}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-                    {formatTaxAmount(totals.monthlyTax)} per month
+                    {summary
+                      ? `${formatTaxAmount(summary.taxablePay)} taxable pay`
+                      : "No salary sheets yet"}
                   </p>
                 </div>
               </div>

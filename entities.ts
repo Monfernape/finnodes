@@ -84,6 +84,11 @@ export enum SalarySheetType {
   Second = "second",
 }
 
+export enum SalarySlipLineType {
+  Earning = "earning",
+  Deduction = "deduction",
+}
+
 export type Expense = {
   id: number;
   title: string;
@@ -108,6 +113,10 @@ export type Seat = {
   date_of_joining: string | null;
   gross_salary: number;
   net_salary: number;
+  utility_allowance: number;
+  fuel_allowance: number;
+  meal_allowance: number;
+  other_allowance: number;
   created_at: string;
 };
 
@@ -331,5 +340,48 @@ export type TaxSlab = {
   fixed_amount: number;
   rate_percent: number;
   sort_order: number;
+  created_at: string;
+};
+
+export type SalarySlip = {
+  id: number;
+  seat_id: number;
+  month: number;
+  year: number;
+  issued_on: string;
+  employee_name: string;
+  designation: string;
+  contact_number: string;
+  date_of_joining: string | null;
+  gross_salary: number;
+  net_salary: number;
+  total_deductions: number;
+  recipient_name: string;
+  purpose: string;
+  created_by_email: string;
+  created_at: string;
+};
+
+export type SalarySlipLine = {
+  id: number;
+  salary_slip_id: number;
+  line_type: SalarySlipLineType;
+  label: string;
+  amount: number;
+  sort_order: number;
+  created_at: string;
+};
+
+export type ExperienceLetter = {
+  id: number;
+  seat_id: number;
+  issued_on: string;
+  employee_name: string;
+  designation: string;
+  date_of_joining: string | null;
+  served_until: string | null;
+  technologies: string[];
+  mentions_client: boolean;
+  created_by_email: string;
   created_at: string;
 };

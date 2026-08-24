@@ -18,4 +18,7 @@ export enum DatabaseTable {
   ProjectAssignments = "project_assignments",
   TaxYears = "tax_years",
   TaxSlabs = "tax_slabs",
+  SalarySlips = "salary_slips",
+  SalarySlipLines = "salary_slip_lines",
+  ExperienceLetters = "experience_letters",
 }

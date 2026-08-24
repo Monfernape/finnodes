@@ -40,6 +40,26 @@ const formSchema = z.object({
   date_of_joining: z.string().optional(),
   gross_salary: z.string({ required_error: "Gross salary is required" }).min(1),
   net_salary: z.string({ required_error: "Net salary is required" }).min(1),
+  utility_allowance: z.string(),
+  fuel_allowance: z.string(),
+  meal_allowance: z.string(),
+  other_allowance: z.string(),
+}).superRefine((values, ctx) => {
+  // Basic pay on a salary slip is gross minus these, so allowances that exceed
+  // the gross salary would print a negative basic line.
+  const allowanceTotal =
+    Number(values.utility_allowance || 0) +
+    Number(values.fuel_allowance || 0) +
+    Number(values.meal_allowance || 0) +
+    Number(values.other_allowance || 0);
+
+  if (allowanceTotal > Number(values.gross_salary || 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["utility_allowance"],
+      message: "Allowances cannot exceed the gross salary",
+    });
+  }
 });
 
 function getSaveErrorDescription(error: unknown, action: "saved" | "updated") {
@@ -81,6 +101,10 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
       date_of_joining: seat?.date_of_joining || "",
       gross_salary: seat?.gross_salary?.toString() || "",
       net_salary: seat?.net_salary?.toString() || "",
+      utility_allowance: seat?.utility_allowance?.toString() || "0",
+      fuel_allowance: seat?.fuel_allowance?.toString() || "0",
+      meal_allowance: seat?.meal_allowance?.toString() || "0",
+      other_allowance: seat?.other_allowance?.toString() || "0",
     },
   });
   const mapPayload = (values: z.infer<typeof formSchema>) => ({
@@ -94,6 +118,10 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
     date_of_joining: values.date_of_joining || null,
     gross_salary: Number(values.gross_salary),
     net_salary: Number(values.net_salary),
+    utility_allowance: Number(values.utility_allowance || 0),
+    fuel_allowance: Number(values.fuel_allowance || 0),
+    meal_allowance: Number(values.meal_allowance || 0),
+    other_allowance: Number(values.other_allowance || 0),
   });
 
   async function saveSeat(values: z.infer<typeof formSchema>) {
@@ -240,6 +268,60 @@ export const SeatFormBuilder = ({ seat, afterSaveHref }: Props) => {
                   <FormLabel>Net salary</FormLabel>
                   <FormControl>
                     <Input inputMode="numeric" placeholder="48000" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* The allowance split a salary slip prints. Whatever is left of the
+                gross salary after these becomes the basic pay line. */}
+            <FormField
+              control={form.control}
+              name="utility_allowance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Utility allowance</FormLabel>
+                  <FormControl>
+                    <Input inputMode="numeric" placeholder="0" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="fuel_allowance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fuel allowance</FormLabel>
+                  <FormControl>
+                    <Input inputMode="numeric" placeholder="0" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="meal_allowance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meal allowance</FormLabel>
+                  <FormControl>
+                    <Input inputMode="numeric" placeholder="0" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="other_allowance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Other allowance</FormLabel>
+                  <FormControl>
+                    <Input inputMode="numeric" placeholder="0" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -24,6 +24,8 @@ export enum Routes {
   REPORTS = "/reports",
   ME_ONE_ON_ONES = "/me/one-on-ones",
   ME_REVIEWS = "/me/reviews",
+  ME_SALARY_SLIPS = "/me/salary-slips",
+  ME_EXPERIENCE_LETTERS = "/me/experience-letters",
   NOT_FOUND = "/_not-found",
 }
 
@@ -133,7 +135,33 @@ export const useToolbar = () => {
           };
         }
 
-        if (tab === "notes" || tab === "edit" || tab === "form") {
+        if (employeeRouteParts[2] === "salary-slips") {
+          return {
+            title:
+              employeeRouteParts[3] === "new"
+                ? "New Salary Slip"
+                : "Salary Slip",
+            backRoute: `${employeeBaseRoute}?tab=salary-slips`,
+          };
+        }
+
+        if (employeeRouteParts[2] === "experience-letters") {
+          return {
+            title:
+              employeeRouteParts[3] === "new"
+                ? "New Experience Letter"
+                : "Experience Letter",
+            backRoute: `${employeeBaseRoute}?tab=experience-letters`,
+          };
+        }
+
+        if (
+          tab === "notes" ||
+          tab === "edit" ||
+          tab === "form" ||
+          tab === "salary-slips" ||
+          tab === "experience-letters"
+        ) {
           return {
             title: "Employee",
             backRoute: employeeBaseRoute,
@@ -223,6 +251,34 @@ export const useToolbar = () => {
       case pathname === Routes.ME_REVIEWS:
         return {
           title: "Reviews",
+        };
+      case pathname === Routes.ME_SALARY_SLIPS:
+        return {
+          title: "Salary Slips",
+        };
+      case pathname === `${Routes.ME_SALARY_SLIPS}/new`:
+        return {
+          title: "New Salary Slip",
+          backRoute: Routes.ME_SALARY_SLIPS,
+        };
+      case pathname.startsWith(`${Routes.ME_SALARY_SLIPS}/`):
+        return {
+          title: "Salary Slip",
+          backRoute: Routes.ME_SALARY_SLIPS,
+        };
+      case pathname === Routes.ME_EXPERIENCE_LETTERS:
+        return {
+          title: "Experience Letters",
+        };
+      case pathname === `${Routes.ME_EXPERIENCE_LETTERS}/new`:
+        return {
+          title: "New Experience Letter",
+          backRoute: Routes.ME_EXPERIENCE_LETTERS,
+        };
+      case pathname.startsWith(`${Routes.ME_EXPERIENCE_LETTERS}/`):
+        return {
+          title: "Experience Letter",
+          backRoute: Routes.ME_EXPERIENCE_LETTERS,
         };
       default:
         if (!(pathname in Routes)) {

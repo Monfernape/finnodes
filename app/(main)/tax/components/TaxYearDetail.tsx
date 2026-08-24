@@ -128,9 +128,12 @@ export const TaxYearDetail = ({ taxYear, slabs, seats }: Props) => {
 
       <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
         <div className="border-b px-4 py-3 sm:px-5">
-          <h2 className="font-semibold tracking-tight">Tax by employee</h2>
+          <h2 className="font-semibold tracking-tight">
+            Projection at current salaries
+          </h2>
           <p className="text-xs text-muted-foreground">
-            Active staff, annual income taken as monthly gross across twelve months
+            Each active seat&apos;s monthly gross across twelve months. The tax
+            sheet reports what was actually paid instead.
           </p>
         </div>
         {rows.length === 0 ? (
