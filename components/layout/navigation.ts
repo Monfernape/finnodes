@@ -3,6 +3,7 @@ import {
   LayoutGridIcon,
   LogOutIcon,
   NotebookPenIcon,
+  PercentIcon,
   StarIcon,
   UsersIcon,
   WalletCardsIcon,
@@ -42,6 +43,11 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     title: "Salaries",
     icon: WalletCardsIcon,
     href: "/salaries",
+  },
+  {
+    title: "Tax",
+    icon: PercentIcon,
+    href: "/tax",
   },
   {
     title: "Reports",

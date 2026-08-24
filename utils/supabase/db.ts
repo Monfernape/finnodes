@@ -16,4 +16,6 @@ export enum DatabaseTable {
   ReviewNotificationOutbox = "review_notification_outbox",
   FeedbackRequests = "feedback_requests",
   ProjectAssignments = "project_assignments",
+  TaxYears = "tax_years",
+  TaxSlabs = "tax_slabs",
 }

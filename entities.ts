@@ -311,3 +311,25 @@ export type ProjectAssignment = {
   created_at: string;
   updated_at: string;
 };
+
+export type TaxYear = {
+  id: number;
+  tax_year: number;
+  starts_on: string;
+  ends_on: string;
+  surcharge_rate: number;
+  surcharge_threshold: number | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type TaxSlab = {
+  id: number;
+  tax_year_id: number;
+  lower_limit: number;
+  upper_limit: number | null;
+  fixed_amount: number;
+  rate_percent: number;
+  sort_order: number;
+  created_at: string;
+};
