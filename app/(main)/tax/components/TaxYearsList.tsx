@@ -110,17 +110,17 @@ export const TaxYearsList = ({ taxYears, slabs, seats }: Props) => {
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button asChild className="col-span-2">
+              <div className="grid gap-2">
+                <Button asChild>
                   <Link href={`/tax/${taxYear.id}/sheet`}>Open tax sheet</Link>
                 </Button>
-                <Button variant="outline" asChild className="col-span-2">
+                <Button variant="outline" asChild>
                   <Link href={`/tax/${taxYear.id}`}>Slabs &amp; rates</Link>
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  className="col-span-2 border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   onClick={() => deleteTaxYear(taxYear.id)}
                 >
                   Delete

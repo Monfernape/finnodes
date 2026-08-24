@@ -85,15 +85,23 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
                   {month.sheets.length === 0 ? "—" : formatTaxAmount(month.tax)}
                 </p>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {month.sheets.length === 0
-                  ? "No salary sheet"
-                  : `${month.employeeCount} taxable · ${formatTaxAmount(
-                      month.taxablePay
-                    )} paid · ${month.sheets
+              {month.sheets.length === 0 ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  No salary sheet
+                </p>
+              ) : (
+                <>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {month.employeeCount} taxable ·{" "}
+                    {formatTaxAmount(month.taxablePay)} paid
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground/80">
+                    {month.sheets
                       .map((sheet) => formatSalarySheetType(sheet.sheet_type))
-                      .join(" + ")}`}
-              </p>
+                      .join(" + ")}
+                  </p>
+                </>
+              )}
             </article>
           ))}
         </div>

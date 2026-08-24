@@ -332,8 +332,8 @@ export const TaxYearCreate = ({
             />
 
             <div className="md:col-span-2">
-              <div className="flex items-center justify-between gap-3">
-                <div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <h3 className="text-sm font-semibold">Slabs</h3>
                   <p className="text-xs text-muted-foreground">
                     Lowest first. Leave the last upper limit blank so it stays
@@ -344,6 +344,7 @@ export const TaxYearCreate = ({
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="shrink-0"
                   onClick={() => {
                     const previous = form.getValues("slabs").at(-1);
                     append({
@@ -372,8 +373,8 @@ export const TaxYearCreate = ({
                       <Button
                         type="button"
                         variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        size="icon"
+                        className="shrink-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                         onClick={() => remove(index)}
                         disabled={fields.length === 1}
                         aria-label={`Remove slab ${index + 1}`}
@@ -381,7 +382,7 @@ export const TaxYearCreate = ({
                         <Trash2Icon className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                       <FormField
                         control={form.control}
                         name={`slabs.${index}.lower_limit`}
