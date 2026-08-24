@@ -1,6 +1,6 @@
 import { SalarySheet, SalarySheetItem, TaxSlab, TaxYear } from "@/entities";
 import { SALARY_MONTHS } from "@/lib/salary";
-import { calculateTax } from "@/lib/tax";
+import { calculateTax, getExemptionThreshold } from "@/lib/tax";
 
 // A tax year runs July to June and is named after the year it ends in, so a
 // salary sheet lands in the tax year that contains its month.
@@ -39,7 +39,7 @@ export type TaxSheetEmployee = {
   seatId: number | null;
   name: string;
   designation: string;
-  monthsPaid: number;
+  taxableMonths: number;
   taxablePay: number;
   tax: number;
 };
@@ -48,6 +48,11 @@ export type TaxSheet = {
   taxYear: TaxYear;
   months: TaxSheetMonth[];
   employees: TaxSheetEmployee[];
+  // Everyone whose pay stayed under the exemption all year. They owe nothing,
+  // so they are kept off the sheet and only summarised.
+  exemptEmployees: TaxSheetEmployee[];
+  exemptPay: number;
+  exemptionThreshold: number;
   monthsCovered: number;
   monthsMissing: string[];
   taxablePay: number;
@@ -66,6 +71,7 @@ export const buildTaxSheet = (
   const sheetsById = new Map(sheetsInYear.map((sheet) => [sheet.id, sheet]));
 
   const employees = new Map<string, TaxSheetEmployee>();
+  const exempt = new Map<string, TaxSheetEmployee>();
 
   const months = getTaxYearMonths(taxYear.tax_year).map(({ month, year }) => {
     const monthSheets = sheetsInYear.filter(
@@ -92,6 +98,7 @@ export const buildTaxSheet = (
 
     let monthTax = 0;
     let monthPay = 0;
+    let taxableThisMonth = 0;
 
     payByEmployee.forEach((employeeItems, key) => {
       const taxablePay = employeeItems.reduce(
@@ -104,25 +111,31 @@ export const buildTaxSheet = (
         calculateTax(taxablePay * 12, slabs, taxYear).annualTax / 12
       );
 
-      monthPay += taxablePay;
-      monthTax += monthlyTax;
-
       const latest = employeeItems[employeeItems.length - 1];
-      const existing = employees.get(key);
+      // Pay under the exemption owes nothing, so it is tallied separately
+      // instead of padding the sheet with zero rows.
+      const bucket = monthlyTax > 0 ? employees : exempt;
+      const existing = bucket.get(key);
       if (existing) {
-        existing.monthsPaid += 1;
+        existing.taxableMonths += 1;
         existing.taxablePay += taxablePay;
         existing.tax += monthlyTax;
       } else {
-        employees.set(key, {
+        bucket.set(key, {
           key,
           seatId: latest.seat_id,
           name: latest.name,
           designation: latest.designation,
-          monthsPaid: 1,
+          taxableMonths: 1,
           taxablePay,
           tax: monthlyTax,
         });
+      }
+
+      if (monthlyTax > 0) {
+        monthPay += taxablePay;
+        monthTax += monthlyTax;
+        taxableThisMonth += 1;
       }
     });
 
@@ -131,7 +144,7 @@ export const buildTaxSheet = (
       year,
       label: `${SALARY_MONTHS[month - 1]} ${year}`,
       sheets: monthSheets,
-      employeeCount: payByEmployee.size,
+      employeeCount: taxableThisMonth,
       taxablePay: monthPay,
       tax: monthTax,
     };
@@ -143,6 +156,13 @@ export const buildTaxSheet = (
     taxYear,
     months,
     employees: Array.from(employees.values()).sort((a, b) => b.tax - a.tax),
+    exemptEmployees: Array.from(exempt.values())
+      .filter((employee) => !employees.has(employee.key))
+      .sort((a, b) => b.taxablePay - a.taxablePay),
+    exemptPay: Array.from(exempt.values())
+      .filter((employee) => !employees.has(employee.key))
+      .reduce((total, employee) => total + employee.taxablePay, 0),
+    exemptionThreshold: getExemptionThreshold(slabs),
     monthsCovered: covered.length,
     monthsMissing: months
       .filter((month) => month.sheets.length === 0)

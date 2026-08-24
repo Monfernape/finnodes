@@ -66,6 +66,16 @@ export const formatSlabFormula = (slab: TaxSlab) => {
 export const sortSlabs = (slabs: TaxSlab[]) =>
   [...slabs].sort((a, b) => a.sort_order - b.sort_order);
 
+// The exemption ceiling is the top of the run of zero-rate slabs, so it tracks
+// whatever the Finance Act of that year set rather than a hardcoded figure.
+export const getExemptionThreshold = (slabs: TaxSlab[]) => {
+  const exemptSlabs = sortSlabs(slabs).filter(
+    (slab) => slab.fixed_amount === 0 && slab.rate_percent === 0
+  );
+  const highest = exemptSlabs[exemptSlabs.length - 1];
+  return highest?.upper_limit ?? 0;
+};
+
 export const findSlabForIncome = (annualIncome: number, slabs: TaxSlab[]) => {
   const ordered = sortSlabs(slabs);
   return (

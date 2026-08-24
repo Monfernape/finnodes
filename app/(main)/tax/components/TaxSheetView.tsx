@@ -53,7 +53,7 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
             </p>
           </div>
           <div className="col-span-2 rounded-xl bg-muted/70 p-3 sm:col-span-1">
-            <p className="text-xs text-muted-foreground">Employees</p>
+            <p className="text-xs text-muted-foreground">Taxable employees</p>
             <p className="mt-0.5 font-semibold">{employees.length}</p>
           </div>
         </div>
@@ -88,7 +88,7 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
               <p className="mt-1 text-xs text-muted-foreground">
                 {month.sheets.length === 0
                   ? "No salary sheet"
-                  : `${month.employeeCount} employees · ${formatTaxAmount(
+                  : `${month.employeeCount} taxable · ${formatTaxAmount(
                       month.taxablePay
                     )} paid · ${month.sheets
                       .map((sheet) => formatSalarySheetType(sheet.sheet_type))
@@ -103,7 +103,7 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
               <TableRow>
                 <TableHead>Month</TableHead>
                 <TableHead>Salary sheets</TableHead>
-                <TableHead className="text-right">Employees</TableHead>
+                <TableHead className="text-right">Taxable staff</TableHead>
                 <TableHead className="text-right">Taxable pay</TableHead>
                 <TableHead className="text-right">Tax</TableHead>
               </TableRow>
@@ -155,7 +155,8 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
         <div className="border-b px-4 py-3 sm:px-5">
           <h2 className="font-semibold tracking-tight">Tax by employee</h2>
           <p className="text-xs text-muted-foreground">
-            Totalled across the months that have a salary sheet
+            Totalled across the months that have a salary sheet. Anyone under
+            the exemption is left out.
           </p>
         </div>
         {employees.length === 0 ? (
@@ -176,7 +177,7 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
                     </p>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {employee.monthsPaid} months ·{" "}
+                    {employee.taxableMonths} taxable months ·{" "}
                     {formatTaxAmount(employee.taxablePay)} paid
                   </p>
                 </article>
@@ -188,7 +189,7 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
                   <TableRow>
                     <TableHead>Employee</TableHead>
                     <TableHead>Designation</TableHead>
-                    <TableHead className="text-right">Months paid</TableHead>
+                    <TableHead className="text-right">Taxable months</TableHead>
                     <TableHead className="text-right">Taxable pay</TableHead>
                     <TableHead className="text-right">Tax for the year</TableHead>
                   </TableRow>
@@ -203,7 +204,7 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
                         {employee.designation}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
-                        {employee.monthsPaid}
+                        {employee.taxableMonths}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {formatTaxAmount(employee.taxablePay)}
@@ -217,6 +218,21 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
               </Table>
             </div>
           </>
+        )}
+        {taxSheet.exemptEmployees.length > 0 && (
+          <div className="border-t bg-muted/40 px-4 py-3 text-xs text-muted-foreground sm:px-5">
+            <p>
+              {taxSheet.exemptEmployees.length}{" "}
+              {taxSheet.exemptEmployees.length === 1 ? "employee is" : "employees are"}{" "}
+              not listed: pay stayed under the{" "}
+              {formatTaxAmount(taxSheet.exemptionThreshold)} exemption all year,
+              so no tax is due. {formatTaxAmount(taxSheet.exemptPay)} paid in
+              total.
+            </p>
+            <p className="mt-1">
+              {taxSheet.exemptEmployees.map((employee) => employee.name).join(", ")}
+            </p>
+          </div>
         )}
       </section>
     </div>
