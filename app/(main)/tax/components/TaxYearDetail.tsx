@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { Seat, TaxSlab, TaxYear } from "@/entities";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -55,6 +57,9 @@ export const TaxYearDetail = ({ taxYear, slabs, seats }: Props) => {
         {taxYear.notes && (
           <p className="mt-3 text-sm text-muted-foreground">{taxYear.notes}</p>
         )}
+        <Button variant="outline" asChild className="mt-4 w-full sm:w-auto">
+          <Link href={`/tax/${taxYear.id}/sheet`}>Open tax sheet</Link>
+        </Button>
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">

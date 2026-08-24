@@ -195,6 +195,13 @@ export const useToolbar = () => {
           title: "Add Tax Year",
           backRoute: Routes.TAX,
         };
+      case pathname.startsWith(`${Routes.TAX}/`) &&
+        pathname.endsWith("/sheet"): {
+        return {
+          title: "Tax Sheet",
+          backRoute: Routes.TAX,
+        };
+      }
       case pathname.startsWith(`${Routes.TAX}/`):
         return {
           title: "Tax Year",

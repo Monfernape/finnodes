@@ -112,7 +112,10 @@ export const TaxYearsList = ({ taxYears, slabs, seats }: Props) => {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button asChild className="col-span-2">
-                  <Link href={`/tax/${taxYear.id}`}>Open tax year</Link>
+                  <Link href={`/tax/${taxYear.id}/sheet`}>Open tax sheet</Link>
+                </Button>
+                <Button variant="outline" asChild className="col-span-2">
+                  <Link href={`/tax/${taxYear.id}`}>Slabs &amp; rates</Link>
                 </Button>
                 <Button
                   type="button"
