@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import React from "react";
+import { redirect } from "next/navigation";
+import { getServerPeopleAccess } from "@/utils/auth/server-access";
+import { PeopleRole } from "@/utils/auth/people-access";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { Seat, TaxSlab, TaxYear } from "@/entities";
@@ -15,6 +18,12 @@ const TaxYearPage = async ({
   params: Promise<{ id: string }>;
 }) => {
   const { id } = await params;
+  // Tax is manager-only; anyone else is sent back to their own workspace.
+  const access = await getServerPeopleAccess();
+  if (access?.role !== PeopleRole.Manager) {
+    redirect("/me/one-on-ones");
+  }
+
   const supabaseClient = await createClient();
   const { data: taxYear } = await supabaseClient
     .from(DatabaseTable.TaxYears)
