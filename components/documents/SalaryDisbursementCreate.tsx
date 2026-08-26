@@ -66,7 +66,9 @@ export const SalaryDisbursementCreate = ({
   basePath,
 }: Props) => {
   const router = useRouter();
-  const supabaseClient = createClient();
+  // Memoised because it is an effect dependency below; a fresh client on
+  // every render would re-run the lookup on every render.
+  const supabaseClient = React.useMemo(() => createClient(), []);
   const { toast } = useToast();
 
   const months = React.useMemo(() => getSelectableDisbursementMonths(), []);

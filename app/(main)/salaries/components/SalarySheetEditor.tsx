@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -34,6 +35,7 @@ import {
   formatCurrency,
   formatSalaryMonth,
   formatSalarySheetType,
+  getSalarySheetTitle,
 } from "@/lib/salary";
 
 const amountSchema = (label: string) =>
@@ -60,6 +62,8 @@ const itemSchema = z.object({
 });
 
 const formSchema = z.object({
+  // Optional: blank falls back to the month, which is what most sheets want.
+  title: z.string().max(120, "Keep the title under 120 characters"),
   issued_on: z.string().min(1, "Letter date is required"),
   recipient_name: z.string().min(1, "Recipient name is required"),
   recipient_bank: z.string().min(1, "Recipient bank is required"),
@@ -77,6 +81,7 @@ type Props = {
 // record and the edited form can be compared field by field.
 const buildSnapshot = (values: z.infer<typeof formSchema>) =>
   JSON.stringify({
+    title: values.title.trim(),
     issued_on: values.issued_on,
     recipient_name: values.recipient_name.trim(),
     recipient_bank: values.recipient_bank.trim(),
@@ -102,6 +107,7 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
   const initialIds = React.useMemo(() => items.map((item) => item.id), [items]);
   const persistedValues = React.useMemo(
     () => ({
+      title: sheet.title,
       issued_on: sheet.issued_on,
       recipient_name: sheet.recipient_name,
       recipient_bank: sheet.recipient_bank,
@@ -171,6 +177,7 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
       const { error: sheetError } = await supabaseClient
         .from(DatabaseTable.SalarySheets)
         .update({
+          title: values.title.trim(),
           issued_on: values.issued_on,
           recipient_name: values.recipient_name.trim(),
           recipient_bank: values.recipient_bank.trim(),
@@ -291,8 +298,10 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
+            {/* Follows the field as it is typed, so a rename is visible before
+                it is saved. */}
             <p className="text-2xl font-semibold">
-              {formatSalaryMonth(sheet.month, sheet.year)}
+              {getSalarySheetTitle({ ...sheet, title: form.watch("title") })}
             </p>
             <p className="text-sm text-muted-foreground">
               {formatSalarySheetType(sheet.sheet_type)}
@@ -334,6 +343,26 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
               </div>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Sheet title</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={formatSalaryMonth(sheet.month, sheet.year)}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Leave blank to keep using{" "}
+                      {formatSalaryMonth(sheet.month, sheet.year)}.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="issued_on"

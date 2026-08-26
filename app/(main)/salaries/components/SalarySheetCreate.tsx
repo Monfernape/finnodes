@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -46,6 +47,7 @@ const formSchema = z.object({
   month: z.string().min(1),
   year: z.string().min(4),
   sheet_type: z.nativeEnum(SalarySheetType),
+  title: z.string().max(120, "Keep the title under 120 characters"),
   issued_on: z.string().min(1, "Issue date is required"),
   recipient_name: z.string().min(1, "Recipient name is required"),
   recipient_bank: z.string().min(1, "Recipient bank is required"),
@@ -67,6 +69,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
       month: `${today.getMonth() + 1}`,
       year: `${today.getFullYear()}`,
       sheet_type: SalarySheetType.Full,
+      title: "",
       issued_on: today.toISOString().slice(0, 10),
       recipient_name: "The Payroll Manager,",
       recipient_bank: "Bank Alfalah Multan.",
@@ -123,6 +126,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
             month,
             year,
             sheet_type: sheetType,
+            title: values.title.trim(),
             issued_on: values.issued_on,
             recipient_name: values.recipient_name.trim(),
             recipient_bank: values.recipient_bank.trim(),
@@ -178,6 +182,23 @@ export const SalarySheetCreate = ({ seats }: Props) => {
             <CardTitle>Salary sheet setup</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Sheet title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="May P1 2026 Salaries" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Optional. Leave blank to use the month and year, which then
+                    follows the sheet if it is duplicated into another period.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="month"

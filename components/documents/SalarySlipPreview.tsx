@@ -178,9 +178,9 @@ export const SalarySlipPreview = ({ slip, lines }: Props) => {
       )}
       {slip.note && (
         <p className={slip.disbursement_summary ? "pt-2 text-xs" : "pt-6 text-xs"}>
-          <span className="font-bold">
-            {slip.disbursement_summary ? "" : "Note: "}
-          </span>
+          {!slip.disbursement_summary && (
+            <span className="font-bold">Note: </span>
+          )}
           {slip.note}
         </p>
       )}

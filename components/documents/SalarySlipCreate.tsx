@@ -73,6 +73,12 @@ type Props = {
 const isSlipId = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
 
+const isDisbursementRow = (value: unknown): value is SalaryDisbursement =>
+  typeof value === "object" &&
+  value !== null &&
+  "paid_on" in value &&
+  "amount" in value;
+
 // Whatever is on the seat wins, then whatever was typed on the last payslip, so
 // a detail is only ever entered once.
 const prefill = (
@@ -87,7 +93,9 @@ export const SalarySlipCreate = ({
   basePath,
 }: Props) => {
   const router = useRouter();
-  const supabaseClient = createClient();
+  // Memoised because it is an effect dependency below; a fresh client on
+  // every render would re-run the lookup on every render.
+  const supabaseClient = React.useMemo(() => createClient(), []);
   const { toast } = useToast();
 
   const months = React.useMemo(() => getSelectableSlipMonths(), []);
@@ -131,7 +139,9 @@ export const SalarySlipCreate = ({
         );
         if (error) throw error;
         if (!cancelled) {
-          setInstalments(Array.isArray(data) ? data : []);
+          setInstalments(
+            Array.isArray(data) ? data.filter(isDisbursementRow) : []
+          );
         }
       } catch (error) {
         console.error("Could not read salary disbursements", error);

@@ -1,4 +1,10 @@
-import { SalarySheetType, Seat, SeatStatus, SalarySheetItem } from "@/entities";
+import {
+  SalarySheet,
+  SalarySheetType,
+  Seat,
+  SeatStatus,
+  SalarySheetItem,
+} from "@/entities";
 
 export const SALARY_MONTHS = [
   "January",
@@ -17,6 +23,15 @@ export const SALARY_MONTHS = [
 
 export const formatSalaryMonth = (month: number, year: number) =>
   `${SALARY_MONTHS[month - 1]} ${year}`;
+
+/**
+ * What to call a sheet: its own title when it has one, otherwise the month it
+ * covers. The dispatch type is shown alongside rather than folded in, so it
+ * stays visible whichever way the sheet is named.
+ */
+export const getSalarySheetTitle = (
+  sheet: Pick<SalarySheet, "title" | "month" | "year">
+) => sheet.title.trim() || formatSalaryMonth(sheet.month, sheet.year);
 
 export const formatSalarySheetType = (sheetType: SalarySheetType) => {
   switch (sheetType) {

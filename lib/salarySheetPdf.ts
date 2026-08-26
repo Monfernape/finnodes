@@ -2,8 +2,8 @@ import { SalarySheet, SalarySheetItem } from "@/entities";
 import {
   formatJoinDate,
   formatPreviewDate,
-  formatSalaryMonth,
   formatSalarySheetType,
+  getSalarySheetTitle,
 } from "@/lib/salary";
 
 // A4 portrait in millimetres, matching the 16mm page margin used for printing.
@@ -12,8 +12,16 @@ const HEADER_FILL: [number, number, number] = [244, 177, 131]; // #f4b183
 const DATE_COLOR: [number, number, number] = [220, 38, 38]; // red-600
 const BORDER_COLOR: [number, number, number] = [0, 0, 0];
 
+// A title is free text, so anything a file system would object to is folded
+// into spaces rather than ending up in the saved name.
+const toFileNamePart = (value: string) =>
+  value
+    .replace(/[\\/:*?"<>|]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 export const buildSalarySheetFileName = (sheet: SalarySheet) =>
-  `${formatSalaryMonth(sheet.month, sheet.year)} ${formatSalarySheetType(
+  `${toFileNamePart(getSalarySheetTitle(sheet))} ${formatSalarySheetType(
     sheet.sheet_type
   )} Salaries.pdf`;
 
@@ -55,7 +63,7 @@ export const downloadSalarySheetPdf = async (
   };
 
   writeLine(
-    `${formatSalaryMonth(sheet.month, sheet.year)} | ${formatSalarySheetType(
+    `${getSalarySheetTitle(sheet)} | ${formatSalarySheetType(
       sheet.sheet_type
     )}`,
     8

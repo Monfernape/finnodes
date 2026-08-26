@@ -2,8 +2,8 @@ import { SalarySheet, SalarySheetItem } from "@/entities";
 import {
   formatJoinDate,
   formatPreviewDate,
-  formatSalaryMonth,
   formatSalarySheetType,
+  getSalarySheetTitle,
 } from "@/lib/salary";
 
 type Props = {
@@ -27,7 +27,7 @@ export const SalarySheetPreview = ({ sheet, items }: Props) => {
 
       <div className="space-y-4 text-lg leading-8">
         <p className="text-base font-medium">
-          {formatSalaryMonth(sheet.month, sheet.year)} |{" "}
+          {getSalarySheetTitle(sheet)} |{" "}
           {formatSalarySheetType(sheet.sheet_type)}
         </p>
         <p>To,</p>

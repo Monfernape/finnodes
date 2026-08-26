@@ -13,6 +13,7 @@ import {
   SALARY_MONTHS,
   formatSalaryMonth,
   formatSalarySheetType,
+  getSalarySheetTitle,
 } from "@/lib/salary";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -212,7 +213,7 @@ export const DuplicateSheetDialog = ({ sheet }: Props) => {
           <DialogTitle>Duplicate salary sheet</DialogTitle>
           <DialogDescription>
             Copies the letter and every employee row from{" "}
-            {formatSalaryMonth(sheet.month, sheet.year)} |{" "}
+            {getSalarySheetTitle(sheet)} |{" "}
             {formatSalarySheetType(sheet.sheet_type)} into a new sheet.
           </DialogDescription>
         </DialogHeader>

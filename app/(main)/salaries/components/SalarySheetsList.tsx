@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { DuplicateSheetDialog } from "./DuplicateSheetDialog";
 import {
   formatCurrency,
-  formatSalaryMonth,
   formatSalarySheetType,
+  getSalarySheetTitle,
   getSalarySheetTotals,
 } from "@/lib/salary";
 
@@ -71,7 +71,9 @@ export const SalarySheetsList = ({ sheets, items }: Props) => {
           <Card key={sheet.id} className="overflow-hidden">
             <CardHeader>
               <div className="flex items-start justify-between gap-3">
-                <CardTitle>{formatSalaryMonth(sheet.month, sheet.year)}</CardTitle>
+                <CardTitle className="min-w-0 break-words">
+                  {getSalarySheetTitle(sheet)}
+                </CardTitle>
                 <Badge variant="outline">
                   {formatSalarySheetType(sheet.sheet_type)}
                 </Badge>

@@ -65,8 +65,14 @@ begin
 end;
 $$;
 
-grant execute on function public.build_disbursement_summary(bigint, integer, integer)
-to authenticated;
+-- Deliberately NOT granted to `authenticated`. It is a definer function that
+-- takes any seat id and returns that person's salary amounts and payment
+-- dates, with no check on who is asking — so it is an internal helper only.
+-- `generate_salary_slip` reaches it as a definer function of its own, and the
+-- backfill below runs as the migration owner. Postgres grants EXECUTE to
+-- PUBLIC on every new function, so that has to be taken away explicitly.
+revoke all on function public.build_disbursement_summary(bigint, integer, integer)
+from public;
 
 -- Same signature as before; only the body changes, to stamp the type and the
 -- summary onto the payslip it writes.

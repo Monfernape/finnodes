@@ -152,6 +152,9 @@ export type SalarySheet = {
   month: number;
   year: number;
   sheet_type: SalarySheetType;
+  // Empty means "use the month and year", so an unrenamed sheet keeps tracking
+  // its period. Only a title someone typed overrides that.
+  title: string;
   issued_on: string;
   recipient_name: string;
   recipient_bank: string;

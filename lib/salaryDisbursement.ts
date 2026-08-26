@@ -20,24 +20,6 @@ export const buildDisbursementLetterFileName = (
   )} Salary Disbursement Confirmation.pdf`;
 
 /**
- * True when the credits landed outside the month they were earned in, which is
- * half of why a payslip and a bank statement fail to line up here.
- */
-export const isPaidAfterMonth = (letter: {
-  month: number;
-  year: number;
-  instalments: SalaryDisbursement[];
-}) =>
-  letter.instalments.some((item) => {
-    const paid = new Date(item.paid_on);
-    return (
-      paid.getFullYear() > letter.year ||
-      (paid.getFullYear() === letter.year &&
-        paid.getMonth() + 1 > letter.month)
-    );
-  });
-
-/**
  * The paragraph that does the actual reconciling: it tells the reader what the
  * statement will show and why it does not match the payslip line for line.
  *

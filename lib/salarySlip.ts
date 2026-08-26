@@ -19,9 +19,6 @@ export const EMPLOYMENT_STATUSES = [
 
 export const DEFAULT_EMPLOYMENT_STATUS = EMPLOYMENT_STATUSES[0];
 
-export const isPartialPayslip = (slip: Pick<SalarySlip, "slip_type">) =>
-  slip.slip_type === PayslipType.Partial;
-
 export const PAYSLIP_TYPE_LABELS: Record<PayslipType, string> = {
   [PayslipType.Full]: "Full salary",
   [PayslipType.Partial]: "Partial salary",
