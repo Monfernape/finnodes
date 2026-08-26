@@ -229,7 +229,7 @@ export const useToolbar = () => {
       }
       case pathname === Routes.TAX:
         return {
-          title: "Tax",
+          title: "Taxes",
           addRoute: Routes.ADD_TAX_YEAR,
         };
       case pathname === Routes.ADD_TAX_YEAR:

@@ -49,7 +49,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     href: "/salaries",
   },
   {
-    title: "Tax",
+    title: "Taxes",
     icon: PercentIcon,
     href: "/tax",
   },
