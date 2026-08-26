@@ -45,6 +45,36 @@ export const formatSalarySheetType = (sheetType: SalarySheetType) => {
   }
 };
 
+// Newest month first, and within a month the later dispatch on top, so the
+// most recent thing sent to the bank is what you see first.
+//
+// Ordered by an explicit rank rather than by the `sheet_type` text. Sorting the
+// text happens to give second/full/first today, purely because 's' > 'f' — it
+// drops a full sheet between the two dispatches, and any new type would land
+// wherever the alphabet put it.
+const DISPATCH_ORDER: Record<SalarySheetType, number> = {
+  [SalarySheetType.Second]: 0,
+  [SalarySheetType.First]: 1,
+  // A full sheet is an alternative to running dispatches at all, so on the rare
+  // month that has both it sits below the pair rather than splitting them.
+  [SalarySheetType.Full]: 2,
+};
+
+const dispatchRank = (sheetType: SalarySheetType) =>
+  DISPATCH_ORDER[sheetType] ?? Number.MAX_SAFE_INTEGER;
+
+export const sortSalarySheets = (sheets: SalarySheet[]) =>
+  [...sheets].sort(
+    (a, b) =>
+      b.year - a.year ||
+      b.month - a.month ||
+      dispatchRank(a.sheet_type) - dispatchRank(b.sheet_type) ||
+      // Unreachable while (month, year, sheet_type) stays unique, but keeps the
+      // order total rather than leaving it to the input order.
+      b.issued_on.localeCompare(a.issued_on) ||
+      b.id - a.id
+  );
+
 export const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-PK", {
     style: "currency",
