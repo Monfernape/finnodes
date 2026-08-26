@@ -3,6 +3,7 @@ import {
   HandCoinsIcon,
   LayoutGridIcon,
   LogOutIcon,
+  MegaphoneIcon,
   NotebookPenIcon,
   PercentIcon,
   ReceiptTextIcon,
@@ -50,6 +51,11 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     title: "Tax",
     icon: PercentIcon,
     href: "/tax",
+  },
+  {
+    title: "Announcements",
+    icon: MegaphoneIcon,
+    href: "/announcements",
   },
   {
     title: "Reports",

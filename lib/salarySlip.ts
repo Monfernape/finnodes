@@ -1,7 +1,26 @@
 import { SalarySlip, SalarySlipLine, SalarySlipLineType, Seat } from "@/entities";
 import { SALARY_MONTHS } from "@/lib/salary";
 
-export const DEFAULT_SLIP_PURPOSE = "opening a personal savings account";
+// The reasons employees actually ask for a salary certificate. Each reads as
+// the tail of "...for the purpose of ___", which is how the slip prints it, so
+// they are stored as the phrase rather than as a code.
+export const SALARY_SLIP_PURPOSES = [
+  "opening a personal savings account",
+  "opening a salary account",
+  "applying for a personal loan",
+  "applying for vehicle financing",
+  "applying for home financing",
+  "applying for a credit card",
+  "applying for a visa",
+  "verifying his employment and income",
+  "entering into a tenancy agreement",
+] as const;
+
+export const DEFAULT_SLIP_PURPOSE = SALARY_SLIP_PURPOSES[0];
+
+// Sentinel for the "something else" option, so a purpose that is not on the
+// list can still be typed rather than forcing a bad fit.
+export const CUSTOM_SLIP_PURPOSE = "__custom__";
 
 export const formatSlipMonth = (month: number, year: number) =>
   `${SALARY_MONTHS[month - 1]} ${year}`;

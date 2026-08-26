@@ -9,7 +9,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Seat } from "@/entities";
 import { createClient } from "@/utils/supabase/client";
 import {
+  CUSTOM_SLIP_PURPOSE,
   DEFAULT_SLIP_PURPOSE,
+  SALARY_SLIP_PURPOSES,
   formatSlipAmount,
   formatSlipMonth,
   getSelectableSlipMonths,
@@ -36,12 +38,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const formSchema = z.object({
-  period: z.string().min(1, "Select the salary month"),
-  recipient_name: z.string().max(120, "Keep the recipient under 120 characters"),
-  purpose: z.string().max(200, "Keep the purpose under 200 characters"),
-  contact_number: z.string().max(40, "Keep the number under 40 characters"),
-});
+const formSchema = z
+  .object({
+    period: z.string().min(1, "Select the salary month"),
+    recipient_name: z.string().max(120, "Keep the recipient under 120 characters"),
+    purpose: z.string().min(1, "Select a purpose"),
+    custom_purpose: z.string().max(200, "Keep the purpose under 200 characters"),
+    contact_number: z.string().max(40, "Keep the number under 40 characters"),
+  })
+  .superRefine((values, ctx) => {
+    if (
+      values.purpose === CUSTOM_SLIP_PURPOSE &&
+      values.custom_purpose.trim().length === 0
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["custom_purpose"],
+        message: "Describe the purpose",
+      });
+    }
+  });
+
+// The slip prints this after "...for the purpose of", so the chosen phrase is
+// used as-is and only the free-text option needs trimming.
+const resolvePurpose = (values: z.infer<typeof formSchema>) =>
+  values.purpose === CUSTOM_SLIP_PURPOSE
+    ? values.custom_purpose.trim()
+    : values.purpose;
 
 type Props = {
   seat: Seat;
@@ -49,6 +72,9 @@ type Props = {
   // employee, the employee's own tab for a manager.
   basePath: string;
 };
+
+const capitalise = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);
 
 const isSlipId = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -67,9 +93,12 @@ export const SalarySlipCreate = ({ seat, basePath }: Props) => {
       period: `${months[0].year}-${months[0].month}`,
       recipient_name: "",
       purpose: DEFAULT_SLIP_PURPOSE,
+      custom_purpose: "",
       contact_number: "",
     },
   });
+
+  const isCustomPurpose = form.watch("purpose") === CUSTOM_SLIP_PURPOSE;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const [year, month] = values.period.split("-").map(Number);
@@ -82,7 +111,7 @@ export const SalarySlipCreate = ({ seat, basePath }: Props) => {
         slip_month: month,
         slip_year: year,
         slip_recipient_name: values.recipient_name.trim(),
-        slip_purpose: values.purpose.trim(),
+        slip_purpose: resolvePurpose(values),
         slip_contact_number: values.contact_number.trim(),
       });
 
@@ -172,7 +201,7 @@ export const SalarySlipCreate = ({ seat, basePath }: Props) => {
                   <FormControl>
                     <Input
                       className="h-11"
-                      placeholder="Meezan Bank"
+                      placeholder="Bank Alfalah"
                       {...field}
                     />
                   </FormControl>
@@ -189,17 +218,50 @@ export const SalarySlipCreate = ({ seat, basePath }: Props) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Purpose</FormLabel>
-                  <FormControl>
-                    <Input
-                      className="h-11"
-                      placeholder={DEFAULT_SLIP_PURPOSE}
-                      {...field}
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Select a purpose" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SALARY_SLIP_PURPOSES.map((purpose) => (
+                        <SelectItem key={purpose} value={purpose}>
+                          {capitalise(purpose)}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value={CUSTOM_SLIP_PURPOSE}>
+                        Something else…
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {isCustomPurpose && (
+              <FormField
+                control={form.control}
+                name="custom_purpose"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Describe the purpose</FormLabel>
+                    <FormControl>
+                      <Input
+                        className="h-11"
+                        placeholder={DEFAULT_SLIP_PURPOSE}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Completes the sentence “…for the purpose of …”, so phrase
+                      it to follow on from that.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </CardContent>
         </Card>
 

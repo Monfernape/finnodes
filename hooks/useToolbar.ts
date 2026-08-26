@@ -21,6 +21,8 @@ export enum Routes {
   ADD_SALARY_SHEET = "/salaries/add-sheet",
   TAX = "/tax",
   ADD_TAX_YEAR = "/tax/add-year",
+  ANNOUNCEMENTS = "/announcements",
+  ADD_ANNOUNCEMENT = "/announcements/new",
   REPORTS = "/reports",
   ME_ONE_ON_ONES = "/me/one-on-ones",
   ME_REVIEWS = "/me/reviews",
@@ -234,6 +236,21 @@ export const useToolbar = () => {
         return {
           title: "Tax Year",
           backRoute: Routes.TAX,
+        };
+      case pathname === Routes.ANNOUNCEMENTS:
+        return {
+          title: "Announcements",
+          addRoute: Routes.ADD_ANNOUNCEMENT,
+        };
+      case pathname === Routes.ADD_ANNOUNCEMENT:
+        return {
+          title: "New Announcement",
+          backRoute: Routes.ANNOUNCEMENTS,
+        };
+      case pathname.startsWith(`${Routes.ANNOUNCEMENTS}/`):
+        return {
+          title: "Announcement",
+          backRoute: Routes.ANNOUNCEMENTS,
         };
       case pathname === Routes.REPORTS:
         return {

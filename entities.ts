@@ -84,6 +84,24 @@ export enum SalarySheetType {
   Second = "second",
 }
 
+export enum OneOnOneReminderStatus {
+  Pending = "pending",
+  Sent = "sent",
+  Failed = "failed",
+}
+
+export enum AnnouncementReminderStatus {
+  Pending = "pending",
+  Sent = "sent",
+  Failed = "failed",
+}
+
+export enum AnnouncementCategory {
+  // Driven by the calendar, so these are never created by hand.
+  PublicHoliday = "public_holiday",
+  General = "general",
+}
+
 export enum SalarySlipLineType {
   Earning = "earning",
   Deduction = "deduction",
@@ -384,4 +402,80 @@ export type ExperienceLetter = {
   mentions_client: boolean;
   created_by_email: string;
   created_at: string;
+};
+
+export type AnnouncementTemplate = {
+  id: number;
+  slug: string;
+  title: string;
+  emoji: string;
+  category: AnnouncementCategory;
+  // Wording is written once and reused; the tokens in it carry the dates.
+  body: string;
+  fixed_month: number | null;
+  fixed_day: number | null;
+  default_duration_days: number;
+  reminder_enabled: boolean;
+  sort_order: number;
+  is_seeded: boolean;
+  created_by_email: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AnnouncementReminder = {
+  id: number;
+  announcement_template_id: number;
+  // The occurrence reminded about, not the day the email went out.
+  occurs_on: string;
+  status: AnnouncementReminderStatus;
+  attempt_count: number;
+  recipient_count: number;
+  last_attempt_at: string | null;
+  sent_at: string | null;
+  provider_message_id: string | null;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AnnouncementCalendarDate = {
+  id: number;
+  announcement_template_id: number;
+  calendar_year: number;
+  starts_on: string;
+  ends_on: string;
+  // Lunar dates are settled by moon sighting, so they are predictions until
+  // the Ruet-e-Hilal announcement lands.
+  is_estimated: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AnnouncementVenue = {
+  id: number;
+  name: string;
+  city: string | null;
+  cuisine: string | null;
+  is_active: boolean;
+  notes: string | null;
+  created_by_email: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OneOnOneReminder = {
+  id: number;
+  seat_id: number;
+  year: number;
+  month: number;
+  status: OneOnOneReminderStatus;
+  attempt_count: number;
+  last_attempt_at: string | null;
+  sent_at: string | null;
+  provider_message_id: string | null;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
 };

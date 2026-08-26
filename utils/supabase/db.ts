@@ -21,4 +21,10 @@ export enum DatabaseTable {
   SalarySlips = "salary_slips",
   SalarySlipLines = "salary_slip_lines",
   ExperienceLetters = "experience_letters",
+  AnnouncementTemplates = "announcement_templates",
+  AnnouncementCalendarDates = "announcement_calendar_dates",
+  AnnouncementVenues = "announcement_venues",
+  AnnouncementReminderOutbox = "announcement_reminder_outbox",
+  OneOnOneReminderOutbox = "one_on_one_reminder_outbox",
+  AllowedEmails = "allowed_emails",
 }

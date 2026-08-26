@@ -14,6 +14,11 @@ const PUBLIC_PATHS = [
   "/access-denied",
   "/manifest.webmanifest",
   "/sw.js",
+  // Woken by Vercel Cron, which carries no session. Neither is open: both
+  // routes require the CRON_SECRET bearer token and answer 401 without it.
+  // Left out of this list, a cron would only ever be redirected to /login.
+  "/api/announcements/reminders",
+  "/api/one-on-ones/reminders",
 ];
 
 const getPublicRedirect = (request: NextRequest, pathname: string) => {
