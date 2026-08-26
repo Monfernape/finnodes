@@ -2,12 +2,32 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileTextIcon, PlusIcon, ReceiptTextIcon } from "lucide-react";
+import {
+  BanknoteIcon,
+  FileTextIcon,
+  PlusIcon,
+  ReceiptTextIcon,
+} from "lucide-react";
 
-import { ExperienceLetter, SalarySlip } from "@/entities";
+import {
+  ExperienceLetter,
+  PayslipType,
+  SalaryDisbursementLetter,
+  SalarySlip,
+} from "@/entities";
 import { createClient } from "@/utils/supabase/client";
 import { DatabaseTable } from "@/utils/supabase/db";
-import { formatSlipAmount, formatSlipDate, formatSlipMonth } from "@/lib/salarySlip";
+import {
+  formatSlipAmount,
+  formatSlipDate,
+  formatSlipMonth,
+  groupPayslipsByType,
+  PAYSLIP_TYPE_LABELS,
+} from "@/lib/salarySlip";
+import {
+  formatDisbursementAmount,
+  formatDisbursementDate,
+} from "@/lib/salaryDisbursement";
 import { resolveTechnologies } from "@/lib/technologies";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,81 +103,110 @@ export const SalarySlipsList = ({
   basePath: string;
   createPath: string;
   showEmployeeName?: boolean;
-}) => (
-  <div className="space-y-3">
-    <div className="flex justify-end">
-      <Button asChild className="h-11">
-        <Link href={createPath} prefetch>
-          <PlusIcon className="mr-2 h-4 w-4" />
-          New salary slip
-        </Link>
-      </Button>
-    </div>
+}) => {
+  // Full and partial payslips are kept in their own sections rather than
+  // interleaved: they are read for different reasons, and a partial one has to
+  // be recognisable before it is handed to anybody.
+  const groups = groupPayslipsByType(slips);
 
-    {slips.length === 0 ? (
-      <EmptyState
-        icon={ReceiptTextIcon}
-        title="No salary slips yet"
-        description="Generate one for any month you have been paid. The figures come straight from the employee record."
-      />
-    ) : (
-      <div className="grid gap-3 md:grid-cols-2">
-        {slips.map((slip) => (
-          <Card key={slip.id}>
-            <CardContent className="space-y-3 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold">
-                    {formatSlipMonth(slip.month, slip.year)}
-                  </p>
-                  {showEmployeeName && (
-                    <p className="truncate text-sm text-muted-foreground">
-                      {slip.employee_name}
-                    </p>
-                  )}
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Issued {formatSlipDate(slip.issued_on)}
-                  </p>
-                </div>
-                {slip.recipient_name && (
-                  <Badge variant="outline" className="shrink-0">
-                    {slip.recipient_name}
-                  </Badge>
-                )}
-              </div>
-              <div className="flex gap-4 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground">Gross</p>
-                  <p className="font-medium tabular-nums">
-                    {formatSlipAmount(slip.gross_salary)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Net</p>
-                  <p className="font-medium tabular-nums">
-                    {formatSlipAmount(slip.net_salary)}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button asChild size="sm" className="flex-1">
-                  <Link href={`${basePath}/${slip.id}`} prefetch>
-                    Open
-                  </Link>
-                </Button>
-                <DeleteButton
-                  table={DatabaseTable.SalarySlips}
-                  id={slip.id}
-                  label="Salary slip"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+  return (
+    <div className="space-y-5">
+      <div className="flex justify-end">
+        <Button asChild className="h-11">
+          <Link href={createPath} prefetch>
+            <PlusIcon className="mr-2 h-4 w-4" />
+            New payslip
+          </Link>
+        </Button>
       </div>
-    )}
-  </div>
-);
+
+      {slips.length === 0 ? (
+        <EmptyState
+          icon={ReceiptTextIcon}
+          title="No payslips yet"
+          description="Generate one for any month you have been paid. The figures come straight from the employee record."
+        />
+      ) : (
+        groups.map((group) => (
+          <section key={group.type} className="space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">
+                {group.label}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {group.description}
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {group.slips.map((slip) => (
+                <Card key={slip.id}>
+                  <CardContent className="space-y-3 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold">
+                          {formatSlipMonth(slip.month, slip.year)}
+                        </p>
+                        {showEmployeeName && (
+                          <p className="truncate text-sm text-muted-foreground">
+                            {slip.employee_name}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Issued {formatSlipDate(slip.issued_on)}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          slip.slip_type === PayslipType.Partial
+                            ? "secondary"
+                            : "outline"
+                        }
+                        className="shrink-0"
+                      >
+                        {PAYSLIP_TYPE_LABELS[slip.slip_type]}
+                      </Badge>
+                    </div>
+                    {slip.disbursement_summary && (
+                      <p className="text-xs text-muted-foreground">
+                        {slip.disbursement_summary}
+                      </p>
+                    )}
+                    <div className="flex gap-4 text-sm">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Gross</p>
+                        <p className="font-medium tabular-nums">
+                          {formatSlipAmount(slip.gross_salary)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Net</p>
+                        <p className="font-medium tabular-nums">
+                          {formatSlipAmount(slip.net_salary)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" asChild className="h-11">
+                        <Link href={`${basePath}/${slip.id}`} prefetch>
+                          Open
+                        </Link>
+                      </Button>
+                      <DeleteButton
+                        table={DatabaseTable.SalarySlips}
+                        id={slip.id}
+                        label="payslip"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        ))
+      )}
+    </div>
+  );
+};
 
 export const ExperienceLettersList = ({
   letters,
@@ -233,6 +282,84 @@ export const ExperienceLettersList = ({
             </Card>
           );
         })}
+      </div>
+    )}
+  </div>
+);
+
+export const SalaryDisbursementList = ({
+  letters,
+  basePath,
+  createPath,
+  showEmployeeName = false,
+}: {
+  letters: SalaryDisbursementLetter[];
+  basePath: string;
+  createPath: string;
+  showEmployeeName?: boolean;
+}) => (
+  <div className="space-y-4">
+    <div className="flex justify-end">
+      <Button asChild className="h-11">
+        <Link href={createPath} prefetch>
+          <PlusIcon className="mr-2 h-4 w-4" />
+          New letter
+        </Link>
+      </Button>
+    </div>
+
+    {letters.length === 0 ? (
+      <EmptyState
+        icon={BanknoteIcon}
+        title="No confirmation letters yet"
+        description="If your salary for a month went out in instalments, this letter sets out each payment and its date so a payslip and a bank statement line up."
+      />
+    ) : (
+      <div className="grid gap-3 md:grid-cols-2">
+        {letters.map((letter) => (
+          <Card key={letter.id}>
+            <CardContent className="space-y-3 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-semibold">
+                    {formatSlipMonth(letter.month, letter.year)}
+                  </p>
+                  {showEmployeeName && (
+                    <p className="truncate text-sm text-muted-foreground">
+                      {letter.employee_name}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Issued {formatDisbursementDate(letter.issued_on)}
+                  </p>
+                </div>
+                <Badge variant="outline" className="shrink-0">
+                  {letter.instalments.length === 1
+                    ? "1 payment"
+                    : `${letter.instalments.length} payments`}
+                </Badge>
+              </div>
+              <div className="text-sm">
+                <p className="text-xs text-muted-foreground">Total confirmed</p>
+                <p className="font-medium tabular-nums">
+                  {formatDisbursementAmount(letter.total_paid)}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" asChild className="h-11">
+                  <Link href={`${basePath}/${letter.id}`} prefetch>
+                    Open
+                  </Link>
+                </Button>
+                <DeleteButton
+                  table={DatabaseTable.SalaryDisbursementLetters}
+                  id={letter.id}
+                  label="letter"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     )}
   </div>

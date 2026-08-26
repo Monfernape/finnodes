@@ -20,6 +20,7 @@ import { DatabaseTable } from "@/utils/supabase/db";
 import {
   ExperienceLetter,
   Manager,
+  SalaryDisbursementLetter,
   ManagerStatus,
   OneOnOne,
   PerformanceReview,
@@ -29,6 +30,7 @@ import {
 } from "@/entities";
 import {
   ExperienceLettersList,
+  SalaryDisbursementList,
   SalarySlipsList,
 } from "@/components/documents/DocumentLists";
 import { getCurrentYear, getMonthName } from "@/lib/people";
@@ -37,6 +39,7 @@ const EMPLOYEE_TABS = [
   { label: "Profile", value: "profile" },
   { label: "Notes", value: "notes" },
   { label: "Salary slips", value: "salary-slips" },
+  { label: "Salary disbursement", value: "salary-disbursements" },
   { label: "Experience letters", value: "experience-letters" },
   { label: "Edit", value: "edit" },
 ];
@@ -170,6 +173,7 @@ export default async function EmployeePage({
     { data: reviews },
     { data: salarySlips },
     { data: experienceLetters },
+    { data: disbursementLetters },
   ] = await Promise.all([
       supabase.from(DatabaseTable.Seats).select().eq("id", id).maybeSingle<Seat>(),
       supabase
@@ -203,6 +207,13 @@ export default async function EmployeePage({
         .eq("seat_id", id)
         .order("issued_on", { ascending: false })
         .returns<ExperienceLetter[]>(),
+      supabase
+        .from(DatabaseTable.SalaryDisbursementLetters)
+        .select()
+        .eq("seat_id", id)
+        .order("year", { ascending: false })
+        .order("month", { ascending: false })
+        .returns<SalaryDisbursementLetter[]>(),
     ]);
 
   if (!employee) notFound();
@@ -212,6 +223,7 @@ export default async function EmployeePage({
     tab === "edit" ||
     tab === "form" ||
     tab === "salary-slips" ||
+    tab === "salary-disbursements" ||
     tab === "experience-letters"
       ? tab
       : "profile";
@@ -344,6 +356,14 @@ export default async function EmployeePage({
           slips={salarySlips ?? []}
           basePath={`/employees/${employee.id}/salary-slips`}
           createPath={`/employees/${employee.id}/salary-slips/new`}
+        />
+      )}
+
+      {normalizedTab === "salary-disbursements" && (
+        <SalaryDisbursementList
+          letters={disbursementLetters ?? []}
+          basePath={`/employees/${employee.id}/salary-disbursements`}
+          createPath={`/employees/${employee.id}/salary-disbursements/new`}
         />
       )}
 

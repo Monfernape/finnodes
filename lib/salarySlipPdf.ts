@@ -1,26 +1,31 @@
 import { SalarySlip, SalarySlipLine } from "@/entities";
 import {
   buildSalarySlipFileName,
+  formatPayslipPeriod,
+  formatPrintDate,
   formatSlipAmount,
-  formatSlipDate,
-  formatSlipMonth,
+  formatSlipMoney,
+  formatSlipShortDate,
   getDeductions,
   getEarnings,
 } from "@/lib/salarySlip";
-import { withHonorific } from "@/lib/documentText";
-import {
-  PAGE_MARGIN,
-  drawContactFooter,
-  drawLetterHead,
-  ensureSpace,
-  loadLogoDataUrl,
-  loadPdfLibs,
-  writeParagraph,
-} from "@/lib/documentPdf";
+import { PAGE_MARGIN, loadLogoDataUrl, loadPdfLibs } from "@/lib/documentPdf";
 
-const TABLE_HEAD_FILL: [number, number, number] = [217, 217, 217];
-const TOTAL_ROW_FILL: [number, number, number] = [237, 237, 237];
-const BORDER_COLOR: [number, number, number] = [180, 180, 180];
+const HEAD_FILL: [number, number, number] = [217, 217, 217];
+const BLANK_FILL: [number, number, number] = [242, 242, 242];
+const BORDER_COLOR: [number, number, number] = [130, 130, 130];
+
+// Four rows minimum under the column headings, so the block reads as a form
+// rather than a stub when someone is on a flat salary.
+const MIN_TABLE_ROWS = 4;
+
+type Cell = {
+  content: string;
+  colSpan?: number;
+  styles?: Record<string, unknown>;
+  /** Set on the last cell so the figure can be drawn at its right edge. */
+  netPay?: string;
+};
 
 export const downloadSalarySlipPdf = async (
   slip: SalarySlip,
@@ -41,137 +46,214 @@ export const downloadSalarySlipPdf = async (
   const pageWidth = doc.internal.pageSize.getWidth();
   const contentWidth = pageWidth - PAGE_MARGIN * 2;
 
-  let cursorY = drawLetterHead(doc, logo);
-
+  // The mark sits top left with the print date opposite, rather than centred
+  // the way the letter-style documents have it.
+  if (logo) {
+    doc.addImage(logo, "PNG", PAGE_MARGIN, PAGE_MARGIN - 2, 30, 12);
+  }
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(20);
-  doc.text("Salary Slip", pageWidth / 2, cursorY, { align: "center" });
-  cursorY += 14;
-
-  doc.setFontSize(10);
-  const writeField = (label: string, value: string) => {
-    doc.setFont("helvetica", "normal");
-    doc.text(`${label} ${value}`, PAGE_MARGIN, cursorY);
-    cursorY += 5;
-  };
-
-  writeField("Name:", slip.employee_name);
-  writeField("Designation:", slip.designation || "—");
-  if (slip.contact_number) {
-    writeField("Personal Contact Number:", slip.contact_number);
-  }
-  writeField("Salary Month:", formatSlipMonth(slip.month, slip.year));
-  cursorY += 7;
-
-  const joined = slip.date_of_joining
-    ? ` since ${formatSlipDate(slip.date_of_joining)}`
-    : "";
-  cursorY = writeParagraph(
-    doc,
-    `This is to certify that ${withHonorific(
-      slip.employee_name
-    )} has been employed with our organization as a ${
-      slip.designation || "team member"
-    }${joined}.`,
-    cursorY,
-    { width: contentWidth, gapAfter: 4 }
-  );
-  cursorY = writeParagraph(
-    doc,
-    "Throughout his employment, we have found him to be dedicated, sincere, and fully committed to his responsibilities.",
-    cursorY,
-    { width: contentWidth, gapAfter: 4 }
-  );
-  if (slip.recipient_name) {
-    cursorY = writeParagraph(
-      doc,
-      `At the request of our employee, we are issuing this letter to introduce and refer him to ${
-        slip.recipient_name
-      }${slip.purpose ? ` for the purpose of ${slip.purpose}` : ""}.`,
-      cursorY,
-      { width: contentWidth, gapAfter: 4 }
-    );
-  }
-  cursorY = writeParagraph(
-    doc,
-    "Should you require any further information, please feel free to contact us.",
-    cursorY,
-    { width: contentWidth, gapAfter: 8 }
+  doc.setFontSize(9);
+  doc.text(
+    `Print Date:${formatPrintDate()}`,
+    pageWidth - PAGE_MARGIN,
+    PAGE_MARGIN + 3,
+    { align: "right" }
   );
 
+  let cursorY = PAGE_MARGIN + 20;
   doc.setFont("helvetica", "bold");
-  cursorY = ensureSpace(doc, cursorY, 12);
-  doc.text("His salary particulars are given below.", PAGE_MARGIN, cursorY);
+  doc.setFontSize(13);
+  doc.text("DevNodes Pvt,Ltd", pageWidth / 2, cursorY, { align: "center" });
+  cursorY += 6;
+  doc.text(
+    `PAYSLIP: ${formatPayslipPeriod(slip.month, slip.year)}`,
+    pageWidth / 2,
+    cursorY,
+    { align: "center" }
+  );
   cursorY += 6;
 
   const earnings = getEarnings(lines);
   const deductions = getDeductions(lines);
-  // Both columns share one table, so the shorter side is padded with blanks to
-  // keep the grid rectangular, as on the original slip.
-  const rowCount = Math.max(earnings.length, deductions.length);
-  const body = Array.from({ length: rowCount }, (_, index) => [
-    earnings[index]?.label ?? "",
-    earnings[index] ? formatSlipAmount(earnings[index].amount) : "",
-    deductions[index]?.label ?? "",
-    deductions[index] ? formatSlipAmount(deductions[index].amount) : "",
+  const rowCount = Math.max(
+    earnings.length,
+    deductions.length,
+    MIN_TABLE_ROWS
+  );
+
+  const bold = { fontStyle: "bold" as const };
+  const shaded = { fillColor: HEAD_FILL, fontStyle: "bold" as const };
+  const centred = { halign: "center" as const };
+  const right = { halign: "right" as const };
+
+  const detailRows: Cell[][] = [
+    [
+      { content: "Employee Details", colSpan: 5, styles: { ...shaded, ...centred } },
+    ],
+    [
+      { content: "Employee Name :", styles: bold },
+      { content: slip.employee_name, colSpan: 2 },
+      { content: "Account Number/IBAN :", styles: bold },
+      { content: slip.account_number || "-" },
+    ],
+    [
+      { content: "Designation :", styles: bold },
+      { content: slip.designation || "-", colSpan: 2 },
+      { content: "Bank Name :", styles: bold },
+      { content: slip.bank_name || "-" },
+    ],
+    [
+      { content: "Gross Salary :", styles: bold },
+      { content: formatSlipAmount(slip.gross_salary), colSpan: 2 },
+      { content: "CNIC :", styles: bold },
+      { content: slip.cnic || "-" },
+    ],
+    [
+      { content: "Employment Status :", styles: bold },
+      { content: slip.employment_status || "-" },
+      { content: `Office Location : ${slip.office_location || "-"}` },
+      { content: "Date of Joining :", styles: bold },
+      {
+        content: slip.date_of_joining
+          ? formatSlipShortDate(slip.date_of_joining)
+          : "-",
+      },
+    ],
+  ];
+
+  const tableRows: Cell[][] = [
+    [
+      { content: "Earnings", colSpan: 2, styles: { ...shaded, ...centred } },
+      { content: "Deductions", colSpan: 2, styles: { ...shaded, ...centred } },
+      { content: "Tax Details", styles: { ...shaded, ...centred } },
+    ],
+  ];
+
+  for (let index = 0; index < rowCount; index += 1) {
+    const earning = earnings[index];
+    const deduction = deductions[index];
+    const row: Cell[] = [
+      { content: earning?.label ?? "" },
+      {
+        content: earning ? formatSlipMoney(earning.amount) : "",
+        styles: right,
+      },
+      { content: deduction?.label ?? "" },
+      {
+        content: deduction ? formatSlipMoney(deduction.amount) : "",
+        styles: right,
+      },
+    ];
+
+    // The tax column carries its own heading and figure on the first two rows,
+    // then runs on as empty shaded cells like the printed payslip.
+    if (index === 0) {
+      row.push({
+        content: "Current Month Tax Paid",
+        styles: { ...shaded, ...centred },
+      });
+    } else if (index === 1) {
+      row.push({ content: formatSlipMoney(slip.tax_paid), styles: right });
+    } else {
+      row.push({ content: "", styles: { fillColor: BLANK_FILL } });
+    }
+
+    tableRows.push(row);
+  }
+
+  tableRows.push([
+    { content: "Gross Pay", styles: shaded },
+    { content: formatSlipMoney(slip.gross_salary), styles: { ...shaded, ...right } },
+    { content: "Total Deductions", styles: shaded },
+    {
+      content: formatSlipMoney(slip.total_deductions),
+      styles: { ...shaded, ...right },
+    },
+    // autoTable cannot align two halves of one cell independently, so the
+    // label stays left and the figure is pushed to the right edge by drawing
+    // it as its own line in the hook below.
+    {
+      content: "Net Pay",
+      styles: { ...shaded },
+      netPay: formatSlipMoney(slip.net_salary),
+    },
   ]);
 
   autoTable(doc, {
     startY: cursorY,
     margin: { left: PAGE_MARGIN, right: PAGE_MARGIN, top: PAGE_MARGIN },
-    head: [["Earnings", "Amount", "Deductions", "Amount"]],
-    body: [
-      ...body,
-      [
-        "Gross Earnings",
-        formatSlipAmount(slip.gross_salary),
-        "Total Deductions",
-        formatSlipAmount(slip.total_deductions),
-      ],
-      ["", "", "Net Salary", formatSlipAmount(slip.net_salary)],
-    ],
+    body: [...detailRows, ...tableRows],
     theme: "grid",
     styles: {
       font: "helvetica",
-      fontSize: 10,
-      cellPadding: 2.2,
+      fontSize: 8,
+      cellPadding: 1.6,
       lineColor: BORDER_COLOR,
       lineWidth: 0.2,
       textColor: [0, 0, 0],
       overflow: "linebreak",
-    },
-    headStyles: {
-      fillColor: TABLE_HEAD_FILL,
-      textColor: [0, 0, 0],
-      fontStyle: "normal",
+      valign: "middle",
     },
     columnStyles: {
-      0: { cellWidth: contentWidth * 0.3 },
-      1: { cellWidth: contentWidth * 0.2, halign: "right" },
-      2: { cellWidth: contentWidth * 0.3 },
-      3: { cellWidth: contentWidth * 0.2, halign: "right" },
-    },
-    // The two summary rows at the foot are shaded like the reference slip.
-    didParseCell: (data) => {
-      if (data.section !== "body") return;
-      if (data.row.index >= rowCount) {
-        data.cell.styles.fillColor = TOTAL_ROW_FILL;
-        data.cell.styles.fontStyle = "bold";
-      }
+      0: { cellWidth: contentWidth * 0.19 },
+      1: { cellWidth: contentWidth * 0.17 },
+      2: { cellWidth: contentWidth * 0.22 },
+      3: { cellWidth: contentWidth * 0.14 },
+      4: { cellWidth: contentWidth * 0.28 },
     },
     rowPageBreak: "avoid",
+    didDrawCell: (data) => {
+      const raw = data.cell.raw;
+      if (typeof raw !== "object" || raw === null) return;
+      const netPay = (raw as Cell).netPay;
+      if (!netPay) return;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(
+        netPay,
+        data.cell.x + data.cell.width - data.cell.padding("right"),
+        data.cell.y + data.cell.height / 2 + 1,
+        { align: "right" }
+      );
+    },
   });
 
   const table = (doc as unknown as { lastAutoTable?: { finalY: number } })
     .lastAutoTable;
-  cursorY = (table?.finalY ?? cursorY) + 16;
+  cursorY = (table?.finalY ?? cursorY) + 8;
 
+  // The generated line comes first: on a partial payslip it is the one thing
+  // that stops the figures above looking wrong against a bank statement.
+  const writeNote = (text: string, withLabel: boolean) => {
+    doc.setFontSize(9);
+    let textX = PAGE_MARGIN;
+    if (withLabel) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Note:", PAGE_MARGIN, cursorY);
+      textX = PAGE_MARGIN + doc.getTextWidth("Note: ");
+    }
+    doc.setFont("helvetica", "normal");
+    const noteLines = doc.splitTextToSize(text, pageWidth - textX - PAGE_MARGIN);
+    doc.text(noteLines, textX, cursorY);
+    cursorY += noteLines.length * 4.6;
+  };
+
+  if (slip.disbursement_summary) {
+    writeNote(slip.disbursement_summary, true);
+  }
+  if (slip.note) {
+    writeNote(slip.note, !slip.disbursement_summary);
+  }
+
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  const footerEnd = drawContactFooter(doc, cursorY, {
-    name: "Human Resources & Registration",
-  });
-  doc.setFont("helvetica", "normal");
-  doc.text("Director:", pageWidth - PAGE_MARGIN - 30, footerEnd - 10);
+  doc.text(
+    "Authorized Signature: ____________________",
+    pageWidth - PAGE_MARGIN,
+    cursorY + 40,
+    { align: "right" }
+  );
 
   doc.save(buildSalarySlipFileName(slip));
 };

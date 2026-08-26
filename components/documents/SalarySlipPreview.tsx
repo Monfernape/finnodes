@@ -1,150 +1,195 @@
 import { SalarySlip, SalarySlipLine } from "@/entities";
 import {
+  formatPayslipPeriod,
+  formatPrintDate,
   formatSlipAmount,
-  formatSlipDate,
-  formatSlipMonth,
+  formatSlipMoney,
+  formatSlipShortDate,
   getDeductions,
   getEarnings,
 } from "@/lib/salarySlip";
-import { withHonorific } from "@/lib/documentText";
-import { LetterFooter, LetterHead } from "./LetterHead";
 
 type Props = {
   slip: SalarySlip;
   lines: SalarySlipLine[];
 };
 
+const CELL = "border border-gray-400 px-2 py-1 align-top";
+const LABEL = `${CELL} whitespace-nowrap font-bold`;
+
 export const SalarySlipPreview = ({ slip, lines }: Props) => {
   const earnings = getEarnings(lines);
   const deductions = getDeductions(lines);
-  // Earnings and deductions print side by side, so the shorter column is padded
-  // to keep the table rectangular the way the original slip was.
-  const rowCount = Math.max(earnings.length, deductions.length);
+  // Earnings, deductions and tax share one grid, so the short columns are
+  // padded to keep it rectangular the way the printed payslip is. Four rows
+  // minimum leaves the block looking like a form rather than a stub.
+  const rowCount = Math.max(earnings.length, deductions.length, 4);
 
   return (
-    <div className="print-area mx-auto w-full max-w-[900px] bg-white p-6 text-black shadow sm:p-12">
-      <LetterHead />
-
-      <h1 className="mb-10 text-center text-3xl">Salary Slip</h1>
-
-      <div className="space-y-1 text-sm">
-        <p>
-          <span className="font-medium">Name:</span> {slip.employee_name}
-        </p>
-        <p>
-          <span className="font-medium">Designation:</span>{" "}
-          {slip.designation || "—"}
-        </p>
-        {slip.contact_number && (
-          <p>
-            <span className="font-medium">Personal Contact Number:</span>{" "}
-            {slip.contact_number}
-          </p>
-        )}
-        <p>
-          <span className="font-medium">Salary Month:</span>{" "}
-          {formatSlipMonth(slip.month, slip.year)}
-        </p>
+    <div className="print-area mx-auto w-full max-w-[900px] bg-white p-6 text-black shadow sm:p-10">
+      <div className="flex items-start justify-between gap-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/devnodes.png"
+          alt="DevNodes"
+          className="h-10 w-auto object-contain"
+        />
+        <p className="text-xs">Print Date:{formatPrintDate()}</p>
       </div>
 
-      <div className="mt-8 space-y-4 text-sm leading-7">
-        <p>
-          This is to certify that{" "}
-          <strong>{withHonorific(slip.employee_name)}</strong> has been employed
-          with our organization as a {slip.designation || "team member"}
-          {slip.date_of_joining
-            ? ` since ${formatSlipDate(slip.date_of_joining)}`
-            : ""}
-          .
-        </p>
-        <p>
-          Throughout his employment, we have found him to be dedicated, sincere,
-          and fully committed to his responsibilities.
-        </p>
-        {slip.recipient_name && (
-          <p>
-            At the request of our employee, we are issuing this letter to
-            introduce and refer him to <strong>{slip.recipient_name}</strong>
-            {slip.purpose ? ` for the purpose of ${slip.purpose}` : ""}.
-          </p>
-        )}
-        <p>
-          Should you require any further information, please feel free to contact
-          us.
-        </p>
+      <div className="pb-4 pt-6 text-center">
+        <h1 className="text-lg font-bold">DevNodes Pvt,Ltd</h1>
+        <h2 className="text-lg font-bold">
+          PAYSLIP: {formatPayslipPeriod(slip.month, slip.year)}
+        </h2>
       </div>
-
-      <p className="mb-3 mt-8 text-sm font-semibold">
-        His salary particulars are given below.
-      </p>
 
       <div className="print-table-scroll overflow-x-auto">
-        <table className="w-full min-w-[560px] border-collapse text-left text-sm">
-          <thead>
+        <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+          <tbody>
             <tr className="bg-gray-200">
-              <th className="border border-gray-300 px-3 py-2 font-normal">
-                Earnings
-              </th>
-              <th className="border border-gray-300 px-3 py-2 text-right font-normal">
-                Amount
-              </th>
-              <th className="border border-gray-300 px-3 py-2 font-normal">
-                Deductions
-              </th>
-              <th className="border border-gray-300 px-3 py-2 text-right font-normal">
-                Amount
+              <th className={`${CELL} text-center`} colSpan={5}>
+                Employee Details
               </th>
             </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: rowCount }, (_, index) => {
+            <tr>
+              <td className={LABEL}>Employee Name :</td>
+              <td className={CELL} colSpan={2}>
+                {slip.employee_name}
+              </td>
+              <td className={LABEL}>Account Number/IBAN :</td>
+              <td className={CELL}>{slip.account_number || "—"}</td>
+            </tr>
+            <tr>
+              <td className={LABEL}>Designation :</td>
+              <td className={CELL} colSpan={2}>
+                {slip.designation || "—"}
+              </td>
+              <td className={LABEL}>Bank Name :</td>
+              <td className={CELL}>{slip.bank_name || "—"}</td>
+            </tr>
+            <tr>
+              <td className={LABEL}>Gross Salary :</td>
+              <td className={CELL} colSpan={2}>
+                {formatSlipAmount(slip.gross_salary)}
+              </td>
+              <td className={LABEL}>CNIC :</td>
+              <td className={CELL}>{slip.cnic || "—"}</td>
+            </tr>
+            <tr>
+              <td className={LABEL}>Employment Status :</td>
+              <td className={CELL}>{slip.employment_status || "—"}</td>
+              <td className={CELL}>
+                <span className="font-bold">Office Location : </span>
+                {slip.office_location || "—"}
+              </td>
+              <td className={LABEL}>Date of Joining :</td>
+              <td className={CELL}>
+                {slip.date_of_joining
+                  ? formatSlipShortDate(slip.date_of_joining)
+                  : "—"}
+              </td>
+            </tr>
+
+            <tr className="bg-gray-200 text-center font-bold">
+              <th className={CELL} colSpan={2}>
+                Earnings
+              </th>
+              <th className={CELL} colSpan={2}>
+                Deductions
+              </th>
+              <th className={CELL}>Tax Details</th>
+            </tr>
+            <tr>
+              <td className={CELL}>{earnings[0]?.label ?? ""}</td>
+              <td className={`${CELL} text-right tabular-nums`}>
+                {earnings[0] ? formatSlipMoney(earnings[0].amount) : ""}
+              </td>
+              <td className={CELL}>{deductions[0]?.label ?? ""}</td>
+              <td className={`${CELL} text-right tabular-nums`}>
+                {deductions[0] ? formatSlipMoney(deductions[0].amount) : ""}
+              </td>
+              <td className={`${CELL} bg-gray-200 text-center font-bold`}>
+                Current Month Tax Paid
+              </td>
+            </tr>
+            <tr>
+              <td className={CELL}>{earnings[1]?.label ?? ""}</td>
+              <td className={`${CELL} text-right tabular-nums`}>
+                {earnings[1] ? formatSlipMoney(earnings[1].amount) : ""}
+              </td>
+              <td className={CELL}>{deductions[1]?.label ?? ""}</td>
+              <td className={`${CELL} text-right tabular-nums`}>
+                {deductions[1] ? formatSlipMoney(deductions[1].amount) : ""}
+              </td>
+              <td className={`${CELL} text-right tabular-nums`}>
+                {formatSlipMoney(slip.tax_paid)}
+              </td>
+            </tr>
+            {Array.from({ length: rowCount - 2 }, (_, offset) => {
+              const index = offset + 2;
               const earning = earnings[index];
               const deduction = deductions[index];
 
               return (
-                <tr key={index} className={index % 2 === 1 ? "bg-gray-50" : ""}>
-                  <td className="border border-gray-300 px-3 py-2">
-                    {earning?.label ?? ""}
+                <tr key={index}>
+                  <td className={CELL}>{earning?.label ?? ""}</td>
+                  <td className={`${CELL} text-right tabular-nums`}>
+                    {earning ? formatSlipMoney(earning.amount) : ""}
                   </td>
-                  <td className="border border-gray-300 px-3 py-2 text-right tabular-nums">
-                    {earning ? formatSlipAmount(earning.amount) : ""}
+                  <td className={CELL}>{deduction?.label ?? ""}</td>
+                  <td className={`${CELL} text-right tabular-nums`}>
+                    {deduction ? formatSlipMoney(deduction.amount) : ""}
                   </td>
-                  <td className="border border-gray-300 px-3 py-2">
-                    {deduction?.label ?? ""}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2 text-right tabular-nums">
-                    {deduction ? formatSlipAmount(deduction.amount) : ""}
-                  </td>
+                  <td className={`${CELL} bg-gray-100`} />
                 </tr>
               );
             })}
-            <tr className="bg-gray-100 font-medium">
-              <td className="border border-gray-300 px-3 py-2">Gross Earnings</td>
-              <td className="border border-gray-300 px-3 py-2 text-right tabular-nums">
-                {formatSlipAmount(slip.gross_salary)}
+
+            <tr className="bg-gray-200 font-bold">
+              <td className={CELL}>Gross Pay</td>
+              <td className={`${CELL} text-right tabular-nums`}>
+                {formatSlipMoney(slip.gross_salary)}
               </td>
-              <td className="border border-gray-300 px-3 py-2">
-                Total Deductions
+              <td className={CELL}>Total Deductions</td>
+              <td className={`${CELL} text-right tabular-nums`}>
+                {formatSlipMoney(slip.total_deductions)}
               </td>
-              <td className="border border-gray-300 px-3 py-2 text-right tabular-nums">
-                {formatSlipAmount(slip.total_deductions)}
-              </td>
-            </tr>
-            <tr className="bg-gray-100 font-semibold">
-              <td className="border border-gray-300 px-3 py-2" colSpan={2} />
-              <td className="border border-gray-300 px-3 py-2">Net Salary</td>
-              <td className="border border-gray-300 px-3 py-2 text-right tabular-nums">
-                {formatSlipAmount(slip.net_salary)}
+              <td className={CELL}>
+                <span className="flex justify-between gap-3">
+                  <span>Net Pay</span>
+                  <span className="tabular-nums">
+                    {formatSlipMoney(slip.net_salary)}
+                  </span>
+                </span>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <LetterFooter
-        name="Human Resources & Registration"
-        signatureLabel="Director:"
-      />
+      {/* The generated line comes first: on a partial payslip it is the one
+          thing that stops the figures above looking wrong against a bank
+          statement. Anything a manager wrote follows it. */}
+      {slip.disbursement_summary && (
+        <p className="pt-6 text-xs">
+          <span className="font-bold">Note:</span> {slip.disbursement_summary}
+        </p>
+      )}
+      {slip.note && (
+        <p className={slip.disbursement_summary ? "pt-2 text-xs" : "pt-6 text-xs"}>
+          <span className="font-bold">
+            {slip.disbursement_summary ? "" : "Note: "}
+          </span>
+          {slip.note}
+        </p>
+      )}
+
+      <div className="flex justify-end pt-24">
+        <p className="text-sm font-bold">
+          Authorized Signature: ____________________
+        </p>
+      </div>
     </div>
   );
 };

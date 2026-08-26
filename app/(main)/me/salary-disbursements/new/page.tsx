@@ -1,55 +1,52 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { SalarySlip, Seat } from "@/entities";
-import { SalarySlipCreate } from "@/components/documents/SalarySlipCreate";
+import { SalaryDisbursementCreate } from "@/components/documents/SalaryDisbursementCreate";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { getServerPeopleAccess } from "@/utils/auth/server-access";
 import { PeopleRole } from "@/utils/auth/people-access";
 
 export const metadata: Metadata = {
-  title: "New Salary Slip",
+  title: "New Confirmation Letter",
 };
 
-export default async function NewEmployeeSalarySlipPage({
-  params,
-}: {
-  params: Promise<{ employeeId: string }>;
-}) {
-  const { employeeId } = await params;
-  // Issuing for someone else is a manager action; the database checks this too.
+export default async function NewSalaryDisbursementPage() {
   const access = await getServerPeopleAccess();
-  if (access?.role !== PeopleRole.Manager) {
-    redirect("/me/salary-slips");
+  if (access?.role !== PeopleRole.Employee) {
+    redirect("/employees");
   }
 
   const supabase = await createClient();
   const { data: seat } = await supabase
     .from(DatabaseTable.Seats)
     .select()
-    .eq("id", employeeId)
+    .eq("id", access.seatId)
     .maybeSingle<Seat>();
 
-  if (!seat) notFound();
+  if (!seat) {
+    redirect("/me/salary-disbursements");
+  }
 
-  // The last payslip carries whatever was typed by hand, so those details are
-  // offered again rather than asked for every month.
+  // The bank was very likely typed on a payslip already, so it is offered
+  // again rather than asked for twice.
   const { data: previousSlip } = await supabase
     .from(DatabaseTable.SalarySlips)
     .select()
-    .eq("seat_id", seat.id)
+    .eq("seat_id", access.seatId)
     .order("year", { ascending: false })
     .order("month", { ascending: false })
     .limit(1)
     .maybeSingle<SalarySlip>();
 
   return (
-    <SalarySlipCreate
+    <SalaryDisbursementCreate
       seat={seat}
-      previousSlip={previousSlip ?? null}
-      isManager
-      basePath={`/employees/${seat.id}/salary-slips`}
+      defaultBankName={
+        (seat.bank_name || "").trim() || (previousSlip?.bank_name || "").trim()
+      }
+      basePath="/me/salary-disbursements"
     />
   );
 }

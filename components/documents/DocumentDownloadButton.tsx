@@ -3,8 +3,14 @@
 import * as React from "react";
 import { DownloadIcon } from "lucide-react";
 
-import { ExperienceLetter, SalarySlip, SalarySlipLine } from "@/entities";
+import {
+  ExperienceLetter,
+  SalaryDisbursementLetter,
+  SalarySlip,
+  SalarySlipLine,
+} from "@/entities";
 import { downloadSalarySlipPdf } from "@/lib/salarySlipPdf";
+import { downloadSalaryDisbursementPdf } from "@/lib/salaryDisbursementPdf";
 import { downloadExperienceLetterPdf } from "@/lib/experienceLetterPdf";
 import { LETTER_SIGN_OFF } from "@/lib/experienceLetter";
 import { Button } from "@/components/ui/button";
@@ -61,6 +67,24 @@ export const ExperienceLetterDownloadButton = ({
   const { run, isGenerating } = useDownload(
     () => downloadExperienceLetterPdf(letter, LETTER_SIGN_OFF),
     "Experience letter"
+  );
+
+  return (
+    <Button type="button" onClick={run} disabled={isGenerating}>
+      <DownloadIcon className="mr-2 h-4 w-4" />
+      {isGenerating ? "Preparing PDF…" : "Download as PDF"}
+    </Button>
+  );
+};
+
+export const SalaryDisbursementDownloadButton = ({
+  letter,
+}: {
+  letter: SalaryDisbursementLetter;
+}) => {
+  const { run, isGenerating } = useDownload(
+    () => downloadSalaryDisbursementPdf(letter),
+    "Salary disbursement letter"
   );
 
   return (

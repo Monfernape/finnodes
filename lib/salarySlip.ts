@@ -1,26 +1,48 @@
-import { SalarySlip, SalarySlipLine, SalarySlipLineType, Seat } from "@/entities";
+import {
+  PayslipType,
+  SalarySlip,
+  SalarySlipLine,
+  SalarySlipLineType,
+  Seat,
+} from "@/entities";
 import { SALARY_MONTHS } from "@/lib/salary";
 
-// The reasons employees actually ask for a salary certificate. Each reads as
-// the tail of "...for the purpose of ___", which is how the slip prints it, so
-// they are stored as the phrase rather than as a code.
-export const SALARY_SLIP_PURPOSES = [
-  "opening a personal savings account",
-  "opening a salary account",
-  "applying for a personal loan",
-  "applying for vehicle financing",
-  "applying for home financing",
-  "applying for a credit card",
-  "applying for a visa",
-  "verifying his employment and income",
-  "entering into a tenancy agreement",
+// What a seat's employment status can be. Free text in the database so an
+// unusual arrangement is still expressible, but these are the four the picker
+// offers.
+export const EMPLOYMENT_STATUSES = [
+  "Permanent",
+  "Probation",
+  "Contract",
+  "Internship",
 ] as const;
 
-export const DEFAULT_SLIP_PURPOSE = SALARY_SLIP_PURPOSES[0];
+export const DEFAULT_EMPLOYMENT_STATUS = EMPLOYMENT_STATUSES[0];
 
-// Sentinel for the "something else" option, so a purpose that is not on the
-// list can still be typed rather than forcing a bad fit.
-export const CUSTOM_SLIP_PURPOSE = "__custom__";
+export const isPartialPayslip = (slip: Pick<SalarySlip, "slip_type">) =>
+  slip.slip_type === PayslipType.Partial;
+
+export const PAYSLIP_TYPE_LABELS: Record<PayslipType, string> = {
+  [PayslipType.Full]: "Full salary",
+  [PayslipType.Partial]: "Partial salary",
+};
+
+export const PAYSLIP_TYPE_DESCRIPTIONS: Record<PayslipType, string> = {
+  [PayslipType.Full]: "Paid in a single transfer.",
+  [PayslipType.Partial]:
+    "Paid in instalments. Each payment and its date is named on the payslip so it reconciles against a bank statement.",
+};
+
+/** Splits payslips by type, keeping each group newest first. */
+export const groupPayslipsByType = (slips: SalarySlip[]) =>
+  [PayslipType.Partial, PayslipType.Full]
+    .map((type) => ({
+      type,
+      label: PAYSLIP_TYPE_LABELS[type],
+      description: PAYSLIP_TYPE_DESCRIPTIONS[type],
+      slips: slips.filter((slip) => slip.slip_type === type),
+    }))
+    .filter((group) => group.slips.length > 0);
 
 export const formatSlipMonth = (month: number, year: number) =>
   `${SALARY_MONTHS[month - 1]} ${year}`;
@@ -30,6 +52,40 @@ export const formatSlipAmount = (amount: number) =>
     Number(amount)
   );
 
+// The figures inside the earnings and deductions table carry two decimals, the
+// way the printed payslip does. The employee-details block does not.
+export const formatSlipMoney = (amount: number) =>
+  new Intl.NumberFormat("en-PK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(amount));
+
+const SHORT_MONTHS = [
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+];
+
+/** The payslip's own heading, e.g. "MAR,2026". */
+export const formatPayslipPeriod = (month: number, year: number) =>
+  `${SHORT_MONTHS[month - 1]},${year}`;
+
+const NUMERIC_DATE = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+
+/** dd/mm/yyyy, as the payslip prints joining and print dates. */
+export const formatSlipShortDate = (value: string) =>
+  NUMERIC_DATE.format(new Date(value));
+
+/**
+ * Stamped on the document when it is printed rather than when it was issued,
+ * which is what "Print Date" means on the reference payslip.
+ */
+export const formatPrintDate = (reference = new Date()) =>
+  NUMERIC_DATE.format(reference);
+
 export const formatSlipDate = (value: string) =>
   new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
@@ -38,10 +94,7 @@ export const formatSlipDate = (value: string) =>
   }).format(new Date(value));
 
 export const buildSalarySlipFileName = (slip: SalarySlip) =>
-  `${slip.employee_name} ${formatSlipMonth(
-    slip.month,
-    slip.year
-  )} Salary Certificate.pdf`;
+  `${slip.employee_name} ${formatSlipMonth(slip.month, slip.year)} Payslip.pdf`;
 
 export const getEarnings = (lines: SalarySlipLine[]) =>
   lines
@@ -84,11 +137,11 @@ export const previewSlipLines = (seat: Seat) => {
 
   return {
     earnings: [
-      { label: "Basic Salary", amount: Math.max(gross - allowanceTotal, 0) },
+      { label: "Basic", amount: Math.max(gross - allowanceTotal, 0) },
       ...allowances,
     ],
     deductions:
-      gross - net > 0 ? [{ label: "Taxation", amount: gross - net }] : [],
+      gross - net > 0 ? [{ label: "Income Tax", amount: gross - net }] : [],
     gross,
     net,
     totalDeductions: Math.max(gross - net, 0),

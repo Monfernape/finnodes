@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { SalarySlip, Seat } from "@/entities";
-import { SalarySlipCreate } from "@/components/documents/SalarySlipCreate";
+import { SalaryDisbursementCreate } from "@/components/documents/SalaryDisbursementCreate";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { getServerPeopleAccess } from "@/utils/auth/server-access";
 import { PeopleRole } from "@/utils/auth/people-access";
 
 export const metadata: Metadata = {
-  title: "New Salary Slip",
+  title: "New Confirmation Letter",
 };
 
-export default async function NewEmployeeSalarySlipPage({
+export default async function NewEmployeeSalaryDisbursementPage({
   params,
 }: {
   params: Promise<{ employeeId: string }>;
@@ -21,7 +21,7 @@ export default async function NewEmployeeSalarySlipPage({
   // Issuing for someone else is a manager action; the database checks this too.
   const access = await getServerPeopleAccess();
   if (access?.role !== PeopleRole.Manager) {
-    redirect("/me/salary-slips");
+    redirect("/me/salary-disbursements");
   }
 
   const supabase = await createClient();
@@ -33,8 +33,6 @@ export default async function NewEmployeeSalarySlipPage({
 
   if (!seat) notFound();
 
-  // The last payslip carries whatever was typed by hand, so those details are
-  // offered again rather than asked for every month.
   const { data: previousSlip } = await supabase
     .from(DatabaseTable.SalarySlips)
     .select()
@@ -45,11 +43,12 @@ export default async function NewEmployeeSalarySlipPage({
     .maybeSingle<SalarySlip>();
 
   return (
-    <SalarySlipCreate
+    <SalaryDisbursementCreate
       seat={seat}
-      previousSlip={previousSlip ?? null}
-      isManager
-      basePath={`/employees/${seat.id}/salary-slips`}
+      defaultBankName={
+        (seat.bank_name || "").trim() || (previousSlip?.bank_name || "").trim()
+      }
+      basePath={`/employees/${seat.id}/salary-disbursements`}
     />
   );
 }

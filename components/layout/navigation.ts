@@ -3,6 +3,7 @@ import {
   HandCoinsIcon,
   LayoutGridIcon,
   LogOutIcon,
+  BanknoteIcon,
   MegaphoneIcon,
   NotebookPenIcon,
   PercentIcon,
@@ -79,6 +80,11 @@ export const EMPLOYEE_NAVIGATION_ITEMS: NavigationItem[] = [
     title: "Salary Slips",
     icon: ReceiptTextIcon,
     href: "/me/salary-slips",
+  },
+  {
+    title: "Salary Disbursement",
+    icon: BanknoteIcon,
+    href: "/me/salary-disbursements",
   },
   {
     title: "Experience Letters",

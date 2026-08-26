@@ -27,6 +27,7 @@ export enum Routes {
   ME_ONE_ON_ONES = "/me/one-on-ones",
   ME_REVIEWS = "/me/reviews",
   ME_SALARY_SLIPS = "/me/salary-slips",
+  ME_SALARY_DISBURSEMENTS = "/me/salary-disbursements",
   ME_EXPERIENCE_LETTERS = "/me/experience-letters",
   NOT_FOUND = "/_not-found",
 }
@@ -147,6 +148,16 @@ export const useToolbar = () => {
           };
         }
 
+        if (employeeRouteParts[2] === "salary-disbursements") {
+          return {
+            title:
+              employeeRouteParts[3] === "new"
+                ? "New Confirmation Letter"
+                : "Confirmation Letter",
+            backRoute: `${employeeBaseRoute}?tab=salary-disbursements`,
+          };
+        }
+
         if (employeeRouteParts[2] === "experience-letters") {
           return {
             title:
@@ -162,6 +173,7 @@ export const useToolbar = () => {
           tab === "edit" ||
           tab === "form" ||
           tab === "salary-slips" ||
+          tab === "salary-disbursements" ||
           tab === "experience-letters"
         ) {
           return {
@@ -282,6 +294,20 @@ export const useToolbar = () => {
         return {
           title: "Salary Slip",
           backRoute: Routes.ME_SALARY_SLIPS,
+        };
+      case pathname === Routes.ME_SALARY_DISBURSEMENTS:
+        return {
+          title: "Salary Disbursement",
+        };
+      case pathname === `${Routes.ME_SALARY_DISBURSEMENTS}/new`:
+        return {
+          title: "New Confirmation Letter",
+          backRoute: Routes.ME_SALARY_DISBURSEMENTS,
+        };
+      case pathname.startsWith(`${Routes.ME_SALARY_DISBURSEMENTS}/`):
+        return {
+          title: "Confirmation Letter",
+          backRoute: Routes.ME_SALARY_DISBURSEMENTS,
         };
       case pathname === Routes.ME_EXPERIENCE_LETTERS:
         return {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { Seat } from "@/entities";
+import { SalarySlip, Seat } from "@/entities";
 import { SalarySlipCreate } from "@/components/documents/SalarySlipCreate";
 import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
@@ -29,5 +29,23 @@ export default async function NewSalarySlipPage() {
     redirect("/me/salary-slips");
   }
 
-  return <SalarySlipCreate seat={seat} basePath="/me/salary-slips" />;
+  // The last payslip carries whatever was typed by hand, so those details are
+  // offered again rather than asked for every month.
+  const { data: previousSlip } = await supabase
+    .from(DatabaseTable.SalarySlips)
+    .select()
+    .eq("seat_id", access.seatId)
+    .order("year", { ascending: false })
+    .order("month", { ascending: false })
+    .limit(1)
+    .maybeSingle<SalarySlip>();
+
+  return (
+    <SalarySlipCreate
+      seat={seat}
+      previousSlip={previousSlip ?? null}
+      isManager={false}
+      basePath="/me/salary-slips"
+    />
+  );
 }

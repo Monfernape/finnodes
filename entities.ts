@@ -102,6 +102,12 @@ export enum AnnouncementCategory {
   General = "general",
 }
 
+/** Derived from how many dispatches the month actually went out in. */
+export enum PayslipType {
+  Full = "full",
+  Partial = "partial",
+}
+
 export enum SalarySlipLineType {
   Earning = "earning",
   Deduction = "deduction",
@@ -129,6 +135,9 @@ export type Seat = {
   account_number: string | null;
   designation: string | null;
   date_of_joining: string | null;
+  bank_name: string | null;
+  office_location: string | null;
+  employment_status: string;
   gross_salary: number;
   net_salary: number;
   utility_allowance: number;
@@ -374,6 +383,22 @@ export type SalarySlip = {
   gross_salary: number;
   net_salary: number;
   total_deductions: number;
+  account_number: string;
+  bank_name: string;
+  cnic: string;
+  employment_status: string;
+  office_location: string;
+  income_tax: number;
+  tax_paid: number;
+  slip_type: PayslipType;
+  // The generated one-liner naming each instalment and its date. Empty on a
+  // full payslip.
+  disbursement_summary: string;
+  // Manager-written line under the table, for anything about how the month was
+  // actually paid.
+  note: string;
+  // Kept for payslips issued under the old certificate format, which named a
+  // recipient and a purpose. Nothing prints them now.
   recipient_name: string;
   purpose: string;
   created_by_email: string;
@@ -478,4 +503,31 @@ export type OneOnOneReminder = {
   last_error: string | null;
   created_at: string;
   updated_at: string;
+};
+
+/** One credit that made up a month's salary, as the dispatch letters recorded it. */
+export type SalaryDisbursement = {
+  paid_on: string;
+  amount: number;
+  sheet_type: SalarySheetType;
+};
+
+export type SalaryDisbursementLetter = {
+  id: number;
+  seat_id: number;
+  month: number;
+  year: number;
+  issued_on: string;
+  employee_name: string;
+  designation: string;
+  cnic: string;
+  account_number: string;
+  bank_name: string;
+  date_of_joining: string | null;
+  // Snapshot, so a letter already handed to a bank does not change if a
+  // dispatch sheet is corrected afterwards.
+  instalments: SalaryDisbursement[];
+  total_paid: number;
+  created_by_email: string;
+  created_at: string;
 };
