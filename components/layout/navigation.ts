@@ -6,6 +6,7 @@ import {
   BanknoteIcon,
   MegaphoneIcon,
   NotebookPenIcon,
+  PhoneCallIcon,
   PercentIcon,
   ReceiptTextIcon,
   StarIcon,
@@ -20,6 +21,13 @@ export type NavigationItem = {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+};
+
+/** Shared, because salespeople who are not managers reach Sales too. */
+export const SALES_NAV_ITEM: NavigationItem = {
+  title: "Sales",
+  icon: PhoneCallIcon,
+  href: "/sales",
 };
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
@@ -58,6 +66,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     icon: MegaphoneIcon,
     href: "/announcements",
   },
+  SALES_NAV_ITEM,
   {
     title: "Reports",
     icon: ReportIcon,
@@ -114,9 +123,39 @@ export const SIGN_OUT_NAV = {
   icon: LogOutIcon,
 };
 
-export const getNavigationItems = (role: PeopleRole | null | undefined) =>
-  role === PeopleRole.Employee ? EMPLOYEE_NAVIGATION_ITEMS : NAVIGATION_ITEMS;
+/**
+ * An employee holding a sales title gets Sales alongside their own workspace.
+ * It is appended rather than built into the employee list because most
+ * employees never see it, and the menu should not imply otherwise.
+ */
+export const getNavigationItems = (
+  role: PeopleRole | null | undefined,
+  canAccessSales = false
+) => {
+  if (role !== PeopleRole.Employee) {
+    return NAVIGATION_ITEMS;
+  }
 
+  return canAccessSales
+    ? [...EMPLOYEE_NAVIGATION_ITEMS, SALES_NAV_ITEM]
+    : EMPLOYEE_NAVIGATION_ITEMS;
+};
+
+/**
+ * The two tabs on the mobile bar. For somebody whose job is selling, Sales
+ * takes the second slot: it is what they open the app for, and burying it in
+ * the More sheet would cost a tap on every call they log. Reviews stays one
+ * tap away under More.
+ */
 export const getMobilePrimaryNavItems = (
   role: PeopleRole | null | undefined,
-) => (role === PeopleRole.Employee ? EMPLOYEE_MOBILE_PRIMARY_NAV : MOBILE_PRIMARY_NAV);
+  canAccessSales = false,
+) => {
+  if (role !== PeopleRole.Employee) {
+    return MOBILE_PRIMARY_NAV;
+  }
+
+  return canAccessSales
+    ? [EMPLOYEE_NAVIGATION_ITEMS[0], SALES_NAV_ITEM]
+    : EMPLOYEE_MOBILE_PRIMARY_NAV;
+};

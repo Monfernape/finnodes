@@ -23,6 +23,10 @@ export enum Routes {
   ADD_TAX_YEAR = "/tax/add-year",
   ANNOUNCEMENTS = "/announcements",
   ADD_ANNOUNCEMENT = "/announcements/new",
+  SALES = "/sales",
+  ADD_SALES_LEAD = "/sales/new",
+  SALES_STRATEGIES = "/sales/strategies",
+  ADD_SALES_STRATEGY = "/sales/strategies/new",
   REPORTS = "/reports",
   ME_ONE_ON_ONES = "/me/one-on-ones",
   ME_REVIEWS = "/me/reviews",
@@ -263,6 +267,53 @@ export const useToolbar = () => {
         return {
           title: "Announcement",
           backRoute: Routes.ANNOUNCEMENTS,
+        };
+      case pathname === Routes.SALES:
+        return {
+          title: "Sales",
+          addRoute: Routes.ADD_SALES_LEAD,
+        };
+      case pathname === Routes.ADD_SALES_LEAD:
+        return {
+          title: "New Lead",
+          backRoute: Routes.SALES,
+        };
+      case pathname === Routes.SALES_STRATEGIES:
+        return {
+          title: "Strategies",
+          backRoute: Routes.SALES,
+          addRoute: Routes.ADD_SALES_STRATEGY,
+        };
+      case pathname === Routes.ADD_SALES_STRATEGY:
+        return {
+          title: "New Strategy",
+          backRoute: Routes.SALES_STRATEGIES,
+        };
+      case pathname.startsWith(`${Routes.SALES_STRATEGIES}/`) &&
+        pathname.endsWith("/edit"): {
+        // Back goes to the strategy being edited, not the whole list.
+        return {
+          title: "Edit Strategy",
+          backRoute: pathname.slice(0, -"/edit".length),
+        };
+      }
+      case pathname.startsWith(`${Routes.SALES_STRATEGIES}/`):
+        return {
+          title: "Strategy",
+          backRoute: Routes.SALES_STRATEGIES,
+        };
+      case pathname.startsWith(`${Routes.SALES}/`) &&
+        pathname.endsWith("/edit"): {
+        // Back goes to the lead being edited, not the whole list.
+        return {
+          title: "Edit Lead",
+          backRoute: pathname.slice(0, -"/edit".length),
+        };
+      }
+      case pathname.startsWith(`${Routes.SALES}/`):
+        return {
+          title: "Lead",
+          backRoute: Routes.SALES,
         };
       case pathname === Routes.REPORTS:
         return {

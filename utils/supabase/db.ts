@@ -27,5 +27,11 @@ export enum DatabaseTable {
   AnnouncementVenues = "announcement_venues",
   AnnouncementReminderOutbox = "announcement_reminder_outbox",
   OneOnOneReminderOutbox = "one_on_one_reminder_outbox",
+  SalesStrategies = "sales_strategies",
+  SalesLeads = "sales_leads",
+  SalesLeadUpdates = "sales_lead_updates",
+  JobTitles = "job_titles",
+  SeatTitles = "seat_titles",
+  SalesOwnerOptions = "sales_owner_options",
   AllowedEmails = "allowed_emails",
 }

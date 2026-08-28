@@ -19,6 +19,7 @@ import { createClient } from "@/utils/supabase/server";
 import { DatabaseTable } from "@/utils/supabase/db";
 import {
   ExperienceLetter,
+  JobTitle,
   Manager,
   SalaryDisbursementLetter,
   ManagerStatus,
@@ -26,6 +27,7 @@ import {
   PerformanceReview,
   SalarySlip,
   Seat,
+  SeatTitle,
   SeatStatus,
 } from "@/entities";
 import {
@@ -33,6 +35,8 @@ import {
   SalaryDisbursementList,
   SalarySlipsList,
 } from "@/components/documents/DocumentLists";
+import { EmployeeTitles } from "@/components/people/EmployeeTitles";
+import { getServerPeopleAccess } from "@/utils/auth/server-access";
 import { getCurrentYear, getMonthName } from "@/lib/people";
 
 const EMPLOYEE_TABS = [
@@ -165,9 +169,12 @@ export default async function EmployeePage({
   if (!Number.isFinite(id)) notFound();
 
   const supabase = await createClient();
+  const access = await getServerPeopleAccess();
   const year = getCurrentYear();
   const [
     { data: employee },
+    { data: jobTitles },
+    { data: seatTitles },
     { data: managers },
     { data: oneOnOnes },
     { data: reviews },
@@ -176,6 +183,16 @@ export default async function EmployeePage({
     { data: disbursementLetters },
   ] = await Promise.all([
       supabase.from(DatabaseTable.Seats).select().eq("id", id).maybeSingle<Seat>(),
+      supabase
+        .from(DatabaseTable.JobTitles)
+        .select()
+        .order("name", { ascending: true })
+        .returns<JobTitle[]>(),
+      supabase
+        .from(DatabaseTable.SeatTitles)
+        .select()
+        .eq("seat_id", id)
+        .returns<SeatTitle[]>(),
       supabase
         .from(DatabaseTable.Managers)
         .select()
@@ -229,6 +246,10 @@ export default async function EmployeePage({
       : "profile";
   const normalizedTab = activeTab === "form" ? "edit" : activeTab;
   const manager = managers?.find((item) => item.seats.includes(employee.id));
+  const heldTitleIds = new Set((seatTitles ?? []).map((row) => row.job_title_id));
+  const heldTitles = (jobTitles ?? []).filter((title) =>
+    heldTitleIds.has(title.id),
+  );
   const latestOneOnOne = [...(oneOnOnes ?? [])].sort((a, b) => b.month - a.month)[0];
   const latestReview = reviews?.[0];
   const completedOneOnOnes = (oneOnOnes ?? []).filter(
@@ -345,6 +366,15 @@ export default async function EmployeePage({
               icon={BadgeCheckIcon}
               label="Compensation"
               value={`${formatCurrency(employee.net_salary)} net`}
+            />
+          </div>
+
+          <div className="mt-3">
+            <EmployeeTitles
+              seatId={employee.id}
+              titles={heldTitles}
+              catalog={jobTitles ?? []}
+              authorEmail={access?.email ?? ""}
             />
           </div>
           </div>

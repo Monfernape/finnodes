@@ -12,3 +12,4 @@ DevNodes is a mobile-first company workspace built with Next.js, Supabase, and T
 - [Mobile-Native Experience](./docs/agents/mobile-native-experience.md)
 - [PWA Behavior](./docs/agents/pwa.md)
 - [TypeScript Conventions](./docs/agents/typescript.md)
+- [Sales Module](./docs/agents/sales-module.md)

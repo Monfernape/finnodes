@@ -7,6 +7,7 @@ import {
   normalizeEmail,
 } from "@/utils/auth/allowlist";
 import { PeopleRole, resolvePeopleAccess } from "@/utils/auth/people-access";
+import { isEmployeeAllowedPath } from "@/utils/auth/employee-paths";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -27,18 +28,6 @@ const getPublicRedirect = (request: NextRequest, pathname: string) => {
   url.searchParams.set("next", request.nextUrl.pathname);
   return url;
 };
-
-const EMPLOYEE_ALLOWED_PATHS = [
-  "/me",
-  "/auth/callback",
-  "/login",
-  "/access-denied",
-  "/manifest.webmanifest",
-  "/sw.js",
-];
-
-const isEmployeeAllowedPath = (pathname: string) =>
-  EMPLOYEE_ALLOWED_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
 const copyCookies = (from: NextResponse, to: NextResponse) => {
   from.cookies.getAll().forEach((cookie) => {
@@ -166,6 +155,8 @@ export const updateSession = async (request: NextRequest) => {
             role: PeopleRole.Manager,
             email: normalizedEmail,
             seatId: null,
+            // Managers reach everything, which is what the cookie caches.
+            canAccessSales: true,
           }
         : await resolvePeopleAccess(supabase, user);
 
@@ -199,7 +190,7 @@ export const updateSession = async (request: NextRequest) => {
 
       if (
         access.role === PeopleRole.Employee &&
-        !isEmployeeAllowedPath(request.nextUrl.pathname)
+        !isEmployeeAllowedPath(request.nextUrl.pathname, access.canAccessSales)
       ) {
         const redirectUrl = request.nextUrl.clone();
         redirectUrl.pathname = "/me/one-on-ones";

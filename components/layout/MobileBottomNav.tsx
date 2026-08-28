@@ -35,18 +35,26 @@ const isNavItemActive = (pathname: string, href: string) =>
 
 type MobileBottomNavProps = {
   role?: PeopleRole | null;
+  canAccessSales?: boolean;
 };
 
 export function MobileBottomNav({
   role,
+  canAccessSales,
 }: MobileBottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const navigationItems = useMemo(() => getNavigationItems(role), [role]);
-  const primaryItems = useMemo(() => getMobilePrimaryNavItems(role), [role]);
+  const navigationItems = useMemo(
+    () => getNavigationItems(role, canAccessSales),
+    [role, canAccessSales]
+  );
+  const primaryItems = useMemo(
+    () => getMobilePrimaryNavItems(role, canAccessSales),
+    [role, canAccessSales]
+  );
 
   useRoutePrefetch(navigationItems.map((item) => item.href));
 

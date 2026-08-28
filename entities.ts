@@ -113,6 +113,24 @@ export enum SalarySlipLineType {
   Deduction = "deduction",
 }
 
+export enum SalesLeadStatus {
+  New = "new",
+  Contacted = "contacted",
+  FollowingUp = "following_up",
+  Meeting = "meeting",
+  Proposal = "proposal",
+  Won = "won",
+  Lost = "lost",
+}
+
+export enum SalesStrategyChannel {
+  Call = "call",
+  Email = "email",
+  LinkedIn = "linkedin",
+  Referral = "referral",
+  Event = "event",
+}
+
 export type Expense = {
   id: number;
   title: string;
@@ -533,4 +551,88 @@ export type SalaryDisbursementLetter = {
   total_paid: number;
   created_by_email: string;
   created_at: string;
+};
+
+/** A cold-call approach somebody on the team wrote down for everyone to reuse. */
+export type SalesStrategy = {
+  id: number;
+  title: string;
+  channel: SalesStrategyChannel;
+  approach: string;
+  follow_up_plan: string;
+  // Days to leave between touches. Prefills the next follow-up date on a lead
+  // working this strategy; 0 means the strategy sets no cadence.
+  follow_up_after_days: number;
+  // Retired: still named on its leads and still counted, but not offered for
+  // new ones.
+  is_active: boolean;
+  // Soft deleted. The row stays so old leads keep reading correctly and the
+  // numbers it earned survive; nothing in the app shows it.
+  deleted_at: string | null;
+  created_by_email: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SalesLead = {
+  id: number;
+  company: string;
+  contact_name: string;
+  contact_role: string;
+  phone: string;
+  email: string;
+  source: string;
+  // Null once the strategy it was worked with has been deleted; the lead keeps
+  // its history either way.
+  strategy_id: number | null;
+  status: SalesLeadStatus;
+  owner_email: string;
+  // Null means nothing is scheduled, which is where a won or lost lead lands.
+  next_follow_up_on: string | null;
+  notes: string;
+  created_by_email: string;
+  created_at: string;
+  updated_at: string;
+};
+
+/** One touch on a lead: what happened, on what day, written by whom. */
+export type SalesLeadUpdate = {
+  id: number;
+  lead_id: number;
+  happened_on: string;
+  note: string;
+  // The status the lead moved to with this update, or null when the update
+  // only added detail. A snapshot for the timeline; the lead's own status is
+  // the source of truth.
+  status_after: SalesLeadStatus | null;
+  author_email: string;
+  created_at: string;
+};
+
+/** A job title an employee can hold. Separate from `Seat.designation`, which
+ * stays the single title printed on payslips and letters. */
+export type JobTitle = {
+  id: number;
+  name: string;
+  // Holding a title flagged here opens the sales module.
+  grants_sales_access: boolean;
+  is_seeded: boolean;
+  created_by_email: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SeatTitle = {
+  id: number;
+  seat_id: number;
+  job_title_id: number;
+  assigned_by_email: string;
+  created_at: string;
+};
+
+/** A row of the `sales_owner_options` view: names without the salaries. */
+export type SalesOwnerRow = {
+  source: string;
+  email: string;
+  name: string;
 };

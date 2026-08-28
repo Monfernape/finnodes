@@ -12,6 +12,7 @@ export default async function MainLayout({
 }) {
   const access = await getServerPeopleAccess();
   const role = access?.role ?? null;
+  const canAccessSales = access?.canAccessSales ?? false;
 
   return (
     <SidebarProvider
@@ -23,14 +24,14 @@ export default async function MainLayout({
       }
     >
       <RefreshStaleRoutes />
-      <Sidebar role={role} />
+      <Sidebar role={role} canAccessSales={canAccessSales} />
       <SidebarInset className="bg-background">
         <PageTitle />
         <main className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-28 pt-4 md:gap-8 md:px-6 md:pb-6 md:pt-6">
           {children}
         </main>
       </SidebarInset>
-      <MobileBottomNav role={role} />
+      <MobileBottomNav role={role} canAccessSales={canAccessSales} />
     </SidebarProvider>
   );
 }

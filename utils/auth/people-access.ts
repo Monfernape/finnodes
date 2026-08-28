@@ -22,12 +22,36 @@ export type PeopleAccess =
       role: PeopleRole.Manager;
       email: string;
       seatId: null;
+      canAccessSales: true;
     }
   | {
       role: PeopleRole.Employee;
       email: string;
       seatId: number;
+      // True for an employee holding a title flagged as a sales role. An
+      // employee can hold several titles; one sales title is enough.
+      canAccessSales: boolean;
     };
+
+/**
+ * Asks the database the same question its row policies ask.
+ *
+ * Deliberately an RPC rather than the rule re-written in TypeScript: the menu
+ * and the policies guarding the sales tables must agree, and the only way to
+ * guarantee that is for both to read the same function.
+ */
+const canAccessSales = async (supabase: SupabaseClient) => {
+  const { data, error } = await supabase.rpc("can_access_sales");
+
+  if (error) {
+    // A failure here must not open a door. The worst case is a salesperson who
+    // has to reload, which is better than showing the module to someone whose
+    // access could not be confirmed.
+    return false;
+  }
+
+  return data === true;
+};
 
 const getSeatForUser = async (
   supabase: SupabaseClient,
@@ -93,10 +117,12 @@ export const resolvePeopleAccess = async (
   }
 
   if (await isEmailAllowListed(supabase, normalizedEmail)) {
+    // Managers see everything, so there is nothing to ask the database.
     return {
       role: PeopleRole.Manager,
       email: normalizedEmail,
       seatId: null,
+      canAccessSales: true,
     };
   }
 
@@ -109,5 +135,6 @@ export const resolvePeopleAccess = async (
     role: PeopleRole.Employee,
     email: normalizedEmail,
     seatId: seat.id,
+    canAccessSales: await canAccessSales(supabase),
   };
 };

@@ -31,15 +31,19 @@ const isNavItemActive = (pathname: string, href: string) =>
 type SidebarProps = {
   onNavigate?: () => void;
   role?: PeopleRole | null;
+  canAccessSales?: boolean;
 };
 
-export const Sidebar = ({ onNavigate, role }: SidebarProps) => {
+export const Sidebar = ({ onNavigate, role, canAccessSales }: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [signingOut, setSigningOut] = useState(false);
   const { isMobile, setOpenMobile } = useSidebar();
-  const navigationItems = useMemo(() => getNavigationItems(role), [role]);
+  const navigationItems = useMemo(
+    () => getNavigationItems(role, canAccessSales),
+    [role, canAccessSales]
+  );
 
   useRoutePrefetch(["/", ...navigationItems.map((item) => item.href)]);
 
