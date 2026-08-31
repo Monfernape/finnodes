@@ -42,7 +42,7 @@ import { TaxSalarySlipCreate } from "@/components/documents/TaxSalarySlipCreate"
 import { EmployeeTitles } from "@/components/people/EmployeeTitles";
 import { getServerPeopleAccess } from "@/utils/auth/server-access";
 import { getCurrentYear, getMonthName } from "@/lib/people";
-import { isSeatSalaryItem } from "@/lib/taxSalarySlip";
+import { toTaxSlipPayRows } from "@/lib/taxSalarySlip";
 
 const EMPLOYEE_TABS = [
   { label: "Profile", value: "profile" },
@@ -197,13 +197,12 @@ const getTaxSalarySlipData = async (
 
   return {
     taxYears: taxYears ?? [],
-    salarySheets: salarySheets ?? [],
-    items: [
+    // Narrowed to this employee here rather than in the browser, so nobody
+    // else's pay is sent to the page in the first place.
+    payRows: toTaxSlipPayRows(seat, salarySheets ?? [], [
       ...(linkedItems ?? []),
-      // Filtered here rather than in the browser, so nobody else's pay is sent
-      // to the page in the first place.
-      ...(unlinkedItems ?? []).filter((item) => isSeatSalaryItem(item, seat)),
-    ],
+      ...(unlinkedItems ?? []),
+    ]),
   };
 };
 
@@ -453,8 +452,7 @@ export default async function EmployeePage({
         <TaxSalarySlipCreate
           seat={employee}
           taxYears={taxSlipData.taxYears}
-          salarySheets={taxSlipData.salarySheets}
-          items={taxSlipData.items}
+          payRows={taxSlipData.payRows}
         />
       )}
 

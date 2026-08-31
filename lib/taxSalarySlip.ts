@@ -6,7 +6,7 @@ import {
 } from "@/entities";
 import { SALARY_MONTHS } from "@/lib/salary";
 import { formatTaxYearPeriod, getTaxYearPeriod } from "@/lib/tax";
-import { getTaxYearMonths } from "@/lib/taxSheet";
+import { getTaxYearForMonth, getTaxYearMonths } from "@/lib/taxSheet";
 
 // A tax salary slip is the year-long counterpart to a monthly payslip: one
 // document covering a whole tax year (July through June), month by month, with
@@ -133,19 +133,58 @@ export const isSeatSalaryItem = (item: SalarySheetItem, seat: Seat) => {
   return Boolean(cnic) && normaliseIdentifier(item.cnic) === cnic;
 };
 
+/**
+ * One dispatch of one person's pay. This is all the document is built from, so
+ * neither the manager's page nor the employee's own ever has to hold anybody
+ * else's figures: a manager's page narrows the salary sheets down to these
+ * before rendering, and an employee's page is handed only their own by the
+ * database.
+ */
+export type TaxSlipPayRow = {
+  month: number;
+  year: number;
+  grossSalary: number;
+  netSalary: number;
+};
+
 // Income tax is charged on gross pay, so what was withheld is the gap between
 // gross and net. A row that only ever recorded a net figure carries gross as
 // zero; that is a missing figure rather than a tax-free month, so the net is
 // reported as the gross and nothing is claimed to have been deducted.
-const readItemPay = (item: SalarySheetItem) => {
-  const gross = Number(item.gross_salary) > 0 ? Number(item.gross_salary) : 0;
-  const net = Number(item.net_salary);
+const readRowPay = (row: TaxSlipPayRow) => {
+  const gross = Number(row.grossSalary) > 0 ? Number(row.grossSalary) : 0;
+  const net = Number(row.netSalary);
 
   if (gross === 0) {
     return { gross: net, tax: 0, net };
   }
 
   return { gross, tax: Math.max(gross - net, 0), net };
+};
+
+/** The salary sheets an employee appears on, as pay rows. */
+export const toTaxSlipPayRows = (
+  seat: Seat,
+  salarySheets: SalarySheet[],
+  items: SalarySheetItem[]
+): TaxSlipPayRow[] => {
+  const sheetsById = new Map(salarySheets.map((sheet) => [sheet.id, sheet]));
+
+  return items
+    .filter((item) => isSeatSalaryItem(item, seat))
+    .flatMap((item) => {
+      const sheet = sheetsById.get(item.salary_sheet_id);
+      if (!sheet) return [];
+
+      return [
+        {
+          month: sheet.month,
+          year: sheet.year,
+          grossSalary: Number(item.gross_salary),
+          netSalary: Number(item.net_salary),
+        },
+      ];
+    });
 };
 
 // Tax-year order, so a range is sliced from July rather than from January.
@@ -173,35 +212,27 @@ export const getSelectedTaxSlipMonths = (
 };
 
 export const buildTaxSalarySlip = ({
-  seat,
   taxYear,
   from,
   to,
-  salarySheets,
-  items,
+  payRows,
 }: {
-  seat: Seat;
   taxYear: number;
   from: TaxSlipPeriod;
   to: TaxSlipPeriod;
-  salarySheets: SalarySheet[];
-  items: SalarySheetItem[];
+  payRows: TaxSlipPayRow[];
 }): TaxSalarySlip => {
-  const seatItems = items.filter((item) => isSeatSalaryItem(item, seat));
-  const sheetsById = new Map(salarySheets.map((sheet) => [sheet.id, sheet]));
-
   const months = getSelectedTaxSlipMonths(taxYear, from, to).map(
     ({ month, year }): TaxSlipMonth => {
-      const monthItems = seatItems.filter((item) => {
-        const sheet = sheetsById.get(item.salary_sheet_id);
-        return sheet ? sheet.month === month && sheet.year === year : false;
-      });
+      const monthRows = payRows.filter(
+        (row) => row.month === month && row.year === year
+      );
 
       // A month paid over several dispatches is one line on this document, so
       // the dispatches are summed before anything is reported.
-      const totals = monthItems.reduce(
-        (acc, item) => {
-          const pay = readItemPay(item);
+      const totals = monthRows.reduce(
+        (acc, row) => {
+          const pay = readRowPay(row);
           acc.grossSalary += pay.gross;
           acc.taxDeducted += pay.tax;
           acc.netSalary += pay.net;
@@ -214,8 +245,8 @@ export const buildTaxSalarySlip = ({
         month,
         year,
         label: `${SALARY_MONTHS[month - 1]} ${year}`,
-        recorded: monthItems.length > 0,
-        dispatches: monthItems.length,
+        recorded: monthRows.length > 0,
+        dispatches: monthRows.length,
         ...totals,
       };
     }
@@ -254,25 +285,16 @@ export const buildTaxSalarySlip = ({
  */
 export const getDefaultTaxYear = (
   taxYears: TaxYear[],
-  seat: Seat,
-  salarySheets: SalarySheet[],
-  items: SalarySheetItem[]
+  payRows: TaxSlipPayRow[]
 ) => {
   const years = [...taxYears].sort((a, b) => b.tax_year - a.tax_year);
   if (years.length === 0) return null;
 
-  const paidYear = years.find((year) => {
-    const period = getTaxYearMonths(year.tax_year);
-    const slip = buildTaxSalarySlip({
-      seat,
-      taxYear: year.tax_year,
-      from: period[0],
-      to: period[period.length - 1],
-      salarySheets,
-      items,
-    });
-    return slip.monthsRecorded > 0;
-  });
+  const paidYear = years.find((year) =>
+    payRows.some(
+      (row) => getTaxYearForMonth(row.month, row.year) === year.tax_year
+    )
+  );
 
   return paidYear ?? years[0];
 };

@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SalaryDisbursement, SalarySlip, Seat } from "@/entities";
 import { createClient } from "@/utils/supabase/client";
 import {
+  DEFAULT_BANK_NAME,
   DEFAULT_EMPLOYMENT_STATUS,
   EMPLOYMENT_STATUSES,
   formatSlipAmount,
@@ -285,7 +286,7 @@ export const SalarySlipCreate = ({
                   <FormControl>
                     <Input
                       className="h-11"
-                      placeholder="Bank Alfalah (0736)"
+                      placeholder={DEFAULT_BANK_NAME}
                       {...field}
                     />
                   </FormControl>

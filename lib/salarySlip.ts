@@ -19,6 +19,11 @@ export const EMPLOYMENT_STATUSES = [
 
 export const DEFAULT_EMPLOYMENT_STATUS = EMPLOYMENT_STATUSES[0];
 
+// The branch every employee's salary account is held at. Kept here rather than
+// typed into each form so the documents agree with one another, and so a
+// record that never had a bank name on it still prints one.
+export const DEFAULT_BANK_NAME = "Bank Alfalah Gulshan Market Branch";
+
 export const PAYSLIP_TYPE_LABELS: Record<PayslipType, string> = {
   [PayslipType.Full]: "Full salary",
   [PayslipType.Partial]: "Partial salary",
