@@ -25,24 +25,30 @@ import {
   ManagerStatus,
   OneOnOne,
   PerformanceReview,
+  SalarySheet,
+  SalarySheetItem,
   SalarySlip,
   Seat,
   SeatTitle,
   SeatStatus,
+  TaxYear,
 } from "@/entities";
 import {
   ExperienceLettersList,
   SalaryDisbursementList,
   SalarySlipsList,
 } from "@/components/documents/DocumentLists";
+import { TaxSalarySlipCreate } from "@/components/documents/TaxSalarySlipCreate";
 import { EmployeeTitles } from "@/components/people/EmployeeTitles";
 import { getServerPeopleAccess } from "@/utils/auth/server-access";
 import { getCurrentYear, getMonthName } from "@/lib/people";
+import { isSeatSalaryItem } from "@/lib/taxSalarySlip";
 
 const EMPLOYEE_TABS = [
   { label: "Profile", value: "profile" },
   { label: "Notes", value: "notes" },
   { label: "Salary slips", value: "salary-slips" },
+  { label: "Tax salary slip", value: "tax-salary-slip" },
   { label: "Salary disbursement", value: "salary-disbursements" },
   { label: "Experience letters", value: "experience-letters" },
   { label: "Edit", value: "edit" },
@@ -157,6 +163,50 @@ const EmployeeTabs = ({
   </nav>
 );
 
+// Everything the tax salary slip is built from: the tax years the company has
+// set up, and this employee's rows on the salary sheets dispatched so far.
+// Rows typed before sheets linked to seats carry no seat id, so the unlinked
+// ones are read too and matched back to the person by account number or CNIC.
+const getTaxSalarySlipData = async (
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  seat: Seat
+) => {
+  const [
+    { data: taxYears },
+    { data: salarySheets },
+    { data: linkedItems },
+    { data: unlinkedItems },
+  ] = await Promise.all([
+    supabase
+      .from(DatabaseTable.TaxYears)
+      .select()
+      .order("tax_year", { ascending: false })
+      .returns<TaxYear[]>(),
+    supabase.from(DatabaseTable.SalarySheets).select().returns<SalarySheet[]>(),
+    supabase
+      .from(DatabaseTable.SalarySheetItems)
+      .select()
+      .eq("seat_id", seat.id)
+      .returns<SalarySheetItem[]>(),
+    supabase
+      .from(DatabaseTable.SalarySheetItems)
+      .select()
+      .is("seat_id", null)
+      .returns<SalarySheetItem[]>(),
+  ]);
+
+  return {
+    taxYears: taxYears ?? [],
+    salarySheets: salarySheets ?? [],
+    items: [
+      ...(linkedItems ?? []),
+      // Filtered here rather than in the browser, so nobody else's pay is sent
+      // to the page in the first place.
+      ...(unlinkedItems ?? []).filter((item) => isSeatSalaryItem(item, seat)),
+    ],
+  };
+};
+
 export default async function EmployeePage({
   params,
   searchParams,
@@ -167,6 +217,18 @@ export default async function EmployeePage({
   const [{ employeeId }, { tab }] = await Promise.all([params, searchParams]);
   const id = Number(employeeId);
   if (!Number.isFinite(id)) notFound();
+
+  const activeTab =
+    tab === "notes" ||
+    tab === "edit" ||
+    tab === "form" ||
+    tab === "salary-slips" ||
+    tab === "tax-salary-slip" ||
+    tab === "salary-disbursements" ||
+    tab === "experience-letters"
+      ? tab
+      : "profile";
+  const normalizedTab = activeTab === "form" ? "edit" : activeTab;
 
   const supabase = await createClient();
   const access = await getServerPeopleAccess();
@@ -235,16 +297,14 @@ export default async function EmployeePage({
 
   if (!employee) notFound();
 
-  const activeTab =
-    tab === "notes" ||
-    tab === "edit" ||
-    tab === "form" ||
-    tab === "salary-slips" ||
-    tab === "salary-disbursements" ||
-    tab === "experience-letters"
-      ? tab
-      : "profile";
-  const normalizedTab = activeTab === "form" ? "edit" : activeTab;
+  // Only read for the tab that needs it: the tax salary slip is built from
+  // every salary sheet the company has dispatched, which is a lot to load
+  // behind a profile nobody asked it for.
+  const taxSlipData =
+    normalizedTab === "tax-salary-slip"
+      ? await getTaxSalarySlipData(supabase, employee)
+      : null;
+
   const manager = managers?.find((item) => item.seats.includes(employee.id));
   const heldTitleIds = new Set((seatTitles ?? []).map((row) => row.job_title_id));
   const heldTitles = (jobTitles ?? []).filter((title) =>
@@ -386,6 +446,15 @@ export default async function EmployeePage({
           slips={salarySlips ?? []}
           basePath={`/employees/${employee.id}/salary-slips`}
           createPath={`/employees/${employee.id}/salary-slips/new`}
+        />
+      )}
+
+      {normalizedTab === "tax-salary-slip" && taxSlipData && (
+        <TaxSalarySlipCreate
+          seat={employee}
+          taxYears={taxSlipData.taxYears}
+          salarySheets={taxSlipData.salarySheets}
+          items={taxSlipData.items}
         />
       )}
 
