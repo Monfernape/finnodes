@@ -301,6 +301,14 @@ export const TaxSalarySlipCreate = ({
                       rather than as a zero.
                     </p>
                   )}
+                  {slip.derivedMonths > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      The salary letters for {slip.derivedMonths} of these
+                      months recorded only the amount transferred, so the gross
+                      pay and the tax behind it were worked back from the tax
+                      year&rsquo;s slabs.
+                    </p>
+                  )}
                 </>
               )}
 

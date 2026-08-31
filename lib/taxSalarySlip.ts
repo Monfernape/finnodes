@@ -22,6 +22,8 @@ export type TaxSlipMonth = {
   recorded: boolean;
   /** How many dispatches the month was paid over. */
   dispatches: number;
+  /** Any part of the month's gross was reconstructed from the tax slabs. */
+  derived: boolean;
   grossSalary: number;
   taxDeducted: number;
   netSalary: number;
@@ -48,6 +50,8 @@ export type TaxSalarySlip = {
   netSalary: number;
   /** Averaged over the months with pay on record, not over the selection. */
   averageMonthlyGross: number;
+  /** How many of the reported months carry a reconstructed gross. */
+  derivedMonths: number;
 };
 
 /** The twelve months of a tax year, as the picker offers them. */
@@ -145,6 +149,8 @@ export type TaxSlipPayRow = {
   year: number;
   grossSalary: number;
   netSalary: number;
+  /** The gross was reconstructed from the tax slabs, not read off a letter. */
+  derived: boolean;
 };
 
 // Income tax is charged on gross pay, so what was withheld is the gap between
@@ -182,6 +188,7 @@ export const toTaxSlipPayRows = (
           year: sheet.year,
           grossSalary: Number(item.gross_salary),
           netSalary: Number(item.net_salary),
+          derived: Boolean(item.gross_is_derived),
         },
       ];
     });
@@ -247,6 +254,7 @@ export const buildTaxSalarySlip = ({
         label: `${SALARY_MONTHS[month - 1]} ${year}`,
         recorded: monthRows.length > 0,
         dispatches: monthRows.length,
+        derived: monthRows.some((row) => row.derived),
         ...totals,
       };
     }
@@ -275,6 +283,7 @@ export const buildTaxSalarySlip = ({
               recorded.length
           )
         : 0,
+    derivedMonths: recorded.filter((entry) => entry.derived).length,
   };
 };
 

@@ -77,6 +77,7 @@ const buildItem = (
   date_of_joining: "2024-01-15",
   gross_salary: 200000,
   net_salary: 187500,
+  gross_is_derived: false,
   sort_order: 0,
   created_at: "2025-08-01T00:00:00.000Z",
   ...overrides,
@@ -87,6 +88,7 @@ const buildPayRow = (overrides: Partial<TaxSlipPayRow> = {}): TaxSlipPayRow => (
   year: 2025,
   grossSalary: 200000,
   netSalary: 187500,
+  derived: false,
   ...overrides,
 });
 
@@ -273,7 +275,13 @@ describe("toTaxSlipPayRows", () => {
     );
 
     expect(rows).toEqual([
-      { month: 3, year: 2026, grossSalary: 200000, netSalary: 187500 },
+      {
+        month: 3,
+        year: 2026,
+        grossSalary: 200000,
+        netSalary: 187500,
+        derived: false,
+      },
     ]);
   });
 
@@ -400,5 +408,60 @@ describe("getDefaultTaxYear", () => {
 describe("formatTaxSlipHeading", () => {
   it("names the period the way the payslip heading does", () => {
     expect(formatTaxSlipHeading(JULY_2025, JUNE_2026)).toBe("JUL,2025 - JUN,2026");
+  });
+});
+
+describe("reconstructed gross figures", () => {
+  it("counts the months whose gross was worked back from the slabs", () => {
+    const slip = buildTaxSalarySlip({
+      taxYear: 2026,
+      from: JULY_2025,
+      to: { month: 9, year: 2025 },
+      payRows: [
+        // July's letter printed a gross column; August's and September's did not.
+        buildPayRow({ month: 7, year: 2025 }),
+        buildPayRow({ month: 8, year: 2025, derived: true }),
+        buildPayRow({ month: 9, year: 2025, derived: true }),
+      ],
+    });
+
+    expect(slip.derivedMonths).toBe(2);
+    expect(slip.months.map((month) => month.derived)).toEqual([
+      false,
+      true,
+      true,
+    ]);
+  });
+
+  it("counts a month once however many of its dispatches were reconstructed", () => {
+    const slip = buildTaxSalarySlip({
+      taxYear: 2026,
+      from: JULY_2025,
+      to: JULY_2025,
+      payRows: [
+        buildPayRow({ grossSalary: 65000, netSalary: 63100, derived: true }),
+        buildPayRow({ grossSalary: 65000, netSalary: 63100, derived: true }),
+      ],
+    });
+
+    expect(slip.derivedMonths).toBe(1);
+    expect(slip.months[0]).toMatchObject({
+      dispatches: 2,
+      grossSalary: 130000,
+      netSalary: 126200,
+      // The tax the two dispatches were grossed up for.
+      taxDeducted: 3800,
+    });
+  });
+
+  it("counts nothing when every figure came off a letter", () => {
+    const slip = buildTaxSalarySlip({
+      taxYear: 2026,
+      from: JULY_2025,
+      to: JUNE_2026,
+      payRows: buildYearOfPay(),
+    });
+
+    expect(slip.derivedMonths).toBe(0);
   });
 });

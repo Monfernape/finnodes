@@ -192,6 +192,10 @@ export type SalarySheetItem = {
   date_of_joining: string;
   gross_salary: number;
   net_salary: number;
+  // True when the gross was reconstructed from the tax slabs because the
+  // letter recorded only what was transferred. See the
+  // `derive_gross_salary_from_net` migration.
+  gross_is_derived: boolean;
   sort_order: number;
   created_at: string;
 };

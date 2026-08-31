@@ -18,6 +18,7 @@ type PayRowRecord = {
   year: number;
   gross_salary: number;
   net_salary: number;
+  gross_is_derived: boolean;
 };
 
 const isPayRowRecord = (value: unknown): value is PayRowRecord =>
@@ -26,7 +27,8 @@ const isPayRowRecord = (value: unknown): value is PayRowRecord =>
   "month" in value &&
   "year" in value &&
   "gross_salary" in value &&
-  "net_salary" in value;
+  "net_salary" in value &&
+  "gross_is_derived" in value;
 
 export default async function MyTaxSalarySlipPage() {
   const access = await getServerPeopleAccess();
@@ -64,6 +66,7 @@ export default async function MyTaxSalarySlipPage() {
     year: Number(row.year),
     grossSalary: Number(row.gross_salary),
     netSalary: Number(row.net_salary),
+    derived: Boolean(row.gross_is_derived),
   }));
 
   return (
