@@ -15,7 +15,7 @@ import {
   getSelectableDisbursementMonths,
   sumDisbursements,
 } from "@/lib/salaryDisbursement";
-import { formatSlipMonth } from "@/lib/salarySlip";
+import { DEFAULT_BANK_NAME, formatSlipMonth } from "@/lib/salarySlip";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -208,7 +208,7 @@ export const SalaryDisbursementCreate = ({
                   <FormControl>
                     <Input
                       className="h-11"
-                      placeholder="Bank Alfalah (0736)"
+                      placeholder={DEFAULT_BANK_NAME}
                       {...field}
                     />
                   </FormControl>

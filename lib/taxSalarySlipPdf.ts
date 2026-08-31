@@ -1,6 +1,10 @@
 import { Seat } from "@/entities";
 import { PAGE_MARGIN, loadLogoDataUrl, loadPdfLibs } from "@/lib/documentPdf";
-import { formatPrintDate, formatSlipShortDate } from "@/lib/salarySlip";
+import {
+  DEFAULT_BANK_NAME,
+  formatPrintDate,
+  formatSlipShortDate,
+} from "@/lib/salarySlip";
 import {
   TaxSalarySlip,
   TaxSlipPeriod,
@@ -99,7 +103,7 @@ export const downloadTaxSalarySlipPdf = async (
       { content: "Designation :", styles: bold },
       { content: seat.designation || "-" },
       { content: "Bank Name :", styles: bold },
-      { content: seat.bank_name || "-" },
+      { content: seat.bank_name || DEFAULT_BANK_NAME },
     ],
     [
       { content: "Employment Status :", styles: bold },

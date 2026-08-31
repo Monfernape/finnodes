@@ -91,6 +91,11 @@ export const EMPLOYEE_NAVIGATION_ITEMS: NavigationItem[] = [
     href: "/me/salary-slips",
   },
   {
+    title: "Tax Salary Slip",
+    icon: PercentIcon,
+    href: "/me/tax-salary-slip",
+  },
+  {
     title: "Salary Disbursement",
     icon: BanknoteIcon,
     href: "/me/salary-disbursements",

@@ -3,8 +3,9 @@
 import * as React from "react";
 import { DownloadIcon, FileSpreadsheetIcon } from "lucide-react";
 
-import { SalarySheet, SalarySheetItem, Seat, TaxYear } from "@/entities";
+import { Seat, TaxYear } from "@/entities";
 import {
+  TaxSlipPayRow,
   TaxSlipPeriod,
   buildTaxSalarySlip,
   formatTaxSlipAmount,
@@ -32,9 +33,12 @@ type Props = {
   seat: Seat;
   /** Tax years the company has set up, newest first is not assumed. */
   taxYears: TaxYear[];
-  salarySheets: SalarySheet[];
-  /** Every sheet row that could belong to this employee, linked or not. */
-  items: SalarySheetItem[];
+  /**
+   * This employee's pay, and nobody else's. Narrowed before it ever reaches
+   * the browser — by the database for an employee reading their own, by the
+   * page for a manager reading someone's.
+   */
+  payRows: TaxSlipPayRow[];
 };
 
 const Summary = ({ label, value }: { label: string; value: string }) => (
@@ -49,8 +53,7 @@ const Summary = ({ label, value }: { label: string; value: string }) => (
 export const TaxSalarySlipCreate = ({
   seat,
   taxYears,
-  salarySheets,
-  items,
+  payRows,
 }: Props) => {
   const { toast } = useToast();
 
@@ -61,8 +64,8 @@ export const TaxSalarySlipCreate = ({
   // Opens on the year the employee was last paid in, so the document is
   // populated rather than empty the moment the tab is opened.
   const defaultYear = React.useMemo(
-    () => getDefaultTaxYear(taxYears, seat, salarySheets, items),
-    [taxYears, seat, salarySheets, items]
+    () => getDefaultTaxYear(taxYears, payRows),
+    [taxYears, payRows]
   );
 
   const [taxYear, setTaxYear] = React.useState(
@@ -122,14 +125,12 @@ export const TaxSalarySlipCreate = ({
   const slip = React.useMemo(() => {
     if (!generated) return null;
     return buildTaxSalarySlip({
-      seat,
       taxYear: generated.taxYear,
       from: generated.from,
       to: generated.to,
-      salarySheets,
-      items,
+      payRows,
     });
-  }, [generated, seat, salarySheets, items]);
+  }, [generated, payRows]);
 
   const generate = () => {
     if (!selectedYear || !fromPeriod || !toPeriod || !isRangeValid) return;
@@ -245,7 +246,7 @@ export const TaxSalarySlipCreate = ({
             </p>
           )}
 
-          <div className="flex justify-end">
+          <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-20 -mx-6 border-t bg-background/95 px-6 pb-3 pt-3 backdrop-blur-xl sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
             <Button
               type="button"
               className="h-11 w-full sm:w-auto"
@@ -275,7 +276,7 @@ export const TaxSalarySlipCreate = ({
                 </p>
               ) : (
                 <>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                     <Summary
                       label="Months paid"
                       value={`${slip.monthsRecorded} of ${slip.months.length}`}
@@ -303,12 +304,12 @@ export const TaxSalarySlipCreate = ({
                 </>
               )}
 
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-1">
                 <Button
                   type="button"
                   onClick={download}
                   disabled={isDownloading || slip.monthsRecorded === 0}
-                  className="h-11"
+                  className="h-11 w-full sm:w-auto"
                 >
                   <DownloadIcon className="mr-2 h-4 w-4" />
                   {isDownloading ? "Preparing PDF…" : "Download as PDF"}

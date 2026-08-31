@@ -9,6 +9,7 @@ import {
   TaxYear,
 } from "@/entities";
 import {
+  TaxSlipPayRow,
   buildTaxSalarySlip,
   formatTaxSlipHeading,
   getDefaultTaxYear,
@@ -16,6 +17,7 @@ import {
   getTaxSlipMonthOptions,
   isSeatSalaryItem,
   parseTaxSlipPeriodValue,
+  toTaxSlipPayRows,
 } from "./taxSalarySlip";
 
 const JULY_2025 = { month: 7, year: 2025 };
@@ -34,7 +36,7 @@ const buildSeat = (overrides: Partial<Seat> = {}): Seat => ({
   account_number: "07361010107933",
   designation: "Software Engineer",
   date_of_joining: "2024-01-15",
-  bank_name: "Bank Alfalah",
+  bank_name: "Bank Alfalah Gulshan Market Branch",
   office_location: "Multan Office",
   employment_status: "Permanent",
   gross_salary: 200000,
@@ -80,21 +82,19 @@ const buildItem = (
   ...overrides,
 });
 
-// One sheet and one item per month of the tax year, so a test only has to say
-// what it wants to be different about a month.
-const buildYearOfPay = (
-  perMonth: Partial<SalarySheetItem> = {}
-): { sheets: SalarySheet[]; items: SalarySheetItem[] } => {
-  const months = getTaxSlipMonthOptions(2026);
-  return {
-    sheets: months.map((entry, index) =>
-      buildSheet({ id: index + 1, month: entry.month, year: entry.year })
-    ),
-    items: months.map((_, index) =>
-      buildItem({ id: index + 1, salary_sheet_id: index + 1, ...perMonth })
-    ),
-  };
-};
+const buildPayRow = (overrides: Partial<TaxSlipPayRow> = {}): TaxSlipPayRow => ({
+  month: 7,
+  year: 2025,
+  grossSalary: 200000,
+  netSalary: 187500,
+  ...overrides,
+});
+
+/** A month of pay for every month of the tax year, 200,000 gross each. */
+const buildYearOfPay = (overrides: Partial<TaxSlipPayRow> = {}) =>
+  getTaxSlipMonthOptions(2026).map((entry) =>
+    buildPayRow({ month: entry.month, year: entry.year, ...overrides })
+  );
 
 describe("getTaxSlipMonthOptions", () => {
   it("runs July to June, the order a tax year is read in", () => {
@@ -160,12 +160,10 @@ describe("getSelectedTaxSlipMonths", () => {
 describe("buildTaxSalarySlip", () => {
   it("reports every month of the selected year, paid or not", () => {
     const slip = buildTaxSalarySlip({
-      seat: buildSeat(),
       taxYear: 2026,
       from: JULY_2025,
       to: JUNE_2026,
-      salarySheets: [buildSheet({ id: 1, month: 7, year: 2025 })],
-      items: [buildItem({ salary_sheet_id: 1 })],
+      payRows: [buildPayRow()],
     });
 
     expect(slip.months).toHaveLength(12);
@@ -176,15 +174,11 @@ describe("buildTaxSalarySlip", () => {
   });
 
   it("totals a full year of pay and the tax withheld from it", () => {
-    const { sheets, items } = buildYearOfPay();
-
     const slip = buildTaxSalarySlip({
-      seat: buildSeat(),
       taxYear: 2026,
       from: JULY_2025,
       to: JUNE_2026,
-      salarySheets: sheets,
-      items,
+      payRows: buildYearOfPay(),
     });
 
     expect(slip.monthsRecorded).toBe(12);
@@ -197,27 +191,12 @@ describe("buildTaxSalarySlip", () => {
 
   it("sums a month paid over several dispatches into one line", () => {
     const slip = buildTaxSalarySlip({
-      seat: buildSeat(),
       taxYear: 2026,
       from: JULY_2025,
       to: JULY_2025,
-      salarySheets: [
-        buildSheet({ id: 1, month: 7, year: 2025, sheet_type: SalarySheetType.First }),
-        buildSheet({ id: 2, month: 7, year: 2025, sheet_type: SalarySheetType.Second }),
-      ],
-      items: [
-        buildItem({
-          id: 1,
-          salary_sheet_id: 1,
-          gross_salary: 100000,
-          net_salary: 93750,
-        }),
-        buildItem({
-          id: 2,
-          salary_sheet_id: 2,
-          gross_salary: 100000,
-          net_salary: 93750,
-        }),
+      payRows: [
+        buildPayRow({ grossSalary: 100000, netSalary: 93750 }),
+        buildPayRow({ grossSalary: 100000, netSalary: 93750 }),
       ],
     });
 
@@ -230,36 +209,12 @@ describe("buildTaxSalarySlip", () => {
     });
   });
 
-  it("leaves somebody else's pay off the document", () => {
-    const slip = buildTaxSalarySlip({
-      seat: buildSeat({ id: 1 }),
-      taxYear: 2026,
-      from: JULY_2025,
-      to: JUNE_2026,
-      salarySheets: [buildSheet({ id: 1, month: 7, year: 2025 })],
-      items: [
-        buildItem({
-          id: 2,
-          seat_id: 2,
-          name: "Someone Else",
-          account_number: "0000000000",
-          cnic: "11111-1111111-1",
-        }),
-      ],
-    });
-
-    expect(slip.monthsRecorded).toBe(0);
-    expect(slip.grossSalary).toBe(0);
-  });
-
   it("claims no deduction for a month that only ever recorded a net figure", () => {
     const slip = buildTaxSalarySlip({
-      seat: buildSeat(),
       taxYear: 2026,
       from: JULY_2025,
       to: JULY_2025,
-      salarySheets: [buildSheet({ id: 1, month: 7, year: 2025 })],
-      items: [buildItem({ gross_salary: 0, net_salary: 187500 })],
+      payRows: [buildPayRow({ grossSalary: 0, netSalary: 187500 })],
     });
 
     expect(slip.months[0]).toMatchObject({
@@ -270,16 +225,12 @@ describe("buildTaxSalarySlip", () => {
   });
 
   it("averages over the months on record rather than the months selected", () => {
-    const { sheets, items } = buildYearOfPay();
-
     const slip = buildTaxSalarySlip({
-      seat: buildSeat(),
       taxYear: 2026,
       from: JULY_2025,
       to: JUNE_2026,
-      salarySheets: sheets,
       // Only the first three months were paid.
-      items: items.slice(0, 3),
+      payRows: buildYearOfPay().slice(0, 3),
     });
 
     expect(slip.monthsRecorded).toBe(3);
@@ -287,19 +238,88 @@ describe("buildTaxSalarySlip", () => {
   });
 
   it("ignores pay from a month outside the selected range", () => {
-    const { sheets, items } = buildYearOfPay();
-
     const slip = buildTaxSalarySlip({
-      seat: buildSeat(),
       taxYear: 2026,
       from: JULY_2025,
       to: { month: 9, year: 2025 },
-      salarySheets: sheets,
-      items,
+      payRows: buildYearOfPay(),
     });
 
     expect(slip.months).toHaveLength(3);
     expect(slip.grossSalary).toBe(600000);
+  });
+
+  it("reports nothing at all when the employee has no pay on record", () => {
+    const slip = buildTaxSalarySlip({
+      taxYear: 2026,
+      from: JULY_2025,
+      to: JUNE_2026,
+      payRows: [],
+    });
+
+    expect(slip.monthsRecorded).toBe(0);
+    expect(slip.grossSalary).toBe(0);
+    expect(slip.averageMonthlyGross).toBe(0);
+    expect(slip.monthsMissing).toHaveLength(12);
+  });
+});
+
+describe("toTaxSlipPayRows", () => {
+  it("dates a row by the sheet it was dispatched on", () => {
+    const rows = toTaxSlipPayRows(
+      buildSeat(),
+      [buildSheet({ id: 4, month: 3, year: 2026 })],
+      [buildItem({ salary_sheet_id: 4 })]
+    );
+
+    expect(rows).toEqual([
+      { month: 3, year: 2026, grossSalary: 200000, netSalary: 187500 },
+    ]);
+  });
+
+  it("leaves somebody else's pay out", () => {
+    const rows = toTaxSlipPayRows(
+      buildSeat({ id: 1 }),
+      [buildSheet()],
+      [
+        buildItem({ id: 1, seat_id: 1 }),
+        buildItem({
+          id: 2,
+          seat_id: 2,
+          name: "Someone Else",
+          account_number: "0000000000",
+          cnic: "11111-1111111-1",
+        }),
+      ]
+    );
+
+    expect(rows).toHaveLength(1);
+  });
+
+  it("drops a row whose sheet is not to hand, rather than dating it wrongly", () => {
+    const rows = toTaxSlipPayRows(
+      buildSeat(),
+      [],
+      [buildItem({ salary_sheet_id: 99 })]
+    );
+
+    expect(rows).toEqual([]);
+  });
+
+  it("keeps every dispatch of a month as its own row", () => {
+    const rows = toTaxSlipPayRows(
+      buildSeat(),
+      [
+        buildSheet({ id: 1, sheet_type: SalarySheetType.First }),
+        buildSheet({ id: 2, sheet_type: SalarySheetType.Second }),
+      ],
+      [
+        buildItem({ id: 1, salary_sheet_id: 1 }),
+        buildItem({ id: 2, salary_sheet_id: 2 }),
+      ]
+    );
+
+    expect(rows).toHaveLength(2);
   });
 });
 
@@ -355,13 +375,9 @@ describe("getDefaultTaxYear", () => {
   });
 
   it("opens on the most recent year the employee was actually paid in", () => {
-    const { sheets, items } = buildYearOfPay();
-
     const taxYear = getDefaultTaxYear(
       [buildTaxYear(2026), buildTaxYear(2027)],
-      buildSeat(),
-      sheets,
-      items
+      buildYearOfPay()
     );
 
     expect(taxYear?.tax_year).toBe(2026);
@@ -370,8 +386,6 @@ describe("getDefaultTaxYear", () => {
   it("falls back to the newest year when there is no pay on record", () => {
     const taxYear = getDefaultTaxYear(
       [buildTaxYear(2026), buildTaxYear(2027)],
-      buildSeat(),
-      [],
       []
     );
 
@@ -379,7 +393,7 @@ describe("getDefaultTaxYear", () => {
   });
 
   it("has nothing to open on when no tax year has been set up", () => {
-    expect(getDefaultTaxYear([], buildSeat(), [], [])).toBeNull();
+    expect(getDefaultTaxYear([], buildYearOfPay())).toBeNull();
   });
 });
 

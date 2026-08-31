@@ -1,5 +1,9 @@
 import { Seat } from "@/entities";
-import { formatPrintDate, formatSlipShortDate } from "@/lib/salarySlip";
+import {
+  DEFAULT_BANK_NAME,
+  formatPrintDate,
+  formatSlipShortDate,
+} from "@/lib/salarySlip";
 import {
   TaxSalarySlip,
   TaxSlipPeriod,
@@ -15,79 +19,75 @@ type Props = {
   to: TaxSlipPeriod;
 };
 
-const CELL = "border border-gray-400 px-2 py-1 align-top";
-const LABEL = `${CELL} whitespace-nowrap font-bold`;
+// The month table is four narrow columns, so it fits a phone at the smaller
+// type size and only scrolls locally on the very narrowest handsets.
+const CELL = "border border-gray-400 px-1.5 py-1 align-top sm:px-2";
 const FIGURE = `${CELL} text-right tabular-nums`;
 
+const Detail = ({ label, value }: { label: string; value: string }) => (
+  <div className="border border-gray-400 px-2 py-1.5">
+    <p className="text-[10px] font-bold uppercase tracking-wide text-gray-600">
+      {label}
+    </p>
+    <p className="mt-0.5 break-words text-xs">{value || "—"}</p>
+  </div>
+);
+
 export const TaxSalarySlipPreview = ({ seat, slip, from, to }: Props) => (
-  <div className="print-area mx-auto w-full max-w-[900px] bg-white p-6 text-black shadow sm:p-10">
-    <div className="flex items-start justify-between gap-4">
+  <div className="print-area mx-auto w-full max-w-[900px] bg-white p-4 text-black shadow sm:p-10">
+    <div className="flex items-start justify-between gap-3">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/images/devnodes.png"
         alt="DevNodes"
-        className="h-10 w-auto object-contain"
+        className="h-8 w-auto object-contain sm:h-10"
       />
-      <p className="text-xs">Print Date:{formatPrintDate()}</p>
+      <p className="text-[10px] sm:text-xs">Print Date:{formatPrintDate()}</p>
     </div>
 
-    <div className="pb-4 pt-6 text-center">
-      <h1 className="text-lg font-bold">DevNodes Pvt,Ltd</h1>
-      <h2 className="text-lg font-bold">
+    <div className="pb-4 pt-5 text-center sm:pt-6">
+      <h1 className="text-base font-bold sm:text-lg">DevNodes Pvt,Ltd</h1>
+      <h2 className="text-base font-bold sm:text-lg">
         TAX SALARY SLIP: {formatTaxSlipHeading(from, to)}
       </h2>
-      <p className="pt-1 text-xs">
+      <p className="pt-1 text-[10px] sm:text-xs">
         Tax year {slip.taxYear} · {slip.taxYearPeriod}
       </p>
     </div>
 
-    <div className="print-table-scroll overflow-x-auto">
-      <table className="w-full min-w-[640px] border-collapse text-left text-xs">
-        <tbody>
-          <tr className="bg-gray-200">
-            <th className={`${CELL} text-center`} colSpan={4}>
-              Employee Details
-            </th>
-          </tr>
-          <tr>
-            <td className={LABEL}>Employee Name :</td>
-            <td className={CELL}>{seat.name}</td>
-            <td className={LABEL}>Account Number/IBAN :</td>
-            <td className={CELL}>{seat.account_number || "—"}</td>
-          </tr>
-          <tr>
-            <td className={LABEL}>Designation :</td>
-            <td className={CELL}>{seat.designation || "—"}</td>
-            <td className={LABEL}>Bank Name :</td>
-            <td className={CELL}>{seat.bank_name || "—"}</td>
-          </tr>
-          <tr>
-            <td className={LABEL}>Employment Status :</td>
-            <td className={CELL}>{seat.employment_status || "—"}</td>
-            <td className={LABEL}>CNIC :</td>
-            <td className={CELL}>{seat.cnic || "—"}</td>
-          </tr>
-          <tr>
-            <td className={LABEL}>Period :</td>
-            <td className={CELL}>{formatTaxSlipRange(from, to)}</td>
-            <td className={LABEL}>Date of Joining :</td>
-            <td className={CELL}>
-              {seat.date_of_joining
-                ? formatSlipShortDate(seat.date_of_joining)
-                : "—"}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    {/* Stacked on a phone and two up from `sm`, rather than a wide table that
+        would have to be scrolled sideways to read a name. */}
+    <div>
+      <p className="border border-b-0 border-gray-400 bg-gray-200 px-2 py-1 text-center text-xs font-bold">
+        Employee Details
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2">
+        <Detail label="Employee Name" value={seat.name} />
+        <Detail
+          label="Account Number/IBAN"
+          value={seat.account_number || ""}
+        />
+        <Detail label="Designation" value={seat.designation || ""} />
+        <Detail label="Bank Name" value={seat.bank_name || DEFAULT_BANK_NAME} />
+        <Detail label="Employment Status" value={seat.employment_status || ""} />
+        <Detail label="CNIC" value={seat.cnic || ""} />
+        <Detail label="Period" value={formatTaxSlipRange(from, to)} />
+        <Detail
+          label="Date of Joining"
+          value={
+            seat.date_of_joining ? formatSlipShortDate(seat.date_of_joining) : ""
+          }
+        />
+      </div>
     </div>
 
     <div className="print-table-scroll overflow-x-auto pt-4">
-      <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+      <table className="w-full min-w-[300px] border-collapse text-left text-[11px] sm:text-xs">
         <tbody>
           <tr className="bg-gray-200 text-center font-bold">
             <th className={`${CELL} text-left`}>Month</th>
             <th className={`${CELL} text-right`}>Gross Pay</th>
-            <th className={`${CELL} text-right`}>Tax Deducted</th>
+            <th className={`${CELL} text-right`}>Tax</th>
             <th className={`${CELL} text-right`}>Net Pay</th>
           </tr>
           {slip.months.map((month) => (
@@ -95,9 +95,8 @@ export const TaxSalarySlipPreview = ({ seat, slip, from, to }: Props) => (
               <td className={CELL}>
                 {month.label}
                 {month.dispatches > 1 && (
-                  <span className="text-[10px] text-gray-600">
-                    {" "}
-                    ({month.dispatches} dispatches)
+                  <span className="block text-[10px] text-gray-600">
+                    {month.dispatches} dispatches
                   </span>
                 )}
               </td>
@@ -137,7 +136,7 @@ export const TaxSalarySlipPreview = ({ seat, slip, from, to }: Props) => (
       </table>
     </div>
 
-    <p className="pt-6 text-xs">
+    <p className="pt-5 text-[11px] sm:pt-6 sm:text-xs">
       <span className="font-bold">Note:</span> This statement covers{" "}
       {formatTaxSlipRange(from, to)} and reports salary paid and income tax
       deducted at source over that period.
@@ -145,8 +144,8 @@ export const TaxSalarySlipPreview = ({ seat, slip, from, to }: Props) => (
         ` No salary was dispatched for ${slip.monthsMissing.join(", ")}.`}
     </p>
 
-    <div className="flex justify-end pt-24">
-      <p className="text-sm font-bold">
+    <div className="flex justify-end pt-16 sm:pt-24">
+      <p className="text-xs font-bold sm:text-sm">
         Authorized Signature: ____________________
       </p>
     </div>
