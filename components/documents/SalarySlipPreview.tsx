@@ -48,42 +48,48 @@ export const SalarySlipPreview = ({ slip, lines }: Props) => {
         <table className="w-full min-w-[640px] border-collapse text-left text-xs">
           <tbody>
             <tr className="bg-gray-200">
-              <th className={`${CELL} text-center`} colSpan={5}>
+              <th className={`${CELL} text-center`} colSpan={6}>
                 Employee Details
               </th>
             </tr>
             <tr>
-              <td className={LABEL}>Employee Name :</td>
+              <td className={LABEL}>Employee Name:</td>
               <td className={CELL} colSpan={2}>
                 {slip.employee_name}
               </td>
-              <td className={LABEL}>Account Number/IBAN :</td>
-              <td className={CELL}>{slip.account_number || "—"}</td>
+              <td className={LABEL}>Account Number/IBAN:</td>
+              <td className={CELL} colSpan={2}>
+                {slip.account_number || "—"}
+              </td>
             </tr>
             <tr>
-              <td className={LABEL}>Designation :</td>
+              <td className={LABEL}>Designation:</td>
               <td className={CELL} colSpan={2}>
                 {slip.designation || "—"}
               </td>
-              <td className={LABEL}>Bank Name :</td>
-              <td className={CELL}>{slip.bank_name || "—"}</td>
+              <td className={LABEL}>Bank Name:</td>
+              <td className={CELL} colSpan={2}>
+                {slip.bank_name || "—"}
+              </td>
             </tr>
             <tr>
-              <td className={LABEL}>Gross Salary :</td>
+              <td className={LABEL}>Gross Salary:</td>
               <td className={CELL} colSpan={2}>
                 {formatSlipAmount(slip.gross_salary)}
               </td>
-              <td className={LABEL}>CNIC :</td>
-              <td className={CELL}>{slip.cnic || "—"}</td>
+              <td className={LABEL}>CNIC:</td>
+              <td className={CELL} colSpan={2}>
+                {slip.cnic || "—"}
+              </td>
             </tr>
             <tr>
-              <td className={LABEL}>Employment Status :</td>
+              <td className={LABEL}>Employment Status:</td>
               <td className={CELL}>{slip.employment_status || "—"}</td>
-              <td className={CELL}>
-                <span className="font-bold">Office Location : </span>
+              <td className={CELL} colSpan={2}>
+                <span className="font-bold">Office Location: </span>
                 {slip.office_location || "—"}
               </td>
-              <td className={LABEL}>Date of Joining :</td>
+              <td className={LABEL}>Date of Joining:</td>
               <td className={CELL}>
                 {slip.date_of_joining
                   ? formatSlipShortDate(slip.date_of_joining)
@@ -98,36 +104,11 @@ export const SalarySlipPreview = ({ slip, lines }: Props) => {
               <th className={CELL} colSpan={2}>
                 Deductions
               </th>
-              <th className={CELL}>Tax Details</th>
+              <th className={CELL} colSpan={2}>
+                Tax Details
+              </th>
             </tr>
-            <tr>
-              <td className={CELL}>{earnings[0]?.label ?? ""}</td>
-              <td className={`${CELL} text-right tabular-nums`}>
-                {earnings[0] ? formatSlipMoney(earnings[0].amount) : ""}
-              </td>
-              <td className={CELL}>{deductions[0]?.label ?? ""}</td>
-              <td className={`${CELL} text-right tabular-nums`}>
-                {deductions[0] ? formatSlipMoney(deductions[0].amount) : ""}
-              </td>
-              <td className={`${CELL} bg-gray-200 text-center font-bold`}>
-                Current Month Tax Paid
-              </td>
-            </tr>
-            <tr>
-              <td className={CELL}>{earnings[1]?.label ?? ""}</td>
-              <td className={`${CELL} text-right tabular-nums`}>
-                {earnings[1] ? formatSlipMoney(earnings[1].amount) : ""}
-              </td>
-              <td className={CELL}>{deductions[1]?.label ?? ""}</td>
-              <td className={`${CELL} text-right tabular-nums`}>
-                {deductions[1] ? formatSlipMoney(deductions[1].amount) : ""}
-              </td>
-              <td className={`${CELL} text-right tabular-nums`}>
-                {formatSlipMoney(slip.tax_paid)}
-              </td>
-            </tr>
-            {Array.from({ length: rowCount - 2 }, (_, offset) => {
-              const index = offset + 2;
+            {Array.from({ length: rowCount }, (_, index) => {
               const earning = earnings[index];
               const deduction = deductions[index];
 
@@ -141,7 +122,23 @@ export const SalarySlipPreview = ({ slip, lines }: Props) => {
                   <td className={`${CELL} text-right tabular-nums`}>
                     {deduction ? formatSlipMoney(deduction.amount) : ""}
                   </td>
-                  <td className={`${CELL} bg-gray-100`} />
+                  {index === 0 ? (
+                    <>
+                      <td className={`${CELL} bg-gray-200 font-bold`}>
+                        Current Month Tax Paid
+                      </td>
+                      <td
+                        className={`${CELL} bg-gray-200 text-right font-bold tabular-nums`}
+                      >
+                        {formatSlipMoney(slip.tax_paid)}
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className={`${CELL} bg-gray-100`} />
+                      <td className={`${CELL} bg-gray-100`} />
+                    </>
+                  )}
                 </tr>
               );
             })}
@@ -155,13 +152,9 @@ export const SalarySlipPreview = ({ slip, lines }: Props) => {
               <td className={`${CELL} text-right tabular-nums`}>
                 {formatSlipMoney(slip.total_deductions)}
               </td>
-              <td className={CELL}>
-                <span className="flex justify-between gap-3">
-                  <span>Net Pay</span>
-                  <span className="tabular-nums">
-                    {formatSlipMoney(slip.net_salary)}
-                  </span>
-                </span>
+              <td className={CELL}>Net Pay</td>
+              <td className={`${CELL} text-right tabular-nums`}>
+                {formatSlipMoney(slip.net_salary)}
               </td>
             </tr>
           </tbody>

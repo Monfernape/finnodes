@@ -34,4 +34,10 @@ export enum DatabaseTable {
   SeatTitles = "seat_titles",
   SalesOwnerOptions = "sales_owner_options",
   AllowedEmails = "allowed_emails",
+  TaxCprs = "tax_cprs",
+}
+
+/** Supabase Storage buckets the app reads or writes. */
+export enum StorageBucket {
+  TaxCprs = "tax-cprs",
 }

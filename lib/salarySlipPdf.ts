@@ -23,8 +23,6 @@ type Cell = {
   content: string;
   colSpan?: number;
   styles?: Record<string, unknown>;
-  /** Set on the last cell so the figure can be drawn at its right edge. */
-  netPay?: string;
 };
 
 export const downloadSalarySlipPdf = async (
@@ -88,31 +86,31 @@ export const downloadSalarySlipPdf = async (
 
   const detailRows: Cell[][] = [
     [
-      { content: "Employee Details", colSpan: 5, styles: { ...shaded, ...centred } },
+      { content: "Employee Details", colSpan: 6, styles: { ...shaded, ...centred } },
     ],
     [
-      { content: "Employee Name :", styles: bold },
+      { content: "Employee Name:", styles: bold },
       { content: slip.employee_name, colSpan: 2 },
-      { content: "Account Number/IBAN :", styles: bold },
-      { content: slip.account_number || "-" },
+      { content: "Account Number/IBAN:", styles: bold },
+      { content: slip.account_number || "-", colSpan: 2 },
     ],
     [
-      { content: "Designation :", styles: bold },
+      { content: "Designation:", styles: bold },
       { content: slip.designation || "-", colSpan: 2 },
-      { content: "Bank Name :", styles: bold },
-      { content: slip.bank_name || "-" },
+      { content: "Bank Name:", styles: bold },
+      { content: slip.bank_name || "-", colSpan: 2 },
     ],
     [
-      { content: "Gross Salary :", styles: bold },
+      { content: "Gross Salary:", styles: bold },
       { content: formatSlipAmount(slip.gross_salary), colSpan: 2 },
-      { content: "CNIC :", styles: bold },
-      { content: slip.cnic || "-" },
+      { content: "CNIC:", styles: bold },
+      { content: slip.cnic || "-", colSpan: 2 },
     ],
     [
-      { content: "Employment Status :", styles: bold },
+      { content: "Employment Status:", styles: bold },
       { content: slip.employment_status || "-" },
-      { content: `Office Location : ${slip.office_location || "-"}` },
-      { content: "Date of Joining :", styles: bold },
+      { content: `Office Location: ${slip.office_location || "-"}`, colSpan: 2 },
+      { content: "Date of Joining:", styles: bold },
       {
         content: slip.date_of_joining
           ? formatSlipShortDate(slip.date_of_joining)
@@ -125,7 +123,7 @@ export const downloadSalarySlipPdf = async (
     [
       { content: "Earnings", colSpan: 2, styles: { ...shaded, ...centred } },
       { content: "Deductions", colSpan: 2, styles: { ...shaded, ...centred } },
-      { content: "Tax Details", styles: { ...shaded, ...centred } },
+      { content: "Tax Details", colSpan: 2, styles: { ...shaded, ...centred } },
     ],
   ];
 
@@ -145,17 +143,21 @@ export const downloadSalarySlipPdf = async (
       },
     ];
 
-    // The tax column carries its own heading and figure on the first two rows,
-    // then runs on as empty shaded cells like the printed payslip.
+    // The tax column is its own label-and-figure pair on the first row, then
+    // runs on as empty shaded cells like the printed payslip.
     if (index === 0) {
-      row.push({
-        content: "Current Month Tax Paid",
-        styles: { ...shaded, ...centred },
-      });
-    } else if (index === 1) {
-      row.push({ content: formatSlipMoney(slip.tax_paid), styles: right });
+      row.push(
+        { content: "Current Month Tax Paid", styles: shaded },
+        {
+          content: formatSlipMoney(slip.tax_paid),
+          styles: { ...shaded, ...right },
+        }
+      );
     } else {
-      row.push({ content: "", styles: { fillColor: BLANK_FILL } });
+      row.push(
+        { content: "", styles: { fillColor: BLANK_FILL } },
+        { content: "", styles: { fillColor: BLANK_FILL } }
+      );
     }
 
     tableRows.push(row);
@@ -169,14 +171,8 @@ export const downloadSalarySlipPdf = async (
       content: formatSlipMoney(slip.total_deductions),
       styles: { ...shaded, ...right },
     },
-    // autoTable cannot align two halves of one cell independently, so the
-    // label stays left and the figure is pushed to the right edge by drawing
-    // it as its own line in the hook below.
-    {
-      content: "Net Pay",
-      styles: { ...shaded },
-      netPay: formatSlipMoney(slip.net_salary),
-    },
+    { content: "Net Pay", styles: shaded },
+    { content: formatSlipMoney(slip.net_salary), styles: { ...shaded, ...right } },
   ]);
 
   autoTable(doc, {
@@ -195,28 +191,14 @@ export const downloadSalarySlipPdf = async (
       valign: "middle",
     },
     columnStyles: {
-      0: { cellWidth: contentWidth * 0.19 },
-      1: { cellWidth: contentWidth * 0.17 },
-      2: { cellWidth: contentWidth * 0.22 },
-      3: { cellWidth: contentWidth * 0.14 },
-      4: { cellWidth: contentWidth * 0.28 },
+      0: { cellWidth: contentWidth * 0.17 },
+      1: { cellWidth: contentWidth * 0.13 },
+      2: { cellWidth: contentWidth * 0.2 },
+      3: { cellWidth: contentWidth * 0.13 },
+      4: { cellWidth: contentWidth * 0.22 },
+      5: { cellWidth: contentWidth * 0.15 },
     },
     rowPageBreak: "avoid",
-    didDrawCell: (data) => {
-      const raw = data.cell.raw;
-      if (typeof raw !== "object" || raw === null) return;
-      const netPay = (raw as Cell).netPay;
-      if (!netPay) return;
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.text(
-        netPay,
-        data.cell.x + data.cell.width - data.cell.padding("right"),
-        data.cell.y + data.cell.height / 2 + 1,
-        { align: "right" }
-      );
-    },
   });
 
   const table = (doc as unknown as { lastAutoTable?: { finalY: number } })

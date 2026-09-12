@@ -11,6 +11,7 @@ import { createClient } from "@/utils/supabase/client";
 import {
   DEFAULT_BANK_NAME,
   DEFAULT_EMPLOYMENT_STATUS,
+  DEFAULT_OFFICE_ADDRESS,
   EMPLOYMENT_STATUSES,
   formatSlipAmount,
   formatSlipMonth,
@@ -107,16 +108,16 @@ export const SalarySlipCreate = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       period: `${months[0].year}-${months[0].month}`,
-      bank_name: prefill(seat.bank_name, previousSlip?.bank_name),
+      bank_name:
+        prefill(seat.bank_name, previousSlip?.bank_name) || DEFAULT_BANK_NAME,
       account_number: prefill(
         seat.account_number,
         previousSlip?.account_number
       ),
       cnic: prefill(seat.cnic, previousSlip?.cnic),
-      office_location: prefill(
-        seat.office_location,
-        previousSlip?.office_location
-      ),
+      office_location:
+        prefill(seat.office_location, previousSlip?.office_location) ||
+        DEFAULT_OFFICE_ADDRESS,
       employment_status:
         (seat.employment_status || "").trim() || DEFAULT_EMPLOYMENT_STATUS,
       note: "",

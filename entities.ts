@@ -553,7 +553,43 @@ export type SalaryDisbursementLetter = {
   // dispatch sheet is corrected afterwards.
   instalments: SalaryDisbursement[];
   total_paid: number;
+  // The monthly figures the certificate quotes, snapshotted from the seat at
+  // issue for the same reason.
+  gross_salary: number;
+  income_tax: number;
+  net_salary: number;
   created_by_email: string;
+  created_at: string;
+};
+
+/**
+ * Which shape of period a CPR was uploaded for: a calendar month, matching
+ * salary slips, or a quarter of the July-June tax year, matching how
+ * withholding statements are commonly filed instead.
+ */
+export enum TaxCprPeriodType {
+  Month = "month",
+  Quarter = "quarter",
+}
+
+/**
+ * A CPR (Computerized Payment Receipt) — FBR's own receipt for tax DevNodes
+ * actually deposited, uploaded by a manager rather than generated. `year` is
+ * the calendar year for a month period, or the tax year (named after the year
+ * it ends in) for a quarter period.
+ */
+export type TaxCpr = {
+  id: number;
+  seat_id: number;
+  period_type: TaxCprPeriodType;
+  month: number | null;
+  quarter: number | null;
+  year: number;
+  cpr_number: string;
+  amount: number;
+  storage_path: string;
+  file_name: string;
+  uploaded_by_email: string;
   created_at: string;
 };
 

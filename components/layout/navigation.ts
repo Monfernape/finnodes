@@ -1,4 +1,5 @@
 import {
+  FileBadgeIcon,
   FileTextIcon,
   HandCoinsIcon,
   LayoutGridIcon,
@@ -94,6 +95,11 @@ export const EMPLOYEE_NAVIGATION_ITEMS: NavigationItem[] = [
     title: "Tax Salary Slip",
     icon: PercentIcon,
     href: "/me/tax-salary-slip",
+  },
+  {
+    title: "Tax CPR",
+    icon: FileBadgeIcon,
+    href: "/me/tax-cpr",
   },
   {
     title: "Salary Disbursement",

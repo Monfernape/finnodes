@@ -1,7 +1,8 @@
 import { SalaryDisbursement, SalaryDisbursementLetter } from "@/entities";
 import { formatSlipDate, formatSlipMonth } from "@/lib/salarySlip";
 
-export const LETTER_TITLE = "Salary Disbursement Confirmation";
+// The line the certificate carries under the addressee, in place of a heading.
+export const LETTER_SUBJECT = "Explanation of Partial Salary Disbursement";
 
 export const formatDisbursementAmount = (amount: number) =>
   new Intl.NumberFormat("en-PK", { maximumFractionDigits: 0 }).format(
@@ -19,35 +20,80 @@ export const buildDisbursementLetterFileName = (
     letter.year
   )} Salary Disbursement Confirmation.pdf`;
 
+const NUMBER_WORDS = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+];
+
+const withOrdinal = (day: number) => {
+  const tens = day % 100;
+  if (tens >= 11 && tens <= 13) return `${day}th`;
+  switch (day % 10) {
+    case 1:
+      return `${day}st`;
+    case 2:
+      return `${day}nd`;
+    case 3:
+      return `${day}rd`;
+    default:
+      return `${day}th`;
+  }
+};
+
+/** "July 23rd, 2026" — the date line the certificate opens with. */
+export const formatLetterDate = (value: string) => {
+  const date = new Date(value);
+  const month = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    timeZone: "UTC",
+  }).format(date);
+  return `${month} ${withOrdinal(date.getUTCDate())}, ${date.getUTCFullYear()}`;
+};
+
 /**
- * The paragraph that does the actual reconciling: it tells the reader what the
- * statement will show and why it does not match the payslip line for line.
- *
- * Written from the recorded instalments rather than as fixed prose, so it stays
- * true whether the month went out in one payment or three.
+ * How the month's net salary was split, read from the recorded instalments:
+ * "two equal transactions of PKR 80,900 each" when they match, the amounts
+ * spelled out when they do not. Returned as a clause the certificate prefixes
+ * with "As per the company's payroll process, ".
  */
-export const buildReconciliationSentence = (
-  letter: Pick<
-    SalaryDisbursementLetter,
-    "month" | "year" | "instalments" | "bank_name" | "account_number"
-  >
+export const buildDisbursementNarrative = (
+  letter: Pick<SalaryDisbursementLetter, "instalments">
 ) => {
-  const count = letter.instalments.length;
-  const period = formatSlipMonth(letter.month, letter.year);
-  const account = [
-    letter.bank_name || null,
-    letter.account_number ? `account ${letter.account_number}` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
-  const where = account ? ` of ${account}` : "";
+  const amounts = letter.instalments.map((item) => Number(item.amount));
+  const count = amounts.length;
+  const lead = "the employee's net monthly salary is disbursed in";
 
-  const credits =
-    count === 1
-      ? "a single credit on the date listed above"
-      : `${count} separate credits on the dates listed above`;
+  if (count === 0) {
+    return `${lead} instalments once the month has ended.`;
+  }
 
-  return `The salary for a given month is disbursed in instalments and credited once the month has ended. The total above will therefore appear in the account statement${where} as ${credits}, rather than as one credit falling within ${period}.`;
+  const countWord = NUMBER_WORDS[count] ?? `${count}`;
+  const allEqual = amounts.every((amount) => amount === amounts[0]);
+
+  if (count === 1) {
+    return `${lead} a single transaction of PKR ${formatDisbursementAmount(
+      amounts[0]
+    )}.`;
+  }
+
+  if (allEqual) {
+    return `${lead} ${countWord} equal transactions of PKR ${formatDisbursementAmount(
+      amounts[0]
+    )} each.`;
+  }
+
+  const parts = amounts.map((amount) => `PKR ${formatDisbursementAmount(amount)}`);
+  const joined = `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+  return `${lead} ${countWord} transactions of ${joined}.`;
 };
 
 export const formatDisbursementDate = (value: string) => formatSlipDate(value);

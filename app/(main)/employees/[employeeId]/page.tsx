@@ -31,6 +31,7 @@ import {
   Seat,
   SeatTitle,
   SeatStatus,
+  TaxCpr,
   TaxYear,
 } from "@/entities";
 import {
@@ -39,8 +40,10 @@ import {
   SalarySlipsList,
 } from "@/components/documents/DocumentLists";
 import { TaxSalarySlipCreate } from "@/components/documents/TaxSalarySlipCreate";
+import { TaxCprManage } from "@/components/documents/TaxCprManage";
 import { EmployeeTitles } from "@/components/people/EmployeeTitles";
 import { getServerPeopleAccess } from "@/utils/auth/server-access";
+import { PeopleRole } from "@/utils/auth/people-access";
 import { getCurrentYear, getMonthName } from "@/lib/people";
 import { toTaxSlipPayRows } from "@/lib/taxSalarySlip";
 
@@ -49,6 +52,7 @@ const EMPLOYEE_TABS = [
   { label: "Notes", value: "notes" },
   { label: "Salary slips", value: "salary-slips" },
   { label: "Tax salary slip", value: "tax-salary-slip" },
+  { label: "Tax CPR", value: "tax-cpr" },
   { label: "Salary disbursement", value: "salary-disbursements" },
   { label: "Experience letters", value: "experience-letters" },
   { label: "Edit", value: "edit" },
@@ -223,6 +227,7 @@ export default async function EmployeePage({
     tab === "form" ||
     tab === "salary-slips" ||
     tab === "tax-salary-slip" ||
+    tab === "tax-cpr" ||
     tab === "salary-disbursements" ||
     tab === "experience-letters"
       ? tab
@@ -242,6 +247,7 @@ export default async function EmployeePage({
     { data: salarySlips },
     { data: experienceLetters },
     { data: disbursementLetters },
+    { data: taxCprs },
   ] = await Promise.all([
       supabase.from(DatabaseTable.Seats).select().eq("id", id).maybeSingle<Seat>(),
       supabase
@@ -292,6 +298,12 @@ export default async function EmployeePage({
         .order("year", { ascending: false })
         .order("month", { ascending: false })
         .returns<SalaryDisbursementLetter[]>(),
+      supabase
+        .from(DatabaseTable.TaxCprs)
+        .select()
+        .eq("seat_id", id)
+        .order("year", { ascending: false })
+        .returns<TaxCpr[]>(),
     ]);
 
   if (!employee) notFound();
@@ -453,6 +465,14 @@ export default async function EmployeePage({
           seat={employee}
           taxYears={taxSlipData.taxYears}
           payRows={taxSlipData.payRows}
+        />
+      )}
+
+      {normalizedTab === "tax-cpr" && (
+        <TaxCprManage
+          seat={employee}
+          cprs={taxCprs ?? []}
+          isManager={access?.role === PeopleRole.Manager}
         />
       )}
 

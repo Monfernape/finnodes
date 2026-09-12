@@ -24,6 +24,12 @@ export const DEFAULT_EMPLOYMENT_STATUS = EMPLOYMENT_STATUSES[0];
 // record that never had a bank name on it still prints one.
 export const DEFAULT_BANK_NAME = "Bank Alfalah Gulshan Market Branch";
 
+// The company address a payslip carries when neither the form nor the seat
+// record names one. `generate_salary_slip` applies the same fallback, so this
+// is only the value the create form prefills with.
+export const DEFAULT_OFFICE_ADDRESS =
+  "House No. 349/J-10, Ahmad Park Ahmed Park Colony, Multan, 60650";
+
 export const PAYSLIP_TYPE_LABELS: Record<PayslipType, string> = {
   [PayslipType.Full]: "Full salary",
   [PayslipType.Partial]: "Partial salary",
