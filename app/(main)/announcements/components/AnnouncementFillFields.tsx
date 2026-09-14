@@ -16,6 +16,7 @@ import {
   getNextWorkingDay,
   templateNeedsDates,
   templateNeedsEmployee,
+  templateNeedsTime,
   templateNeedsVenue,
   templateUsesToken,
 } from "@/lib/announcements";
@@ -48,9 +49,10 @@ export const AnnouncementFillFields = ({
 }: Props) => {
   const needsDates = templateNeedsDates(body);
   const needsVenue = templateNeedsVenue(body);
+  const needsTime = templateNeedsTime(body);
   const needsEmployee = templateNeedsEmployee(body);
 
-  if (!needsDates && !needsVenue && !needsEmployee) {
+  if (!needsDates && !needsVenue && !needsTime && !needsEmployee) {
     return (
       <p className="text-sm text-muted-foreground">
         This message needs nothing filled in, so it is ready to copy as it
@@ -128,6 +130,19 @@ export const AnnouncementFillFields = ({
             Not on the list? Type the name and add it — it stays there for next
             time.
           </p>
+        </div>
+      )}
+
+      {needsTime && (
+        <div className="grid gap-2">
+          <Label htmlFor="announcement-time">Time</Label>
+          <Input
+            id="announcement-time"
+            className="h-11"
+            placeholder="4 PM – 7 PM"
+            value={fill.time || ""}
+            onChange={(event) => onChange({ ...fill, time: event.target.value })}
+          />
         </div>
       )}
 

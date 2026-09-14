@@ -17,6 +17,8 @@ export enum AnnouncementToken {
   Quarter = "quarter",
   // Filled from the venue list rather than a date.
   Venue = "venue",
+  // Free text: a time span has no list worth keeping the way a venue does.
+  Time = "time",
   // Filled from the team, which also supplies the two below.
   Employee = "employee",
   Designation = "designation",
@@ -39,6 +41,7 @@ export const ANNOUNCEMENT_TOKEN_HINTS: Record<AnnouncementToken, string> = {
   [AnnouncementToken.Year]: "Calendar year of the date, e.g. 2026",
   [AnnouncementToken.Quarter]: "Quarter of the date, e.g. Q3 2026",
   [AnnouncementToken.Venue]: "Restaurant or venue, picked from the list",
+  [AnnouncementToken.Time]: "Time span of the event, e.g. 4 PM – 7 PM",
   [AnnouncementToken.Employee]: "Their name, picked from the team",
   [AnnouncementToken.Designation]: "Their job title, from their record",
   [AnnouncementToken.Years]: "Time served, e.g. 3 years",
@@ -100,6 +103,8 @@ export const EMPTY_ANNOUNCEMENT_DATES: AnnouncementDates = {
  */
 export type AnnouncementFill = AnnouncementDates & {
   venue?: string;
+  /** Free text, e.g. "4 PM – 7 PM". Typed each time, like the venue. */
+  time?: string;
   employeeName?: string;
   employeeDesignation?: string;
   /** The selected person's joining date, which is what `{{years}}` counts. */
@@ -112,6 +117,7 @@ export const EMPTY_ANNOUNCEMENT_FILL: AnnouncementFill = {
   startDate: "",
   endDate: "",
   venue: "",
+  time: "",
   employeeName: "",
   employeeDesignation: "",
   employeeJoinedOn: "",
@@ -271,6 +277,9 @@ export const templateRequiresDate = (body: string) =>
 export const templateNeedsVenue = (body: string) =>
   templateUsesToken(body, AnnouncementToken.Venue);
 
+export const templateNeedsTime = (body: string) =>
+  templateUsesToken(body, AnnouncementToken.Time);
+
 export const templateNeedsEmployee = (body: string) =>
   EMPLOYEE_TOKENS.some((token) => templateUsesToken(body, token));
 
@@ -327,6 +336,7 @@ export const resolveTokenValues = (
       : `${new Date().getUTCFullYear()}`,
     [AnnouncementToken.Quarter]: formatQuarter(startDate),
     [AnnouncementToken.Venue]: (fill.venue || "").trim(),
+    [AnnouncementToken.Time]: (fill.time || "").trim(),
     [AnnouncementToken.Employee]: (fill.employeeName || "").trim(),
     [AnnouncementToken.Designation]: (fill.employeeDesignation || "").trim(),
     [AnnouncementToken.Years]: formatYearsOfService(
