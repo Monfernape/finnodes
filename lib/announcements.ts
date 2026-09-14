@@ -21,7 +21,14 @@ export enum AnnouncementToken {
   Employee = "employee",
   Designation = "designation",
   Years = "years",
+  // Always counted from DevNodes' own founding date below, so unlike Years
+  // it needs no employee picked.
+  CompanyYears = "company_years",
 }
+
+// Fixed, not read from anywhere else: the one date `{{company_years}}` is
+// always counted from.
+const DEVNODES_FOUNDED_ON = "2021-09-20";
 
 export const ANNOUNCEMENT_TOKEN_HINTS: Record<AnnouncementToken, string> = {
   [AnnouncementToken.StartDate]: "First day off, e.g. 27 May 2026",
@@ -35,6 +42,7 @@ export const ANNOUNCEMENT_TOKEN_HINTS: Record<AnnouncementToken, string> = {
   [AnnouncementToken.Employee]: "Their name, picked from the team",
   [AnnouncementToken.Designation]: "Their job title, from their record",
   [AnnouncementToken.Years]: "Time served, e.g. 3 years",
+  [AnnouncementToken.CompanyYears]: "Years since DevNodes was founded, e.g. 5 years",
 };
 
 // Tokens the date pickers can answer. Year and quarter resolve from today when
@@ -323,6 +331,10 @@ export const resolveTokenValues = (
     [AnnouncementToken.Designation]: (fill.employeeDesignation || "").trim(),
     [AnnouncementToken.Years]: formatYearsOfService(
       fill.employeeJoinedOn || "",
+      startDate
+    ),
+    [AnnouncementToken.CompanyYears]: formatYearsOfService(
+      DEVNODES_FOUNDED_ON,
       startDate
     ),
   };
