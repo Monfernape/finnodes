@@ -1,7 +1,9 @@
 -- DevNodes' own founding anniversary, alongside the individual work
--- anniversary template already seeded. Fixed to 20 September, the day the
--- company was founded in 2021, so the date prefills every year the way a
--- public holiday's does.
+-- anniversary template already seeded. Not fixed to 20 September the way a
+-- public holiday is: the actual founding day only decides how many years are
+-- being celebrated, not when the party happens, so the date and venue are
+-- picked by whoever sends it, the same as the other celebration templates
+-- (team dinner, cricket, badminton) already seeded.
 --
 -- `{{company_years}}` is a new token (see lib/announcements.ts) rather than
 -- reusing `{{years}}`: that one is counted from whichever employee the sender
@@ -17,14 +19,14 @@ values (
   'DevNodes Anniversary',
   '🎂',
   'general',
-  $body$Team, today, {{start_date}}, marks {{company_years}} since DevNodes was founded on 20 September 2021. 🎂
+  $body$Team, DevNodes turns {{company_years}} old this year! 🎂
 
-From a small team taking on our first projects to where we are today, every person who has been part of this has added something to it. The growth we have seen is built on the work put in every day, the problems solved, and the trust earned with the people we work with.
+Join us on {{start_day}}, {{start_date}} at {{venue}} as we mark the occasion together — good food, good company, and a moment to look back on everything built since we started this on 20 September 2021.
 
-Thank you for being part of this journey, whether you joined on day one or last month. Here is to the years still ahead. 🙌
+Everyone is invited. Come celebrate with us! 🙌
 
 DevNodes$body$,
-  9, 20, 1, 390,
+  null, null, 1, 390,
   true, false
 )
 on conflict (slug) do nothing;
