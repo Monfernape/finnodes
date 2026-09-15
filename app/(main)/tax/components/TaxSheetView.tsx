@@ -1,3 +1,7 @@
+"use client";
+
+import { Fragment, useState } from "react";
+import { ChevronDownIcon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -7,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { formatSalarySheetType } from "@/lib/salary";
 import {
   formatTaxAmount,
@@ -14,14 +19,82 @@ import {
   formatTaxYearLabel,
   formatTaxYearPeriod,
 } from "@/lib/tax";
-import type { TaxSheet } from "@/lib/taxSheet";
+import type { TaxSheet, TaxSheetEmployee } from "@/lib/taxSheet";
 
 type Props = {
   taxSheet: TaxSheet;
 };
 
+const EmployeeMonthsMobile = ({ employee }: { employee: TaxSheetEmployee }) => (
+  <div className="divide-y border-t bg-muted/30">
+    {employee.months.map((month) => (
+      <div
+        key={month.label}
+        className={cn(
+          "flex items-baseline justify-between gap-3 px-4 py-2.5 text-xs",
+          (!month.hasSheet || month.tax === 0) && "opacity-60"
+        )}
+      >
+        <span className="truncate">{month.label}</span>
+        {month.hasSheet ? (
+          <span className="shrink-0 tabular-nums">
+            {formatTaxAmount(month.taxablePay)} paid ·{" "}
+            {formatTaxAmount(month.tax)} tax
+          </span>
+        ) : (
+          <span className="shrink-0 text-muted-foreground">No salary sheet</span>
+        )}
+      </div>
+    ))}
+  </div>
+);
+
+const EmployeeMonthsRow = ({ employee }: { employee: TaxSheetEmployee }) => (
+  <TableRow className="bg-muted/30 hover:bg-muted/30">
+    <TableCell colSpan={6} className="p-0">
+      <Table>
+        <TableBody>
+          {employee.months.map((month) => (
+            <TableRow
+              key={month.label}
+              className={cn(
+                "border-none",
+                (!month.hasSheet || month.tax === 0) && "opacity-60"
+              )}
+            >
+              <TableCell className="w-10" />
+              <TableCell className="text-sm">{month.label}</TableCell>
+              <TableCell />
+              <TableCell />
+              <TableCell className="text-right text-sm tabular-nums">
+                {month.hasSheet ? formatTaxAmount(month.taxablePay) : "—"}
+              </TableCell>
+              <TableCell className="text-right text-sm tabular-nums">
+                {month.hasSheet ? formatTaxAmount(month.tax) : "—"}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableCell>
+  </TableRow>
+);
+
 export const TaxSheetView = ({ taxSheet }: Props) => {
   const { taxYear, months, employees } = taxSheet;
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggleEmployee = (key: string) => {
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-4 pb-24 sm:pb-6">
@@ -174,27 +247,47 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
         ) : (
           <>
             <div className="divide-y md:hidden">
-              {employees.map((employee) => (
-                <article key={employee.key} className="px-4 py-4">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h3 className="truncate text-sm font-medium">
-                      {employee.name}
-                    </h3>
-                    <p className="shrink-0 font-semibold tabular-nums">
-                      {formatTaxAmount(employee.tax)}
-                    </p>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {employee.taxableMonths} taxable months ·{" "}
-                    {formatTaxAmount(employee.taxablePay)} paid
-                  </p>
-                </article>
-              ))}
+              {employees.map((employee) => {
+                const isExpanded = expanded.has(employee.key);
+                return (
+                  <article key={employee.key}>
+                    <button
+                      type="button"
+                      onClick={() => toggleEmployee(employee.key)}
+                      aria-expanded={isExpanded}
+                      className="flex w-full items-start gap-2 px-4 py-4 text-left"
+                    >
+                      <ChevronDownIcon
+                        className={cn(
+                          "mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform",
+                          isExpanded && "rotate-180"
+                        )}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <h3 className="truncate text-sm font-medium">
+                            {employee.name}
+                          </h3>
+                          <p className="shrink-0 font-semibold tabular-nums">
+                            {formatTaxAmount(employee.tax)}
+                          </p>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {employee.taxableMonths} taxable months ·{" "}
+                          {formatTaxAmount(employee.taxablePay)} paid
+                        </p>
+                      </div>
+                    </button>
+                    {isExpanded && <EmployeeMonthsMobile employee={employee} />}
+                  </article>
+                );
+              })}
             </div>
             <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10" />
                     <TableHead>Employee</TableHead>
                     <TableHead>Designation</TableHead>
                     <TableHead className="text-right">Taxable months</TableHead>
@@ -203,25 +296,43 @@ export const TaxSheetView = ({ taxSheet }: Props) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {employees.map((employee) => (
-                    <TableRow key={employee.key}>
-                      <TableCell className="font-medium">
-                        {employee.name}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {employee.designation}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {employee.taxableMonths}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatTaxAmount(employee.taxablePay)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {formatTaxAmount(employee.tax)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {employees.map((employee) => {
+                    const isExpanded = expanded.has(employee.key);
+                    return (
+                      <Fragment key={employee.key}>
+                        <TableRow
+                          className="cursor-pointer"
+                          onClick={() => toggleEmployee(employee.key)}
+                          aria-expanded={isExpanded}
+                        >
+                          <TableCell>
+                            <ChevronDownIcon
+                              className={cn(
+                                "size-4 text-muted-foreground transition-transform",
+                                isExpanded && "rotate-180"
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {employee.name}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {employee.designation}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {employee.taxableMonths}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatTaxAmount(employee.taxablePay)}
+                          </TableCell>
+                          <TableCell className="text-right font-medium tabular-nums">
+                            {formatTaxAmount(employee.tax)}
+                          </TableCell>
+                        </TableRow>
+                        {isExpanded && <EmployeeMonthsRow employee={employee} />}
+                      </Fragment>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
