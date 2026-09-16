@@ -143,6 +143,53 @@ describe("buildTaxSheet", () => {
     expect(result.employees).toEqual([]);
   });
 
+  it("leaves a co-founder's own pay off the sheet entirely, taxable or not", () => {
+    const months = getTaxYearMonths(2026);
+    const sheets: SalarySheet[] = [];
+    const items: SalarySheetItem[] = [];
+    months.forEach(({ month, year }) => {
+      const sheet = buildSheet({ month, year });
+      sheets.push(sheet);
+      // A well-paid co-founder, drawn from the same dispatch as a regular
+      // taxable employee.
+      items.push(
+        buildItem({
+          salary_sheet_id: sheet.id,
+          seat_id: 6,
+          name: "Muhammad Usman",
+          designation: "Co-Founder",
+          gross_salary: 500000,
+        })
+      );
+      items.push(buildItem({ salary_sheet_id: sheet.id, seat_id: 1, gross_salary: 200000 }));
+    });
+
+    const result = buildTaxSheet(taxYear, slabs, sheets, items);
+
+    expect(result.employees.some((employee) => employee.name === "Muhammad Usman")).toBe(false);
+    expect(result.exemptEmployees.some((employee) => employee.name === "Muhammad Usman")).toBe(false);
+    // The regular employee on the same sheets is untouched.
+    expect(result.employees).toHaveLength(1);
+    expect(result.employees[0].name).toBe("Ayesha Khan");
+    // The founder's pay does not leak into anyone's totals either.
+    expect(result.months[0].employeeCount).toBe(1);
+    expect(result.taxablePay).toBe(200000 * 12);
+  });
+
+  it("matches any designation with 'founder' in it, not just an exact 'Co-Founder'", () => {
+    const { sheet, item } = monthOf(7, 2025, {
+      seat_id: 6,
+      name: "Founding Partner",
+      designation: "Founder & CEO",
+      gross_salary: 500000,
+    });
+
+    const result = buildTaxSheet(taxYear, slabs, [sheet], [item]);
+
+    expect(result.employees).toEqual([]);
+    expect(result.exemptEmployees).toEqual([]);
+  });
+
   it("puts a well-paid employee in the taxable list with the right totals", () => {
     // 200,000/month annualises to 2,400,000: 180,000 + 25% of the 200,000 over
     // the 2,200,000 floor = 230,000/yr, i.e. 19,167/month after rounding.
@@ -354,6 +401,122 @@ describe("buildTaxSheet", () => {
         true
       );
       expect(exemptEmployee.months.every((month) => month.tax === 0)).toBe(true);
+    });
+  });
+
+  describe("sum invariants: the sheet total always equals the sum of its parts", () => {
+    // A cast covering the ways someone actually shows up on a real tax sheet:
+    // steadily taxable, steadily exempt, a mid-year joiner, and someone paid
+    // over two dispatches every month.
+    const buildFullYearDataset = () => {
+      const months = getTaxYearMonths(2026);
+      const sheets: SalarySheet[] = [];
+      const items: SalarySheetItem[] = [];
+
+      months.forEach(({ month, year }, index) => {
+        const mainSheet = buildSheet({ month, year });
+        sheets.push(mainSheet);
+        // Seat 1: steady 200,000/month, taxable every month.
+        items.push(
+          buildItem({ salary_sheet_id: mainSheet.id, seat_id: 1, name: "Ayesha Khan", gross_salary: 200000 })
+        );
+        // Seat 2: steady 35,000/month, exempt every month.
+        items.push(
+          buildItem({ salary_sheet_id: mainSheet.id, seat_id: 2, name: "Bilal Raza", gross_salary: 35000 })
+        );
+        // Seat 4 only joins from the 7th month of the tax year (January 2026).
+        if (index >= 6) {
+          items.push(
+            buildItem({ salary_sheet_id: mainSheet.id, seat_id: 4, name: "New Hire", gross_salary: 150000 })
+          );
+        }
+
+        // Seat 5: paid over two dispatches every month, 60,000 each.
+        const first = buildSheet({ month, year, sheet_type: SalarySheetType.First });
+        const second = buildSheet({ month, year, sheet_type: SalarySheetType.Second });
+        sheets.push(first, second);
+        items.push(
+          buildItem({ salary_sheet_id: first.id, seat_id: 5, name: "Five Dispatch", gross_salary: 60000 })
+        );
+        items.push(
+          buildItem({ salary_sheet_id: second.id, seat_id: 5, name: "Five Dispatch", gross_salary: 60000 })
+        );
+      });
+
+      return { sheets, items };
+    };
+
+    it("the sheet's grand total equals the sum of every employee's own tax", () => {
+      const { sheets, items } = buildFullYearDataset();
+      const result = buildTaxSheet(taxYear, slabs, sheets, items);
+
+      const sumOfEmployees = result.employees.reduce((total, employee) => total + employee.tax, 0);
+      expect(result.employees.length).toBeGreaterThan(0);
+      expect(sumOfEmployees).toBe(result.tax);
+    });
+
+    it("the sheet's grand total equals the sum of every month's tax", () => {
+      const { sheets, items } = buildFullYearDataset();
+      const result = buildTaxSheet(taxYear, slabs, sheets, items);
+
+      const sumOfMonths = result.months.reduce((total, month) => total + month.tax, 0);
+      expect(sumOfMonths).toBe(result.tax);
+    });
+
+    it("taxable pay reconciles the same two ways: by employee and by month", () => {
+      const { sheets, items } = buildFullYearDataset();
+      const result = buildTaxSheet(taxYear, slabs, sheets, items);
+
+      const sumOfEmployees = result.employees.reduce((total, employee) => total + employee.taxablePay, 0);
+      const sumOfMonths = result.months.reduce((total, month) => total + month.taxablePay, 0);
+      expect(sumOfEmployees).toBe(result.taxablePay);
+      expect(sumOfMonths).toBe(result.taxablePay);
+    });
+
+    it("every employee's own 12-month breakdown adds back up to their own total tax", () => {
+      const { sheets, items } = buildFullYearDataset();
+      const result = buildTaxSheet(taxYear, slabs, sheets, items);
+
+      result.employees.forEach((employee) => {
+        const sumOfTheirMonths = employee.months.reduce((total, month) => total + month.tax, 0);
+        expect(sumOfTheirMonths).toBe(employee.tax);
+      });
+    });
+
+    it("still reconciles with a month missing altogether and an employee taxable in only one of their months", () => {
+      const months = getTaxYearMonths(2026).filter(
+        (entry) => !(entry.month === 11 && entry.year === 2025) // no sheet at all in November
+      );
+      const sheets: SalarySheet[] = [];
+      const items: SalarySheetItem[] = [];
+
+      months.forEach(({ month, year }, index) => {
+        const sheet = buildSheet({ month, year });
+        sheets.push(sheet);
+        items.push(buildItem({ salary_sheet_id: sheet.id, seat_id: 1, gross_salary: 200000 }));
+        // 40,000 every month except one 700,000 bonus month: taxable in one
+        // month, exempt in the rest, for the same person.
+        items.push(
+          buildItem({
+            salary_sheet_id: sheet.id,
+            seat_id: 3,
+            name: "Sana Tariq",
+            gross_salary: index === 2 ? 700000 : 40000,
+          })
+        );
+      });
+
+      const result = buildTaxSheet(taxYear, slabs, sheets, items);
+
+      const sumOfEmployees = result.employees.reduce((total, employee) => total + employee.tax, 0);
+      const sumOfMonths = result.months.reduce((total, month) => total + month.tax, 0);
+      expect(sumOfEmployees).toBe(result.tax);
+      expect(sumOfMonths).toBe(result.tax);
+
+      result.employees.forEach((employee) => {
+        const sumOfTheirMonths = employee.months.reduce((total, month) => total + month.tax, 0);
+        expect(sumOfTheirMonths).toBe(employee.tax);
+      });
     });
   });
 });

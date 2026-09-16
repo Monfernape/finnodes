@@ -486,13 +486,21 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
                   <FormField
                     control={form.control}
                     name={`items.${index}.name`}
-                    render={({ field }) => (
+                    render={({ field: nameField }) => (
                       <FormItem className="xl:col-span-2">
                         <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...nameField} disabled={Boolean(field.seat_id)} />
                         </FormControl>
-                        <FormMessage />
+                        {field.seat_id ? (
+                          <FormDescription>
+                            Synced from the employee&apos;s seat record. Fix it there if it
+                            is wrong, rather than retyping it here — a typo here carries
+                            forward to every sheet duplicated from this one.
+                          </FormDescription>
+                        ) : (
+                          <FormMessage />
+                        )}
                       </FormItem>
                     )}
                   />

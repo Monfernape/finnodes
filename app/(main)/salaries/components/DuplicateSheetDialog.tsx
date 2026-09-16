@@ -113,6 +113,24 @@ export const DuplicateSheetDialog = ({ sheet }: Props) => {
         throw sourceItemsError;
       }
 
+      // A row linked to a seat re-reads that seat's current name rather than
+      // copying the old sheet's own row verbatim, so a name fixed on the seat
+      // stops reappearing wrong on every sheet duplicated from before the fix.
+      const linkedSeatIds = Array.from(
+        new Set((sourceItems || []).map((item) => item.seat_id).filter((id): id is number => id !== null))
+      );
+      const seatNameById = new Map<number, string>();
+      if (linkedSeatIds.length > 0) {
+        const { data: linkedSeats, error: linkedSeatsError } = await supabaseClient
+          .from(DatabaseTable.Seats)
+          .select("id, name")
+          .in("id", linkedSeatIds);
+        if (linkedSeatsError) {
+          throw linkedSeatsError;
+        }
+        (linkedSeats || []).forEach((seat) => seatNameById.set(seat.id, seat.name));
+      }
+
       const { data: createdSheet, error: createSheetError } =
         await supabaseClient
           .from(DatabaseTable.SalarySheets)
@@ -137,7 +155,7 @@ export const DuplicateSheetDialog = ({ sheet }: Props) => {
       const rowsToCopy = (sourceItems || []).map((item, index) => ({
         salary_sheet_id: createdSheet.id,
         seat_id: item.seat_id,
-        name: item.name,
+        name: (item.seat_id !== null ? seatNameById.get(item.seat_id) : undefined) ?? item.name,
         cnic: item.cnic,
         account_number: item.account_number,
         designation: item.designation,

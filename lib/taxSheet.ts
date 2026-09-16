@@ -24,6 +24,11 @@ const getEmployeeKey = (item: SalarySheetItem) =>
 const getTaxablePay = (item: SalarySheetItem) =>
   item.gross_salary > 0 ? item.gross_salary : item.net_salary;
 
+// Co-founders draw a salary through the same dispatches as everyone else,
+// but the tax sheet is an employee-tax report, not a founder one, so their
+// rows are left out of it entirely rather than showing up taxable or exempt.
+const isFounderDesignation = (designation: string) => /founder/i.test(designation);
+
 export type TaxSheetMonth = {
   month: number;
   year: number;
@@ -98,6 +103,7 @@ export const buildTaxSheet = (
     (sheet) => getTaxYearForMonth(sheet.month, sheet.year) === taxYear.tax_year
   );
   const sheetsById = new Map(sheetsInYear.map((sheet) => [sheet.id, sheet]));
+  const employeeItems = items.filter((item) => !isFounderDesignation(item.designation));
 
   const employees = new Map<string, TaxSheetEmployee>();
   const exempt = new Map<string, TaxSheetEmployee>();
@@ -111,7 +117,7 @@ export const buildTaxSheet = (
     const monthSheets = sheetsInYear.filter(
       (sheet) => sheet.month === month && sheet.year === year
     );
-    const monthItems = items.filter((item) => {
+    const monthItems = employeeItems.filter((item) => {
       const sheet = sheetsById.get(item.salary_sheet_id);
       return sheet ? sheet.month === month && sheet.year === year : false;
     });
