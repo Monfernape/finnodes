@@ -11,6 +11,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createClient } from "@/utils/supabase/client";
 import { SalarySheet, SalarySheetItem } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/db";
+import { Routes } from "@/hooks/useToolbar";
+import { markRouteStale } from "@/hooks/useRefreshStaleRoutes";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -271,6 +273,7 @@ export const SalarySheetEditor = ({ sheet, items }: Props) => {
       toast({
         title: "Salary sheet updated",
       });
+      markRouteStale(Routes.SALARIES);
       router.refresh();
     } catch (error) {
       console.error("Salary sheet update failed", error);

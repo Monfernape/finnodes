@@ -9,6 +9,7 @@ import { createClient } from "@/utils/supabase/client";
 import { SalarySheet, SalarySheetItem, SalarySheetType } from "@/entities";
 import { DatabaseTable } from "@/utils/supabase/db";
 import { Routes } from "@/hooks/useToolbar";
+import { markRouteStale } from "@/hooks/useRefreshStaleRoutes";
 import {
   SALARY_MONTHS,
   formatSalaryMonth,
@@ -189,6 +190,7 @@ export const DuplicateSheetDialog = ({ sheet }: Props) => {
         }.`,
       });
       setIsOpen(false);
+      markRouteStale(Routes.SALARIES);
       router.push(`${Routes.SALARIES}/${createdSheet.id}`);
     } catch (error) {
       console.error("Salary sheet duplication failed", error);

@@ -13,6 +13,7 @@ import { DatabaseTable } from "@/utils/supabase/db";
 import { cn } from "@/lib/utils";
 import { formatSalarySheetType, getSeatDefaultSheetRows } from "@/lib/salary";
 import { Routes } from "@/hooks/useToolbar";
+import { markRouteStale } from "@/hooks/useRefreshStaleRoutes";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -161,6 +162,7 @@ export const SalarySheetCreate = ({ seats }: Props) => {
       toast({
         title: `${formatSalarySheetType(sheetType)} sheet created`,
       });
+      markRouteStale(Routes.SALARIES);
       router.push(`${Routes.SALARIES}/${createdSheet.id}`);
     } catch (error) {
       toast({
